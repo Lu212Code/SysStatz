@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>SysStatz - Dashboard</title>
+    <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+	<style>
+		
+		button {
+			padding: 10px 20px;
+			background-color: #4a90e2;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			font-size: 1rem;
+			cursor: pointer;
+			transition: background-color 0.3s ease, transform 0.2s ease;
+			box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+			margin: 0.5rem 0;
+		}
+		
+		button:hover {
+			background-color: #357bd8;
+			transform: translateY(-1px);
+		}
+		
+		.button-link {
+		    display: inline-block;
+		    padding: 8px 16px;
+		    background-color: #007bff;
+		    color: white;
+		    text-decoration: none;
+		    border-radius: 4px;
+		    border: none;
+		    font-size: 14px;
+		}
+		.button-link:hover {
+		    background-color: #0056b3;
+		}
+
+		
+	</style>
+</head>
+<body>
+<header>
+    <h1>
+		<img src="/img/logo.png" alt="SysStatz Logo" style="height: 3em; vertical-align: middle; margin-right: 5px;">
+		SysStatz - Beta 0.5
+	</h1>
+</header>
+
+<nav>
+	<a th:href="@{/settings}">
+	    <button>Einstellungen</button>
+	</a>
+	<a th:href="@{/logs}">
+	    <button>Logs</button>
+	</a>
+</nav>
+
+
+<div id="servers-container">
+    <!-- Server-Infos werden hier dynamisch eingefügt -->
+</div>
+
+<script>
+	
+	function format3(val) {
+	    const n = Number(val);
+	    if (!Number.isFinite(n)) return val;
+	    return n.toLocaleString('de-DE', {
+	        minimumFractionDigits: 0,
+	        maximumFractionDigits: 3
+	    });
+	}
+	
+async function refreshData() {
+    try {
+        const response = await fetch('/api/servers');
+        if (!response.ok) {
+            console.error('Fehler beim Laden der Serverdaten');
+            return;
+        }
+        const servers = await response.json();
+
+        const container = document.getElementById('servers-container');
+        container.innerHTML = ''; // vorher leeren
+
+		if (servers.length === 0) {
+		    const message = document.createElement('p');
+		    message.textContent = 'Keine Serverdaten verfügbar.';
+		    message.style.color = 'gray';
+		    message.style.fontSize = '1.2rem';
+		    message.style.textAlign = 'center';
+		    container.appendChild(message);
+		} else {
+		    servers.forEach(server => {
+		        const div = document.createElement('div');
+		        div.innerHTML = `
+		            <h2>${server.name}</h2>
+					<p>STATUS: ${server.status}</p>
+		            <p>CPU: ${server.cpuPercent}%</p>
+					<p>RAM: ${format3(server.ramUsed)} Gb / ${format3(server.ramTotal)} Gb</p>
+		            <p>STORAGE: ${server.storageUsed} Gb / ${server.storageTotal} Gb</p>
+					<p>NETWORK: ↑ ${format3(server.dsend)} ↓ ${format3(server.drecv)}</p>
+		            <a href="/server/${encodeURIComponent(server.name)}">
+		                <button>Details anzeigen</button>
+		            </a>
+		        `;
+		        container.appendChild(div);
+		    });
+		}
+
+
+    } catch (error) {
+        console.error('Fehler:', error);
+    }
+}
+
+// Daten beim Laden der Seite und alle 5 Sekunden aktualisieren
+refreshData();
+setInterval(refreshData, 5000);
+</script>
+</body>
+</html>

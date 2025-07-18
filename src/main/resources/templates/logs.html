@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>SysStatz - Logs</title>
+    <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+    
+    <style>
+        input[type="text"] {
+            padding: 8px 12px;
+            font-size: 1rem;
+            border: 2px solid #4a90e2;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            width: 250px; /* oder 100% für volle Breite */
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus {
+            border-color: #357bd8;
+            box-shadow: 0 0 5px rgba(53, 123, 216, 0.5);
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin: 0.5rem 0;
+        }
+
+        button:hover {
+            background-color: #357bd8;
+            transform: translateY(-1px);
+        }
+
+        /* Neue Styles für die Konsole */
+        html, body {
+            margin: 0; padding: 0; height: 100%;
+            background: #1e1e2f;
+            color: #ddd;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #console {
+            flex-grow: 1;
+            background: #222;
+            padding: 10px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.2em;
+            border-radius: 6px;
+            margin: 10px 20px;
+            box-shadow: 0 0 10px #000 inset;
+        }
+
+        #inputBar {
+            display: flex;
+            justify-content: center;
+            background: #111;
+            padding: 10px 20px 20px 20px;
+        }
+
+        #inputBar input[type="text"] {
+            flex-grow: 1;
+            max-width: 500px;
+            margin-right: 10px;
+            background: #333;
+            color: #ddd;
+        }
+
+        /* Farben für Logs */
+        .out {
+            color: #7ec8e3; /* hellblau für stdout */
+        }
+        .err {
+            color: #f76c6c; /* rot für stderr */
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>
+        <img src="/img/logo.png" alt="SysStatz Logo" style="height: 3em; vertical-align: middle; margin-right: 5px;">
+        SysStatz - Logs
+    </h1>
+</header>
+<nav>
+    <a th:href="@{/dashboard}">
+        <button>Dashboard</button>
+    </a>
+</nav>
+
+<!-- Konsole -->
+<div id="console" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Eingabezeile -->
+<div id="inputBar">
+    <input type="text" id="commandInput" placeholder="Gebe einen Befehl ein..."/>
+    <button id="sendBtn">Senden</button>
+</div>
+
+<script>
+    const consoleDiv = document.getElementById('console');
+    const input = document.getElementById('commandInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    // WebSocket zum Backend öffnen
+    const ws = new WebSocket(`ws://${location.host}/ws/logs`);
+
+    ws.onmessage = function(event) {
+        const msg = event.data;
+
+        // Prüfen, ob Fehlermeldung oder normaler Output
+        let className = msg.startsWith('[ERR') ? 'err' : 'out';
+
+        // Zeitstempel extrahieren (z.B. "[OUT 12:34:56] Nachricht")
+        const timeEnd = msg.indexOf(']');
+        let time = '';
+        let text = msg;
+        if(timeEnd > 0){
+            time = msg.substring(1, timeEnd);
+            text = msg.substring(timeEnd + 1).trim();
+        }
+
+        // Zeile anlegen und einfärben
+        const line = document.createElement('div');
+        line.className = className;
+        line.textContent = `[${time}] ${text}`;
+        consoleDiv.appendChild(line);
+
+        // Automatisch nach unten scrollen
+        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    };
+
+    // Befehl absenden
+    function sendCommand() {
+        const val = input.value.trim();
+        if(val.length === 0) return;
+        fetch('/console/input', {
+            method: 'POST',
+            headers: {'Content-Type': 'text/plain'},
+            body: val
+        });
+        input.value = '';
+        input.focus();
+    }
+
+    sendBtn.onclick = sendCommand;
+
+    // Enter-Taste abfangen
+    input.addEventListener("keydown", function(event) {
+        if(event.key === "Enter"){
+            sendCommand();
+        }
+    });
+</script>
+</body>
+</html>

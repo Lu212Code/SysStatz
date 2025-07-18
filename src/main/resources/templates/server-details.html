@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="'Details für ' + ${server.name}">Serverdetails</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+    <style>
+        /* Grundlayout */
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121726;
+            color: #ddd;
+            margin: 0;
+            padding: 1rem 2rem 3rem 2rem;
+        }
+		
+		/*
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #333;
+            margin-bottom: 1rem;
+        }
+        header h1 {
+            font-weight: 600;
+            font-size: 1.8rem;
+            margin: 0;
+            color: #4a90e2;
+        } */
+		
+        a.button-link {
+            text-decoration: none;
+        }
+        button {
+            padding: 0.5rem 1.2rem;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        button:hover,
+        button:focus {
+            background-color: #357bd8;
+            transform: translateY(-1px);
+            outline: none;
+        }
+        /* Formular */
+        form {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            max-width: 400px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 0.5rem 0.8rem;
+            font-size: 1rem;
+            border: 2px solid #4a90e2;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-sizing: border-box;
+            color: #222;
+        }
+        input[type="text"]:focus {
+            border-color: #357bd8;
+            box-shadow: 0 0 6px rgba(53, 123, 216, 0.7);
+        }
+        /* Status-Text */
+        .status-text {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        .status-text strong {
+            color: #4a90e2;
+        }
+
+        /* Diagramm-Container: nebeneinander und responsive */
+        .charts-container {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        .chart-wrapper {
+            flex: 1 1 280px;
+            max-width: 320px;
+            background-color: #1e2433;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        }
+        canvas {
+            max-width: 100%;
+            height: 180px !important;
+        }
+
+        /* Kleinere Schrift in Legende */
+        .chart-wrapper .chartjs-render-monitor + div > ul {
+            font-size: 0.85rem !important;
+        }
+    </style>
+</head>
+<body>
+	<header>
+	    <h1 th:text="'Serverdetails für ' + ${server.name}">Details</h1>
+		<a th:href="@{/dashboard}">
+		    <button>Zurück zum Dashboard</button>
+		</a>
+	</header>
+
+<section>
+    <div class="charts-container">
+        <div class="charts-container">
+        <p><strong>CPU:</strong> <span id="cpuText">-</span> %</p>
+        <p><strong>RAM:</strong> <span id="ramText">-</span> GB</p>
+        <p><strong>Storage:</strong> <span id="storageText">-</span> GB</p>
+        </div>
+        <div class="charts-container">
+		<p><strong>Boot Zeit:</strong> <span th:text="${server.boottime}">-</span></p>
+		<p><strong>Uptime:</strong> <span th:text="${server.uptime}">-</span></p>
+        </div>
+    </div>
+
+    <div class="charts-container">
+        <div class="chart-wrapper">
+            <canvas id="cpuLineChart" aria-label="CPU Auslastung Diagramm" role="img"></canvas>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="ramLineChart" aria-label="RAM Verwendung Diagramm" role="img"></canvas>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="storageDoughnutChart" aria-label="Storage Diagramm" role="img"></canvas>
+        </div>
+    </div>
+	
+	<div class="charts-container">
+	<form th:action="@{/command}" method="post" autocomplete="off" spellcheck="false">
+	    <input type="hidden" name="serverName" th:value="${server.name}" />
+	    <input type="text" name="command" placeholder="Befehl eingeben" required />
+	    <button type="submit">Senden</button>
+	</form>
+	</div>
+
+</section>
+
+<script th:inline="javascript">
+    const serverName = /*[[${server.name}]]*/ "";
+
+    const cpuData = [];
+    const ramData = [];
+    const labels = [];
+
+    const maxPoints = 30;
+
+    const cpuCtx = document.getElementById('cpuLineChart').getContext('2d');
+    const ramCtx = document.getElementById('ramLineChart').getContext('2d');
+    const storageCtx = document.getElementById('storageDoughnutChart').getContext('2d');
+
+    const cpuChart = new Chart(cpuCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'CPU-Auslastung (%)',
+                data: cpuData,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 2,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20
+                    }
+                }
+            },
+            plugins: {
+                legend: { labels: { font: { size: 14 } } }
+            }
+        }
+    });
+
+    const ramChart = new Chart(ramCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'RAM-Verwendung (GB)',
+                data: ramData,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.25)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 2,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: { labels: { font: { size: 14 } } }
+            }
+        }
+    });
+
+    let storageChart;
+
+    async function updateData() {
+        try {
+            const res = await fetch(`/api/server/${encodeURIComponent(serverName)}`);
+            if (!res.ok) throw new Error("Fehler beim Laden");
+            const server = await res.json();
+			console.log(server);
+
+            // Text aktualisieren
+            document.getElementById("cpuText").textContent = server.cpuPercent.toFixed(1);
+            document.getElementById("ramText").textContent = server.ramUsed.toFixed(2) + " / " + server.ramTotal.toFixed(2);
+            document.getElementById("storageText").textContent = server.storageUsed.toFixed(2) + " / " + server.storageTotal.toFixed(2);
+
+
+
+            const now = new Date().toLocaleTimeString();
+            if (labels.length >= maxPoints) {
+                labels.shift();
+                cpuData.shift();
+                ramData.shift();
+            }
+            labels.push(now);
+            cpuData.push(server.cpuPercent);
+            ramData.push(server.ramUsed);
+
+            cpuChart.update();
+            ramChart.update();
+
+            if (!storageChart) {
+                storageChart = new Chart(storageCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Verwendet', 'Frei'],
+                        datasets: [{
+                            data: [server.storageUsed, server.storageTotal - server.storageUsed],
+                            backgroundColor: ['rgba(255, 206, 86, 0.8)', 'rgba(100, 100, 100, 0.3)'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#ddd',
+                                    font: { size: 14 }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                storageChart.data.datasets[0].data = [server.storageUsed, server.storageTotal - server.storageUsed];
+                storageChart.update();
+            }
+
+        } catch (e) {
+            console.error("Fehler beim Laden der Serverdaten:", e);
+        }
+    }
+
+    updateData();
+    setInterval(updateData, 5000);
+</script>
+</body>
+</html>

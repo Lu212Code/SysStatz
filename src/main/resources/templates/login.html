@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - SysStatz</title>
+
+    <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1c1e2f;
+            margin: 0;
+        }
+
+        .login-box {
+            background-color: #2c2f48;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.4);
+            text-align: center;
+            width: 300px;
+        }
+
+        .login-box input[type="password"],
+        .login-box input[type="checkbox"],
+        .login-box button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .login-box button {
+            background-color: #4a90e2;
+            color: white;
+            cursor: pointer;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: left;
+            margin-top: -5px;
+        }
+
+        .checkbox-container input {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        .checkbox-container label {
+            font-size: 0.9em;
+            color: white;
+        }
+
+        p, h2 {
+            color: white;
+        }
+
+        img {
+            display: block;
+            margin: 0 auto 10px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <img src="/img/logo.png" alt="SysStatz Logo" style="height: 5em;">
+        <p>Serverüberwachung einfach gemacht</p>
+        <h2>Login</h2>
+        <form method="post" action="/login" onsubmit="handleLogin(event)">
+            <input type="password" name="password" placeholder="Passwort eingeben" required />
+            <button type="submit">Einloggen</button>
+        </form>
+        <p th:if="${error}" th:text="${error}" style="color:red;"></p>
+        <p>Das Passwort kannst du in der Konfiguration des Servers einstellen.</p>
+    </div>
+
+    <script>
+        function handleLogin(event) {
+            const stayLoggedIn = document.getElementById('stayLoggedIn').checked;
+            // sonst wird das Formular ganz normal abgeschickt
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121e14;
+    color: #d8f5dc;
+    margin: 0;
+    padding: 0 20px 40px 20px;
+}
+
+header {
+    background-color: #1a2f1d;
+    padding: 20px 0;
+    text-align: center;
+    border-bottom: 2px solid #3bd16f;
+}
+
+header h1 {
+    margin: 0;
+    font-weight: 700;
+    color: #3bd16f;
+    font-size: 2rem;
+    letter-spacing: 1px;
+}
+
+/* Login-Button-Stil */
+.button-login {
+    padding: 10px 20px;
+    background-color: #3bd16f;
+    color: #121e14;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 3px 8px rgba(0, 255, 100, 0.3);
+}
+
+.button-login:hover {
+    background-color: #2bb757;
+    transform: translateY(-1px);
+}
+
+.button-login:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#servers-container {
+    margin-top: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+/* Einzelne Server-Box */
+#servers-container > div {
+    background-color: #1b2e20;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 100, 50, 0.3);
+    width: 280px;
+    transition: background-color 0.3s ease;
+}
+
+#servers-container > div:hover {
+    background-color: #224030;
+    cursor: pointer;
+}
+
+#servers-container h2 {
+    margin-top: 0;
+    color: #7fffa6;
+    font-size: 1.4rem;
+    border-bottom: 1px solid #3bd16f;
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+}
+
+#servers-container p {
+    margin: 6px 0;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: #d8f5dc;
+}
+
+/* Akzente für Werte */
+#servers-container p:nth-child(2) { /* CPU */
+    color: #f1c40f;
+}
+
+#servers-container p:nth-child(4) { /* DISK */
+    color: #3bd16f;
+}

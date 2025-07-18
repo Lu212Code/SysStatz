@@ -1,0 +1,5 @@
+webPort=8083
+statsPort=12345
+password=LdDKvB152
+theme=copper
+updateRate=null
