@@ -51,10 +51,10 @@
 
 <nav>
 	<a th:href="@{/settings}">
-	    <button>Einstellungen</button>
+	    <button> <img src="/img/settings.png" alt="Settings Icon" style="height: 1em; margin-right: 5px;"> Einstellungen</button>
 	</a>
 	<a th:href="@{/logs}">
-	    <button>Logs</button>
+	    <button> <img src="/img/log.png" alt="Logs Icon" style="height: 1em; margin-right: 5px;">Logs</button>
 	</a>
 </nav>
 
@@ -99,7 +99,7 @@ async function refreshData() {
 		        div.innerHTML = `
 		            <h2>${server.name}</h2>
 					<p>STATUS: ${server.status}</p>
-		            <p>CPU: ${server.cpuPercent}%</p>
+		            <p>CPU: <img src="/img/cpu.png" alt="Logs Icon" style="height: 1em;">  ${server.cpuPercent}%</p>
 					<p>RAM: ${format3(server.ramUsed)} Gb / ${format3(server.ramTotal)} Gb</p>
 		            <p>STORAGE: ${server.storageUsed} Gb / ${server.storageTotal} Gb</p>
 					<p>NETWORK: ↑ ${format3(server.dsend)} ↓ ${format3(server.drecv)}</p>

@@ -210,6 +210,32 @@ public class Server {
             }
         }
         
+        if (bauteil.equalsIgnoreCase("PROC")) {
+            try {
+                // Beispiel: "7932 javaw 188,26 61"
+                // Split mit \s+ für beliebige Leerzeichen
+                String[] teile = Auslastung.trim().split("\\s+");
+                if (teile.length >= 4) {
+                    int pid = Integer.parseInt(teile[0]);
+                    String name = teile[1].replace("_", " ");
+                    double cpu = Double.parseDouble(teile[2].replace(",", "."));
+                    double ramGB = Double.parseDouble(teile[3].replace(",", "."));
+                    long ramMB = (long) (ramGB * 1024);
+
+                    System.out.printf("Prozess erhalten → PID: %d, Name: %s, CPU: %.2f%%, RAM: %d MB%n",
+                            pid, name, cpu, ramMB);
+
+                    ServerProcessInfo pInfo = new ServerProcessInfo(pid, name, cpu, ramMB);
+                    temp.processes.add(pInfo);
+                } else {
+                    System.err.println("Ungültige PROC-Daten empfangen: " + Auslastung);
+                }
+            } catch (Exception e) {
+                System.err.println("Fehler beim Parsen von PROC-Daten: " + Auslastung);
+                e.printStackTrace();
+            }
+        }
+        
         if (bauteil.equalsIgnoreCase("DISKUSAGE")) {
             temp.disk = Auslastung;
             System.out.println("DISK:" + Server + ":" + Auslastung);
@@ -236,7 +262,7 @@ public class Server {
         	temp.drecv = Auslastung;
         }
 
-        if (temp.cpu != null && temp.ram != null && temp.disk != null && temp.sent != null && temp.recv != null && temp.dsent != null && temp.drecv != null) {
+        if (temp.cpu != null && temp.ram != null && temp.disk != null && temp.sent != null && temp.recv != null && temp.dsent != null && temp.drecv != null && temp.processes != null) {
             try {
                 String[] teileRam = temp.ram.split("/");
                 double ramUsed = Double.parseDouble(teileRam[0]);
@@ -254,7 +280,7 @@ public class Server {
                 // Formatierte Ausgabe
                 String formatiert = jetzt.format(formatter);
                 
-                ServerStats.update(Server, temp.cpu, ramUsed, ramTotal, 0, diskUsed, diskTotal, "Online", formatiert, temp.sent, temp.recv, temp.dsent, temp.drecv);
+                ServerStats.update(Server, temp.cpu, ramUsed, ramTotal, 0, diskUsed, diskTotal, "Online", formatiert, temp.sent, temp.recv, temp.dsent, temp.drecv, temp.processes);
 
             } catch (Exception e) {
                 System.err.println("RAM- oder Disk-Daten konnten nicht verarbeitet werden: RAM=" + temp.ram + ", DISK=" + temp.disk);
@@ -286,10 +312,53 @@ public class Server {
         String recv = null;
         String dsent = null;
         String drecv = null;
+        
+        public List<ServerProcessInfo> processes = new ArrayList<>();
     }
+    
+    public static class ServerProcessInfo {
+        public int pid;
+        public String name;
+        public double cpu;
+        public long ram;
+
+        public ServerProcessInfo(int pid, String name, double cpu, long ram) {
+            this.pid = pid;
+            this.name = name;
+            this.cpu = cpu;
+            this.ram = ram;
+        }
+    }
+
+
     
     public static void sendCMD(String serverName, String command) {
     	sendToClient(serverName, "CMD:" +  command);
     }
     
+    private static void handleProcessLine(String werte) {
+        // Beispiel: "PROC 1234 java 12.3 1.25"
+        String[] parts = werte.split(" ");
+        if (parts.length != 5) {
+            System.out.println("Ungültige PROC-Zeile: " + werte);
+            return;
+        }
+
+        try {
+            String pid = parts[1];
+            String name = parts[2];
+            double cpu = Double.parseDouble(parts[3].replace(",", "."));
+            double ram = Double.parseDouble(parts[4].replace(",", ".")); // in GB
+
+            // Ausgabe (optional später ins Web senden)
+            System.out.printf("PROC PID: %s, NAME: %s, CPU: %.2f%%, RAM: %.2f GB%n", pid, name, cpu, ram);
+
+            // TODO: Webfrontend-Update? CSV schreiben? Liste zwischenspeichern?
+            // z. B.:
+            // ServerStats.addProcessInfo(serverName, pid, name, cpu, ram);
+
+        } catch (Exception e) {
+            System.err.println("Fehler beim Parsen von PROC-Zeile: " + werte);
+        }
+    }
 }

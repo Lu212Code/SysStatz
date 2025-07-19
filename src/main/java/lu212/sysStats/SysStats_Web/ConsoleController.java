@@ -7,7 +7,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 
+import lu212.sysStats.General.AppReloader;
 import lu212.sysStats.General.SysStatzInfo;
 
 import java.io.PrintStream;
@@ -90,7 +94,6 @@ public class ConsoleController {
 	// Beispiel: API um eingehende Befehle zu verarbeiten (POST /console/input)
 	@PostMapping("/console/input")
 	public void onInput(@RequestBody String command) {
-		System.out.println("Eingabe erhalten: " + command);
 		// Hier kannst du deine Methode triggern:
 		handleCommand(command);
 	}
@@ -101,6 +104,7 @@ public class ConsoleController {
 		} else if ("help".equalsIgnoreCase(command.trim())) {
 			System.out.println("--------------------Verfügbare Befehle--------------------");
 			System.out.println("stop - Server herunterfahren");
+			System.out.println("list - Zeigt alle verbundenen Server");
 			System.out.println("----------------------------------------------------------");
 		} else if ("info".equalsIgnoreCase(command.trim())) {
 			System.out.println("----------------------SysStatz - Info----------------------");
@@ -108,8 +112,23 @@ public class ConsoleController {
 			System.out.println("Name: " + SysStatzInfo.name);
 			System.out.println("Description: " + SysStatzInfo.description);
 			System.out.println("-----------------------------------------------------------");
+		} else if ("list".equalsIgnoreCase(command.trim())) {
+		    System.out.println("--------------------Registrierte Server--------------------");
+		    ServerStats.getAllServers().forEach(s -> 
+		        System.out.println("- " + s.getName())
+		    );
+		    System.out.println("-----------------------------------------------------------");
+		} else if ("restart".equalsIgnoreCase(command.trim())){
+			System.out.println("SysStatz Webserver wird neugestartet...");
+			AppReloader.restart();
 		} else {
 			System.err.println("Unbekannter Befehl: " + command);
 		}
 	}
+
+    public static void shutdown(ApplicationContext context) {
+        if (context instanceof ConfigurableApplicationContext) {
+            ((ConfigurableApplicationContext) context).close();
+        }
+    }
 }

@@ -3,6 +3,10 @@ package lu212.sysStats.SysStats_Web;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+import lu212.sysStats.StatsServer.Server.ServerProcessInfo;
 
 public class ServerInfo {
     private final String name;
@@ -19,8 +23,9 @@ public class ServerInfo {
     private String recv;
     private String dsent;
     private String drecv;
+    private List<ServerProcessInfo> processes = new ArrayList<>();
 
-    public ServerInfo(String name, int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv) {
+    public ServerInfo(String name, int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv, List<ServerProcessInfo> processes) {
         this.name = name;
         this.cpuPercent = cpuPercent;
         this.ramUsed = ramUsed;
@@ -35,9 +40,10 @@ public class ServerInfo {
         this.recv = recv;
         this.dsent = dsent;
         this.drecv = drecv;
+        this.processes = processes != null ? processes : new ArrayList<>();
     }
 
-    public void update(int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv) {
+    public void update(int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv, List<ServerProcessInfo> processes) {
         this.cpuPercent = cpuPercent;
         this.ramUsed = ramUsed;
         this.ramTotal = ramTotal;
@@ -50,6 +56,7 @@ public class ServerInfo {
         this.recv = recv;
         this.dsent = dsent;
         this.drecv = drecv;
+        this.processes = processes != null ? processes : new ArrayList<>();
 
         // boottime nur setzen, wenn noch nicht gesetzt (also null oder leer)
         if (this.boottime == null || this.boottime.isEmpty()) {
@@ -73,6 +80,7 @@ public class ServerInfo {
     public String getRecv() { return recv; }
     public String getDsend() { return dsent; }
     public String getDrecv() { return drecv; }
+    public List<ServerProcessInfo> getProcesses() { return processes; }
     
     public static String berechneUptime(String boottimeStr) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");

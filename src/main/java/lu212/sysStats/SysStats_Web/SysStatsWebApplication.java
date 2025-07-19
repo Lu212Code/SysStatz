@@ -6,10 +6,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.server.ConfigurableWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import com.github.lalyos.jfiglet.FigletFont;
 
+import lu212.sysStats.General.AppReloader;
 import lu212.sysStats.StatsServer.Server;
 
 @SpringBootApplication
@@ -32,7 +34,9 @@ public class SysStatsWebApplication {
 		System.out.println("Starte SysStats Webserver...");
 		try {
 			System.out.println("Webserver wird auf Port " + webserverport + " gestartet.");
-		SpringApplication.run(SysStatsWebApplication.class, args);
+			SpringApplication.run(SysStatsWebApplication.class, args);
+			//ConfigurableApplicationContext ctx = SpringApplication.run(SysStatsWebApplication.class, args);
+	        //AppReloader.setContext(ctx, args);
 		} catch (Exception e) {
 			System.err.println("Webserver konnte nicht gestartet werden:");
 			e.printStackTrace();

@@ -143,15 +143,34 @@
         </div>
     </div>
 	
-	<div class="charts-container">
-	<form th:action="@{/command}" method="post" autocomplete="off" spellcheck="false">
-	    <input type="hidden" name="serverName" th:value="${server.name}" />
-	    <input type="text" name="command" placeholder="Befehl eingeben" required />
-	    <button type="submit">Senden</button>
-	</form>
-	</div>
+
+	
+	<h2>Top Prozesse</h2>
+	    <table style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+	        <thead>
+	            <tr style="background-color:#2a2f42; color:#fff;">
+	                <th style="padding: 0.5rem; border: 1px solid #444;">PID</th>
+	                <th style="padding: 0.5rem; border: 1px solid #444;">Name</th>
+	                <th style="padding: 0.5rem; border: 1px solid #444;">CPU (%)</th>
+	                <th style="padding: 0.5rem; border: 1px solid #444;">RAM (MB)</th>
+	            </tr>
+	        </thead>
+	        <tbody>
+	            <tr th:each="proc : ${server.processes}">
+	                <td style="padding: 0.5rem; border: 1px solid #555;" th:text="${proc.pid}">PID</td>
+	                <td style="padding: 0.5rem; border: 1px solid #555;" th:text="${proc.name}">Name</td>
+	                <td style="padding: 0.5rem; border: 1px solid #555;" th:text="${#numbers.formatDecimal(proc.cpu, 1, 2)}">CPU</td>
+	                <td style="padding: 0.5rem; border: 1px solid #555;" th:text="${proc.ram}">RAM</td>
+	            </tr>
+	            <tr th:if="${#lists.isEmpty(server.processes)}">
+	                <td colspan="4" style="text-align:center; padding:1rem; color:#aaa;">Keine Prozessdaten verfügbar</td>
+	            </tr>
+	        </tbody>
+	    </table>
+
 
 </section>
+
 
 <script th:inline="javascript">
     const serverName = /*[[${server.name}]]*/ "";
