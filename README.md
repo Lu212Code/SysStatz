@@ -2,8 +2,6 @@
 
 **SysStatz** ist ein leichtgewichtiges plattformübergreifendes Monitoring-Tool zur Anzeige der Systemauslastung von Servern (CPU, RAM, Festplatte, Netzwerk etc.) – optimiert für einfache Integration, Echtzeit-Visualisierung und mobile Nutzung.
 
-![SysStatz Screenshot](docs/screenshot.png)
-
 ---
 
 ## 🔍 Features
@@ -85,7 +83,7 @@ Wenn der Grenzwert überschritten wird, wird eine Mail verschickt (SMTP-Konfigur
 ## 🧠 Architektur
 
 ```text
-[Client(s)] → [Webserver (Spring Boot)] → [Datenbank (optional)] → [Webinterface / API]
+[Client(s)] → [Webserver (Spring Boot)] → [Webinterface / API]
 ```
 
 Kommunikation erfolgt über ein leichtgewichtiges Protokoll via TCP.
@@ -101,25 +99,3 @@ MIT License – frei zur Nutzung, Modifikation und Verbreitung.
 ## 🤝 Mitwirken
 
 Pull Requests sind willkommen! Für größere Änderungen bitte zuerst ein Issue eröffnen.
-
----
-
-## 🧪 ToDo / Roadmap
-
-- [ ] Login-System mit Benutzerrechten
-- [ ] Integration von Docker-Container-Monitoring
-- [ ] Verbesserte Diagramme & Verlauf
-- [ ] Automatische Client-Updates
-- [ ] MQTT-Unterstützung
-
----
-
-## 📷 Screenshots
-
-| Webinterface (Darkmode) | Android App |
-|-------------------------|-------------|
-| ![](docs/web.png)       | ![](docs/android.png) |
-
----
-
-> 📫 Bei Fragen oder Feedback: [kontakt@example.com](mailto:kontakt@example.com)
