@@ -25,6 +25,7 @@
             width: 300px;
         }
 
+        .login-box input[type="text"],
         .login-box input[type="password"],
         .login-box input[type="checkbox"],
         .login-box button {
@@ -74,19 +75,13 @@
         <img src="/img/logo.png" alt="SysStatz Logo" style="height: 5em;">
         <p>Serverüberwachung einfach gemacht</p>
         <h2>Login</h2>
-        <form method="post" action="/login" onsubmit="handleLogin(event)">
+        <form method="post" action="/login">
+            <input type="text" name="username" placeholder="Benutzername" required />
             <input type="password" name="password" placeholder="Passwort eingeben" required />
             <button type="submit">Einloggen</button>
         </form>
         <p th:if="${error}" th:text="${error}" style="color:red;"></p>
-        <p>Das Passwort kannst du in der Konfiguration des Servers einstellen.</p>
+        <p>Gib deinen Benutzer und das zugehörige Passwort ein.</p>
     </div>
-
-    <script>
-        function handleLogin(event) {
-            const stayLoggedIn = document.getElementById('stayLoggedIn').checked;
-            // sonst wird das Formular ganz normal abgeschickt
-        }
-    </script>
 </body>
 </html>

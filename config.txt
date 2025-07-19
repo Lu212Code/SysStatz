@@ -1,5 +1,5 @@
 webPort=8083
 statsPort=12345
 password=LdDKvB152
-theme=copper
+theme=fresh_green
 updateRate=null

@@ -21,14 +21,17 @@ public class LoginController {
  }
  
  @PostMapping("/login")
- public String handleLogin(@RequestParam String password, HttpSession session) {
-     if (AuthService.checkPassword(password)) {
-         session.setAttribute("loggedIn", true);
+ public String handleLogin(@RequestParam String username,
+                           @RequestParam String password,
+                           HttpSession session) {
+     if (AuthService.authenticate(username, password, session)) {
          return "redirect:/dashboard";
      } else {
          return "redirect:/login?error=true";
      }
  }
+
+
 
 
  @GetMapping("/dashboard")

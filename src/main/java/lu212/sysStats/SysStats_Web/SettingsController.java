@@ -4,6 +4,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpSession;
+import lu212.sysStats.General.UserStore;
+
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -15,9 +18,12 @@ public class SettingsController {
 
     // GET /settings: Seite mit geladenen Einstellungen anzeigen
     @GetMapping("/settings")
-    public String settingsPage(Model model) {
+    public String settingsPage(HttpSession session, Model model) {
         Config config = loadConfig();
         model.addAttribute("config", config);
+        
+        model.addAttribute("users", UserStore.getAll());
+        model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
         
    	 	String theme = SysStatsWebApplication.theme;
    	 	model.addAttribute("theme", theme);

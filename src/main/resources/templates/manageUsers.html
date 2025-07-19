@@ -2,10 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>SysStatz - Einstellungen</title>
+    <title>SysStatz - Benutzerverwaltung</title>
     <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+
     <style>
-        /* Allgemeines Styling (deins) */
         input[type="text"], input[type="password"], select {
             padding: 8px 12px;
             font-size: 1rem;
@@ -97,7 +97,7 @@
 <header>
     <h1>
         <img src="/img/logo.png" alt="SysStatz Logo" style="height: 3em; vertical-align: middle; margin-right: 5px;">
-        SysStatz - Einstellungen
+        SysStatz - Benutzerverwaltung
     </h1>
 </header>
 
@@ -105,50 +105,47 @@
     <a th:href="@{/dashboard}">
         <button>Dashboard</button>
     </a>
+    <a th:href="@{/settings}">
+        <button>Einstellungen</button>
+    </a>
 </nav>
 
-<!-- Abschnitt: Allgemeine Einstellungen -->
 <section>
-    <button class="collapsible">⚙️ Allgemeine Einstellungen</button>
-    <div class="content">
-        <form th:action="@{/settings/save}" method="post">
-            <p>Webserver Port: <input type="text" name="webPort" th:value="${config.webPort}"></p>
-            <p>Statsserver Port: <input type="text" name="statsPort" th:value="${config.statsPort}"></p>
-            <p>Website Passwort: <input type="text" name="password" th:value="${config.password}"></p>
-            <p>Website Theme:
-                <select name="theme">
-                    <option th:selected="${config.theme == 'default'}" value="default">Default</option>
-                    <option th:selected="${config.theme == 'copper'}" value="copper">Copper</option>
-                    <option th:selected="${config.theme == 'fresh_green'}" value="fresh_green">Fresh Green</option>
-                    <option th:selected="${config.theme == 'neon'}" value="neon">Neon</option>
-                </select>
-            </p>
-            <button type="submit">Speichern</button>
+        <form method="post" th:action="@{/admin/createUser}">
+            <h3>Neuen Benutzer anlegen</h3>
+            <p>Benutzername: <input type="text" name="username" required /></p>
+            <p>Passwort: <input type="password" name="password" required /></p>
+            <p><label><input type="checkbox" name="isAdmin" /> Admin</label></p>
+            <button type="submit">Erstellen</button>
         </form>
-    </div>
-</section>
 
-<!-- Abschnitt: Benutzerverwaltung (Admin only) -->
-<section th:if="${isAdmin}">
-        <a th:href="@{/admin/manageUsers}">
-        <button>User-Management</button>
-    </a>
+        <h3>Bestehende Benutzer</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Benutzername</th>
+                <th>Rolle</th>
+                <th>Aktionen</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user : ${users}">
+                <td th:text="${user.username}"></td>
+                <td th:text="${user.admin ? 'Admin' : 'Normal'}"></td>
+                <td>
+                    <form method="post" th:action="@{/admin/deleteUser}" style="display:inline-block;">
+                        <input type="hidden" name="username" th:value="${user.username}" />
+                        <button type="submit" onclick="return confirm('Benutzer wirklich löschen?')">Löschen</button>
+                    </form>
+                    <form method="post" th:action="@{/admin/toggleRole}" style="display:inline-block; margin-left:5px;">
+                        <input type="hidden" name="username" th:value="${user.username}" />
+                        <button type="submit">Rolle ändern</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
 </section>
-
-<script>
-    const collapsibles = document.querySelectorAll(".collapsible");
-    collapsibles.forEach(button => {
-        button.addEventListener("click", () => {
-            button.classList.toggle("active");
-            const content = button.nextElementSibling;
-            if (content.style.display === "block") {
-                content.style.display = "none";
-            } else {
-                content.style.display = "block";
-            }
-        });
-    });
-</script>
 
 </body>
 </html>

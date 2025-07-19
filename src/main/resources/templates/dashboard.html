@@ -99,10 +99,10 @@ async function refreshData() {
 		        div.innerHTML = `
 		            <h2>${server.name}</h2>
 					<p>STATUS: ${server.status}</p>
-		            <p>CPU: <img src="/img/cpu.png" alt="CPU Icon" style="height: 1em;">  ${server.cpuPercent}%</p>
-					<p>RAM: <img src="/img/ram.png" alt="RAM Icon" style="height: 1em;"> ${format3(server.ramUsed)} Gb / ${format3(server.ramTotal)} Gb</p>
-		            <p>STORAGE: <img src="/img/ssd.png" alt="SSD Icon" style="height: 1em;">  ${server.storageUsed} Gb / ${server.storageTotal} Gb</p>
-					<p>NETWORK: <img src="/img/network.png" alt="Logs Icon" style="height: 1em;"> ↑ ${format3(server.dsend)} ↓ ${format3(server.drecv)}</p>
+		            <p><img src="/img/cpu.png" alt="CPU Icon" style="height: 1em;"> CPU: ${server.cpuPercent}%</p>
+					<p><img src="/img/ram.png" alt="RAM Icon" style="height: 1em;"> RAM: ${format3(server.ramUsed)} Gb / ${format3(server.ramTotal)} Gb</p>
+		            <p><img src="/img/ssd.png" alt="SSD Icon" style="height: 1em;"> STORAGE:  ${server.storageUsed} Gb / ${server.storageTotal} Gb</p>
+					<p><img src="/img/network.png" alt="Logs Icon" style="height: 1em;"> NETWORK: ↑ ${format3(server.dsend)} ↓ ${format3(server.drecv)}</p>
 		            <a href="/server/${encodeURIComponent(server.name)}">
 		                <button>Details anzeigen</button>
 		            </a>

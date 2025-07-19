@@ -121,9 +121,9 @@
 <section>
     <div class="charts-container">
         <div class="charts-container">
-        <p><strong>CPU:</strong> <span id="cpuText">-</span> %</p>
-        <p><strong>RAM:</strong> <span id="ramText">-</span> GB</p>
-        <p><strong>Storage:</strong> <span id="storageText">-</span> GB</p>
+        <p><img src="/img/cpu.png" alt="CPU Icon" style="height: 1em; margin-right: 0.5rem;"> <strong>CPU:</strong> <span id="cpuText">-</span> %</p>
+        <p><img src="/img/ram.png" alt="RAM Icon" style="height: 1em; margin-right: 0.5rem;"> <strong>RAM:</strong> <span id="ramText">-</span> MB</p>
+        <p><img src="/img/ssd.png" alt="SSD Icon" style="height: 1em; margin-right: 0.5rem;"> <strong>Storage:</strong> <span id="storageText">-</span> GB</p>
         </div>
         <div class="charts-container">
 		<p><strong>Boot Zeit:</strong> <span th:text="${server.boottime}">-</span></p>
@@ -151,8 +151,8 @@
 	            <tr style="background-color:#2a2f42; color:#fff;">
 	                <th style="padding: 0.5rem; border: 1px solid #444;">PID</th>
 	                <th style="padding: 0.5rem; border: 1px solid #444;">Name</th>
-	                <th style="padding: 0.5rem; border: 1px solid #444;">CPU (%)</th>
-	                <th style="padding: 0.5rem; border: 1px solid #444;">RAM (MB)</th>
+	                <th style="padding: 0.5rem; border: 1px solid #444;"><img src="/img/cpu.png" alt="CPU Icon" style="height: 1em;">CPU (%)</th>
+	                <th style="padding: 0.5rem; border: 1px solid #444;"><img src="/img/ram.png" alt="RAM Icon" style="height: 1em;">RAM (MB)</th>
 	            </tr>
 	        </thead>
 	        <tbody>
