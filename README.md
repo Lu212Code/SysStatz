@@ -46,10 +46,9 @@ Konfiguration erfolgt automatisch beim ersten Start (Clientname, Server-IP, Inte
 Die Android-App zeigt die aktuellen Werte mobil an. Funktionen:
 
 - Anzeige der aktuellen Auslastung
-- Einfaches Umschalten zwischen "Home" und "Riegen Wecker"-Modus (Rutenfest-Modus)
 - Automatische Verbindung zur letzten bekannten Serveradresse
 
-📦 **Download APK**: [Releases](https://github.com/DEIN-NAME/sysstatz/releases)
+📦 **Download APK**: [Releases](https://github.com/Lu212Code/sysstatz/releases)
 
 ---
 
@@ -57,11 +56,7 @@ Die Android-App zeigt die aktuellen Werte mobil an. Funktionen:
 
 ### Server
 
-In der `application.properties`:
-
-```properties
-server.port=8080
-```
+Auf der Weboberfläche unter Einstellungen.
 
 ### Client
 
