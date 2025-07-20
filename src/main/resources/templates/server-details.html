@@ -143,6 +143,11 @@
         </div>
     </div>
 	
+	<div class="charts-container" style="flex-direction: column;">
+	    <div class="chart-wrapper" style="max-width: none;">
+	        <canvas id="combinedLineChart" aria-label="Verlauf CPU, RAM, Storage" role="img" style="height: 300px;"></canvas>
+	    </div>
+	</div>
 
 	
 	<h2>Top Prozesse</h2>
@@ -248,6 +253,7 @@
     });
 
     let storageChart;
+	let combinedChart;
 
     async function updateData() {
         try {
@@ -310,6 +316,96 @@
         } catch (e) {
             console.error("Fehler beim Laden der Serverdaten:", e);
         }
+		
+		// Verlauf laden
+		try {
+		    const historyRes = await fetch(`/api/server/${encodeURIComponent(serverName)}/history`);
+		    if (!historyRes.ok) throw new Error("Fehler beim Laden der Verlaufsdaten");
+		    const history = await historyRes.json();
+
+		    const timestamps = history.map(entry => new Date(entry.timestamp).toLocaleTimeString());
+		    const cpuHistory = history.map(entry => entry.cpuPercent);
+			const ramHistory = history.map(entry => entry.ramUsed / 1024);
+		    const diskHistory = history.map(entry => entry.diskPercent);
+
+		    if (!combinedChart) {
+		        const ctx = document.getElementById("combinedLineChart").getContext("2d");
+		        combinedChart = new Chart(ctx, {
+		            type: 'line',
+		            data: {
+		                labels: timestamps,
+		                datasets: [
+		                    {
+		                        label: "CPU (%)",
+		                        data: cpuHistory,
+								yAxisID: 'yCPU',
+		                        borderColor: "rgba(255,99,132,1)",
+		                        backgroundColor: "rgba(255,99,132,0.2)",
+		                        fill: false,
+		                        tension: 0.3
+		                    },
+		                    {
+		                        label: "RAM (GB)",
+		                        data: ramHistory,
+								yAxisID: 'yRAM',
+		                        borderColor: "rgba(54,162,235,1)",
+		                        backgroundColor: "rgba(54,162,235,0.2)",
+		                        fill: false,
+		                        tension: 0.3
+		                    },
+		                    {
+		                        label: "Speicher (%)",
+		                        data: diskHistory,
+								yAxisID: 'yDisk',
+		                        borderColor: "rgba(255,206,86,1)",
+		                        backgroundColor: "rgba(255,206,86,0.2)",
+		                        fill: false,
+		                        tension: 0.3
+		                    }
+		                ]
+		            },
+		            options: {
+		                responsive: true,
+		                maintainAspectRatio: false,
+						scales: {
+						        yCPU: {
+						            type: 'linear',
+						            position: 'left',
+						            beginAtZero: true,
+						            max: 100,
+						            title: { display: true, text: 'CPU (%)' }
+						        },
+						        yRAM: {
+						            type: 'linear',
+						            position: 'right',
+						            beginAtZero: true,
+						            suggestedMax: 32, // oder dynamisch setzen je nach RAM
+						            title: { display: true, text: 'RAM (GB)' }
+						        },
+						        yDisk: {
+						            type: 'linear',
+						            position: 'right',
+						            display: false
+						        }
+						    },
+		                plugins: {
+		                    legend: { labels: { font: { size: 14 } } }
+		                }
+		            }
+		        });
+		    } else {
+		        combinedChart.data.labels = timestamps;
+		        combinedChart.data.datasets[0].data = cpuHistory;
+		        combinedChart.data.datasets[1].data = ramHistory;
+		        combinedChart.data.datasets[2].data = diskHistory;
+		        combinedChart.update();
+		    }
+
+		} catch (e) {
+		    console.error("Fehler beim Laden des Verlaufs:", e);
+		}
+
+		
     }
 
     updateData();

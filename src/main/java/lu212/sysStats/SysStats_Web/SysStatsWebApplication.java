@@ -6,12 +6,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.server.ConfigurableWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-
 import com.github.lalyos.jfiglet.FigletFont;
-
-import lu212.sysStats.General.AppReloader;
 import lu212.sysStats.StatsServer.Server;
 
 @SpringBootApplication

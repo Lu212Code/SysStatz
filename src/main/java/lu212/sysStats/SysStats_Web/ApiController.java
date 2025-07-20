@@ -43,4 +43,13 @@ public class ApiController {
             "features", List.of("Monitoring", "API", "Live-Auslastung")
         );
     }
+    
+    @GetMapping("/api/server/{name}/history")
+    public List<ServerHistoryEntry> getServerHistory(@PathVariable String name) {
+        return ServerStats.getAllServers().stream()
+                .filter(s -> s.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .map(ServerInfo::getHistory)
+                .orElse(List.of());
+    } 
 }

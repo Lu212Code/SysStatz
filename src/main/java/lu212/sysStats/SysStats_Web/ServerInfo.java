@@ -5,10 +5,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Iterator;
 
 import lu212.sysStats.StatsServer.Server.ServerProcessInfo;
 
 public class ServerInfo {
+	
+	private final List<ServerHistoryEntry> history = new ArrayList<>();
+	
     private final String name;
     private int cpuPercent;
     private double ramUsed;
@@ -62,6 +66,27 @@ public class ServerInfo {
         if (this.boottime == null || this.boottime.isEmpty()) {
             this.boottime = boottime;
         }
+        
+     // Neue Verlaufsdaten hinzufügen
+        history.add(new ServerHistoryEntry(
+            LocalDateTime.now(),
+            cpuPercent,
+            ramUsed,
+            diskPercent,
+            dsent,
+            drecv
+        ));
+
+        // 7 Tage alte Daten entfernen
+        LocalDateTime eineWocheZurueck = LocalDateTime.now().minusDays(7);
+        Iterator<ServerHistoryEntry> iterator = history.iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().getTimestamp().isBefore(eineWocheZurueck)) {
+                iterator.remove();
+            }
+        }
+
+        
     }
 
 
@@ -81,6 +106,8 @@ public class ServerInfo {
     public String getDsend() { return dsent; }
     public String getDrecv() { return drecv; }
     public List<ServerProcessInfo> getProcesses() { return processes; }
+    public List<ServerHistoryEntry> getHistory() { return history; }
+
     
     public static String berechneUptime(String boottimeStr) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
@@ -96,5 +123,4 @@ public class ServerInfo {
 
         return String.format("%d Tage, %02d:%02d:%02d", tage, stunden, minuten, sekunden);
     }
-    
 }

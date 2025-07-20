@@ -1,9 +1,5 @@
 webPort=8080
 statsPort=12345
-<<<<<<< HEAD
 password=LdDKvB152
 theme=fresh_green
-=======
-theme=copper
->>>>>>> 99e5cbc822240e073a9394f2d56636320319d69a
 updateRate=null
