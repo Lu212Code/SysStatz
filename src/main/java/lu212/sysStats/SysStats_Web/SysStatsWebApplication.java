@@ -15,7 +15,6 @@ public class SysStatsWebApplication {
 
 	public static String webserverport = "8080";
 	public static String statsserverport;
-	public static String webpasswort;
 	public static String theme;
 	
 	public static void main(String[] args) {
@@ -25,7 +24,7 @@ public class SysStatsWebApplication {
 		System.out.println("----------Config----------");
 		System.out.println("Webserver-Port: " + webserverport);
 		System.out.println("Statsserver-Port: " + statsserverport);
-		System.out.println("Website Passwort: " + webpasswort);
+		System.out.println("Website-Theme: " + theme);
 		System.out.println("----------Config----------");
 		System.out.println("Starte SysStats Webserver...");
 		try {
@@ -64,7 +63,6 @@ public class SysStatsWebApplication {
 		
 		webserverport = config.getWebServerPort();
 		statsserverport = config.getStatsServerPort();
-		webpasswort = config.getPassword();
 		theme = config.getTheme();
 	}
 

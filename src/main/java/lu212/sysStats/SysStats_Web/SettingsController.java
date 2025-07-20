@@ -50,9 +50,7 @@ public class SettingsController {
                         switch (parts[0]) {
                             case "webPort" -> config.setWebPort(parts[1]);
                             case "statsPort" -> config.setStatsPort(parts[1]);
-                            case "password" -> config.setPassword(parts[1]);
                             case "theme" -> config.setTheme(parts[1]);
-                            case "updateRate" -> config.setUpdateRate(parts[1]);
                         }
                     }
                 }
@@ -68,9 +66,7 @@ public class SettingsController {
         try (BufferedWriter writer = Files.newBufferedWriter(CONFIG_PATH)) {
             writer.write("webPort=" + config.getWebPort() + "\n");
             writer.write("statsPort=" + config.getStatsPort() + "\n");
-            writer.write("password=" + config.getPassword() + "\n");
             writer.write("theme=" + config.getTheme() + "\n");
-            writer.write("updateRate=" + config.getUpdateRate() + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }

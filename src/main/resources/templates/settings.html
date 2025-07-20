@@ -114,7 +114,6 @@
         <form th:action="@{/settings/save}" method="post">
             <p>Webserver Port: <input type="text" name="webPort" th:value="${config.webPort}"></p>
             <p>Statsserver Port: <input type="text" name="statsPort" th:value="${config.statsPort}"></p>
-            <p>Website Passwort: <input type="text" name="password" th:value="${config.password}"></p>
             <p>Website Theme:
                 <select name="theme">
                     <option th:selected="${config.theme == 'default'}" value="default">Default</option>

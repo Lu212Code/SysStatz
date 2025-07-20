@@ -11,9 +11,7 @@ public class ConfigManager {
     // Variablen für die Konfiguration
     private String webServerPort;
     private String statsServerPort;
-    private String password;
     private String theme;
-    private String updateRate;
 
     public ConfigManager() {
         try {
@@ -30,9 +28,7 @@ public class ConfigManager {
         List<String> defaultLines = List.of(
             "webPort=8080",
             "statsPort=12345",
-            "password=1",
-            "theme=default",
-            "updateRate="
+            "theme=default"
         );
         Files.write(CONFIG_PATH, defaultLines);
     }
@@ -45,9 +41,7 @@ public class ConfigManager {
                 switch (parts[0]) {
                     case "webPort" -> webServerPort = parts[1];
                     case "statsPort" -> statsServerPort = parts[1];
-                    case "password" -> password = parts[1];
                     case "theme" -> theme = parts[1];
-                    case "updateRate" -> updateRate = parts[1];
                 }
             }
         }
@@ -62,16 +56,8 @@ public class ConfigManager {
     public String getStatsServerPort() {
         return statsServerPort;
     }
-
-    public String getPassword() {
-        return password;
-    }
     
     public String getTheme() {
     	return theme + ".css";
-    }
-
-    public String getUpdateRate() {
-        return updateRate;
     }
 }
