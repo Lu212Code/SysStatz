@@ -2,6 +2,8 @@
 
 **SysStatz** ist ein leichtgewichtiges plattformübergreifendes Monitoring-Tool zur Anzeige der Systemauslastung von Servern (CPU, RAM, Festplatte, Netzwerk etc.) – optimiert für einfache Integration, Echtzeit-Visualisierung und mobile Nutzung.
 
+Website: sysstatz.de
+
 ---
 
 ## 🔍 Features
