@@ -4,6 +4,7 @@ public class Config {
     private String webPort;
     private String statsPort;
     private String theme;
+    private String ollamaserverip;
 
     // Getter und Setter
     public String getWebPort() { return webPort; }
@@ -14,4 +15,7 @@ public class Config {
     
     public String getTheme() { return theme; }
     public void setTheme(String theme) { this.theme = theme; }
+    
+    public String getOllamaPort() { return ollamaserverip; }
+    public void setOllamaPort(String ollamaserverip) { this.ollamaserverip = ollamaserverip; }
 }

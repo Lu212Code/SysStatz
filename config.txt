@@ -1,3 +1,4 @@
 webPort=8080
 statsPort=12345
-theme=fresh_green
+theme=default
+ollamaserverip=default

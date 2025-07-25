@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 
+import lu212.sysStats.General.Logger;
 import lu212.sysStats.SysStats_Web.ServerStats;
 import lu212.sysStats.SysStats_Web.SysStatsWebApplication;
 
@@ -32,7 +33,8 @@ public class Server {
     private void start() throws IOException {
     	PORT = Integer.parseInt(SysStatsWebApplication.statsserverport);
         ServerSocket serverSocket = new ServerSocket(PORT);
-        System.out.println("Server läuft auf Port " + PORT);
+        Logger.info("StatsServer läuft auf Port " + PORT);
+        System.out.println("StatsServer läuft auf Port " + PORT);
         
         while (true) {
             Socket clientSocket = serverSocket.accept();
@@ -57,11 +59,8 @@ public class Server {
 
             ClientHandler handler = new ClientHandler(name, socket, in, out);
             clients.put(name, handler);
-            if(name.equals(configClientName)) {
-            	System.out.println("Controller/Config Client verbunden.");
-            } else {
-            System.out.println("Stats-Client '" + name + "' verbunden.");
-            }
+            	Logger.error("Stats-Client '" + name + "' verbunden.");
+            	System.out.println("Stats-Client '" + name + "' verbunden.");
 
             handler.listen();
 
@@ -76,6 +75,7 @@ public class Server {
         if (handler != null) {
             handler.send(message);
         } else {
+        	Logger.error("Client '" + clientName + "' nicht gefunden.");
             System.out.println("Client '" + clientName + "' nicht gefunden.");
         }
     }
@@ -98,6 +98,7 @@ public class Server {
             try {
                 String line;
                 while ((line = in.readLine()) != null) {
+                	Logger.info("Raw-Nachricht von " + name + ": " + line);
                     System.out.println("Raw-Nachricht von " + name + ": " + line);
 
                     if (line.startsWith("SERVER:")) {
@@ -114,13 +115,16 @@ public class Server {
                             buildLongs(wert);
                             
                         } else {
+                        	Logger.warning("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
                             send("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
                         }
                     } else {
+                    	Logger.info("SERVER: Nachricht empfangen: " + line);
                         send("SERVER: Nachricht empfangen: " + line);
                     }
                 }
             } catch (IOException e) {
+            	Logger.warning("Verbindung zu " + name + " verloren.");
                 System.out.println("Verbindung zu " + name + " verloren.");
             } finally {
                 disconnect();
@@ -145,13 +149,16 @@ public class Server {
                                 
                                 
                             } else {
+                            	Logger.warning("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
                                 send("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
                             }
                         } else {
+                        	Logger.info("SERVER: Nachricht empfangen: " + line);
                             send("SERVER: Nachricht empfangen: " + line);
                         }
                     }
                 } catch (IOException e) {
+                	Logger.warning("Verbindung zu " + name + " verloren.");
                     System.out.println("Verbindung zu " + name + " verloren.");
                 } finally {
                     disconnect();
@@ -170,6 +177,7 @@ public class Server {
             try {
                 clients.remove(name);
                 socket.close();
+                Logger.warning("Client '" + name + "' getrennt.");
                 System.out.println("Client '" + name + "' getrennt.");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -183,6 +191,7 @@ public class Server {
         // String in 3 Teile zerlegen
         String[] parts = werte.split(":");
         if (parts.length != 3) {
+        	Logger.warning("Ungültiges Format: " + werte);
             System.out.println("Ungültiges Format: " + werte);
             return;
         }
@@ -204,8 +213,10 @@ public class Server {
                 String newAuslastung = Auslastung.replace(",", ".");
                 double inDouble = Double.parseDouble(newAuslastung);
                 temp.cpu = (int) inDouble;
+                Logger.info("CPU:" + Server + ":" + temp.cpu);
                 System.out.println("CPU:" + Server + ":" + temp.cpu);
             } catch (Exception e) {
+            	Logger.warning("CPU konnte nicht gelesen werden: " + Auslastung);
                 System.err.println("CPU konnte nicht gelesen werden: " + Auslastung);
             }
         }
@@ -228,9 +239,11 @@ public class Server {
                     ServerProcessInfo pInfo = new ServerProcessInfo(pid, name, cpu, ramMB);
                     temp.processes.add(pInfo);
                 } else {
+                	Logger.warning("Ungültige PROC-Daten empfangen: " + Auslastung);
                     System.err.println("Ungültige PROC-Daten empfangen: " + Auslastung);
                 }
             } catch (Exception e) {
+            	Logger.warning("Fehler beim Parsen von PROC-Daten: " + Auslastung);
                 System.err.println("Fehler beim Parsen von PROC-Daten: " + Auslastung);
                 e.printStackTrace();
             }
@@ -238,11 +251,13 @@ public class Server {
         
         if (bauteil.equalsIgnoreCase("DISKUSAGE")) {
             temp.disk = Auslastung;
+            Logger.info("DISK:" + Server + ":" + Auslastung);
             System.out.println("DISK:" + Server + ":" + Auslastung);
         }
 
         if (bauteil.equalsIgnoreCase("RAM")) {
             temp.ram = Auslastung;
+            Logger.info("RAM:" + Server + ":" + Auslastung);
             System.out.println("RAM:" + Server + ":" + Auslastung);
         }
         
@@ -283,25 +298,13 @@ public class Server {
                 ServerStats.update(Server, temp.cpu, ramUsed, ramTotal, 0, diskUsed, diskTotal, "Online", formatiert, temp.sent, temp.recv, temp.dsent, temp.drecv, temp.processes);
 
             } catch (Exception e) {
+            	Logger.warning("RAM- oder Disk-Daten konnten nicht verarbeitet werden: RAM=" + temp.ram + ", DISK=" + temp.disk);
                 System.err.println("RAM- oder Disk-Daten konnten nicht verarbeitet werden: RAM=" + temp.ram + ", DISK=" + temp.disk);
             }
 
             // Daten zurücksetzen für den nächsten Zyklus
             tempServerData.remove(Server);
         }
-
-        // Sonderfall: Konfigurations-Client
-        if (Server.equals(configClientName)) {
-            handleConfigClient(bauteil, Auslastung);
-        }
-    }
-    
-    private static void handleConfigClient(String configType, String wert) {
-    	if(configType.equalsIgnoreCase("stop")) {
-    		System.out.println("Server wird von ConfigClient heruntergefahren.");
-    		System.exit(0);
-    	}
-    	
     }
     
     private static class ServerTempInfo {
@@ -340,6 +343,7 @@ public class Server {
         // Beispiel: "PROC 1234 java 12.3 1.25"
         String[] parts = werte.split(" ");
         if (parts.length != 5) {
+        	Logger.warning("Ungültige PROC-Zeile: " + werte);
             System.out.println("Ungültige PROC-Zeile: " + werte);
             return;
         }
@@ -358,6 +362,7 @@ public class Server {
             // ServerStats.addProcessInfo(serverName, pid, name, cpu, ram);
 
         } catch (Exception e) {
+        	Logger.warning("Fehler beim Parsen von PROC-Zeile: " + werte);
             System.err.println("Fehler beim Parsen von PROC-Zeile: " + werte);
         }
     }

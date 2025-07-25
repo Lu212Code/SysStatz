@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF-Auswertung</title>
+    <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+	
+	<style>
+		/* Stil für die Server-Auswahlliste */
+		select[name="servers"] {
+		    background-color: #2c2f48;
+		    color: #ddd;
+		    border: 1px solid #4a90e2;
+		    border-radius: 6px;
+		    padding: 8px;
+		    width: 250px;
+		    font-size: 1rem;
+		    margin: 10px 0;
+		}
+
+		/* Stil für die Checkboxen und Labels */
+		input[type="checkbox"] {
+		    accent-color: #4a90e2; /* Moderne Browser */
+		    width: 16px;
+		    height: 16px;
+		    vertical-align: middle;
+		    margin-right: 6px;
+		    cursor: pointer;
+		}
+
+		label {
+		    display: inline-flex;
+		    align-items: center;
+		    margin: 10px;
+		    font-size: 1rem;
+		    color: #ccc;
+		    cursor: pointer;
+		}
+
+		/* Optional: Highlight der Checkboxen beim Hover */
+		label:hover {
+		    color: #fff;
+		}
+		
+		button {
+			padding: 10px 20px;
+			background-color: #4a90e2;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			font-size: 1rem;
+			cursor: pointer;
+			transition: background-color 0.3s ease, transform 0.2s ease;
+			box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+			margin: 0.5rem 0;
+		}
+
+		button:hover {
+			background-color: #357bd8;
+			transform: translateY(-1px);
+		}
+
+		.button-link {
+		    display: inline-block;
+		    padding: 8px 16px;
+		    background-color: #007bff;
+		    color: white;
+		    text-decoration: none;
+		    border-radius: 4px;
+		    border: none;
+		    font-size: 14px;
+		}
+		.button-link:hover {
+		    background-color: #0056b3;
+		}
+	</style>
+	
+</head>
+<body>
+<header>
+    <h1>PDF-Auswertung erstellen</h1>
+</header>
+
+<nav>
+	<a th:href="@{/analyze}">
+	    <button>Zurück</button>
+	</a>
+</nav>
+
+<div class="form-section">
+    <form th:action="@{/generate-pdf}" method="post">
+        <div>
+            <label>Server:</label><br>
+            <select name="servers" multiple size="5" required>
+                <option th:each="server : ${servers}" th:value="${server}" th:text="${server}"></option>
+            </select>
+        </div>
+
+        <div>
+            <label><input type="checkbox" name="metrics" value="cpu" checked> CPU</label>
+            <label><input type="checkbox" name="metrics" value="ram" checked> RAM</label>
+            <label><input type="checkbox" name="metrics" value="disk" checked> Disk</label>
+        </div>
+
+        <button type="submit" class="button-login">PDF erstellen</button>
+    </form>
+</div>
+</body>
+</html>

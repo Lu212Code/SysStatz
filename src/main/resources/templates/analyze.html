@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <title>Datenanalyse – SysStatz</title>
+    <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+
+    <style>
+		h1 {
+		    text-align: center;
+		    margin-bottom: 2rem;
+		    color: #4a90e2; /* passend zum Header-Title */
+		    font-weight: 700;
+		}
+
+		form {
+		    max-width: 600px;
+		    margin: 1rem auto;
+		    background: #2c2f48; /* Dunkel, passend zu Server-Boxen */
+		    padding: 1.5rem;
+		    border-radius: 1rem;
+		    box-shadow: 0 5px 15px rgba(0,0,0,0.5); /* etwas stärkerer Schatten */
+		    color: #ddd;
+		    font-size: 1rem;
+		}
+
+		label {
+		    display: block;
+		    margin-bottom: 0.5rem;
+		    font-weight: 600;
+		    color: #7fbfff;
+		}
+
+		select, button {
+		    width: 100%;
+		    padding: 0.75rem 1rem;
+		    margin-top: 0.8rem;
+		    border: none; /* keine grauen Ränder */
+		    border-radius: 0.5rem;
+		    font-size: 1rem;
+		    background-color: #3a3e61; /* dunkler, dezenter Hintergrund */
+		    color: #ddd;
+		    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+		    transition: background-color 0.3s ease, transform 0.15s ease;
+		    cursor: pointer;
+		}
+
+		select:hover, select:focus {
+		    background-color: #4a90e2;
+		    color: white;
+		    outline: none;
+		    box-shadow: 0 0 8px #4a90e2;
+		}
+
+		button {
+			padding: 10px 20px;
+			background-color: #4a90e2;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			font-size: 1rem;
+			cursor: pointer;
+			transition: background-color 0.3s ease, transform 0.2s ease;
+			box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+			margin: 0.5rem 0;
+		}
+
+		button:hover:not(:disabled) {
+			background-color: #357bd8;
+			transform: translateY(-1px);
+		}
+
+		button:disabled {
+		    background-color: #607aad;
+		    cursor: not-allowed;
+		    box-shadow: none;
+		    transform: none;
+		}
+
+		/* Loader Container */
+		#loader {
+		    display: none;
+		    margin: 2rem auto;
+		    width: 80px;
+		    height: 80px;
+		    position: relative;
+		}
+
+		.circle {
+		    position: absolute;
+		    border: 5px solid;
+		    border-color: #4a90e2 transparent #4a90e2 transparent; /* passend zu Theme */
+		    border-radius: 50%;
+		    width: 80px;
+		    height: 80px;
+		    animation: pulse 1.5s cubic-bezier(0.66, 0, 0, 1) infinite;
+		    top: 0;
+		    left: 0;
+		}
+
+		.circle:nth-child(2) {
+		    width: 60px;
+		    height: 60px;
+		    top: 10px;
+		    left: 10px;
+		    animation-delay: 0.3s;
+		    border-color: #357bd8 transparent #357bd8 transparent;
+		}
+
+		.circle:nth-child(3) {
+		    width: 40px;
+		    height: 40px;
+		    top: 20px;
+		    left: 20px;
+		    animation-delay: 0.6s;
+		    border-color: #2c52a0 transparent #2c52a0 transparent;
+		}
+
+		@keyframes pulse {
+		    0% {
+		        transform: scale(0.8);
+		        opacity: 1;
+		    }
+		    100% {
+		        transform: scale(1.4);
+		        opacity: 0;
+		    }
+		}
+
+		#loaderText {
+		    text-align: center;
+		    font-weight: 600;
+		    font-size: 1.1rem;
+		    color: #4a90e2;
+		    margin-top: 10px;
+		    opacity: 0;
+		    transition: opacity 0.4s ease;
+		}
+
+		#loader.active #loaderText {
+		    opacity: 1;
+		}
+
+		/* Statistiken Liste */
+		ul {
+		    list-style: none;
+		    padding: 0;
+		    margin-top: 1rem;
+		    color: #ddd;
+		}
+
+		li {
+		    margin: 0.5rem 0;
+		    font-weight: 600;
+		}
+
+		/* Optional: Highlights für Prozentzahlen */
+		li:nth-child(1) { /* CPU */
+		    color: #f39c12;
+		}
+
+		li:nth-child(2) { /* RAM */
+		    color: #e67e22;
+		}
+
+		li:nth-child(3) { /* Disk */
+		    color: #27ae60;
+		}
+    </style>
+</head>
+
+<header>
+    <h1>
+		Serverdaten analysieren
+	</h1>
+</header>
+
+<nav>
+	<a th:href="@{/dashboard}">
+	    <button>Dashboard</button>
+	</a>
+	<a th:href="@{/pdf-export}">
+	    <button>Daten PDF erstellen</button>
+	</a>
+</nav>
+
+<body>
+	
+    <form id="serverForm" method="get" action="/analyze">
+        <label for="server">Server auswählen:</label>
+        <select name="server" id="server" required>
+            <option value="">-- Bitte wählen --</option>
+            <option th:each="server : ${servers}" th:value="${server}" th:text="${server}"></option>
+        </select>
+        <button type="submit" id="submitBtn">Daten laden</button>
+    </form>
+
+    <div id="loader">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+
+    <div th:if="${stats != null}">
+        <form id="aiForm" method="post" action="/analyze/ai" style="max-width: 600px; margin: 2rem auto;">
+            <h2 th:text="'Statistiken für ' + ${selectedServer}"></h2>
+            <ul>
+                <li th:text="'CPU – Min: ' + ${stats.cpuMin} + ' %, Max: ' + ${stats.cpuMax} + ' %, Ø: ' + ${stats.cpuAvg} + ' %'"></li>
+                <li th:text="'RAM – Min: ' + ${stats.ramMin} + ' %, Max: ' + ${stats.ramMax} + ' %, Ø: ' + ${stats.ramAvg} + ' %'"></li>
+                <li th:text="'Disk – Min: ' + ${stats.diskMin} + ' %, Max: ' + ${stats.diskMax} + ' %, Ø: ' + ${stats.diskAvg} + ' %'"></li>
+            </ul>
+            <input type="hidden" name="server" th:value="${selectedServer}" />
+            <button type="submit" id="aiBtn">Mit KI analysieren</button>
+        </form>
+    </div>
+
+    <div id="loader">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div id="loaderText">Bitte warten, die KI analysiert die Daten…</div>
+    </div>
+
+    <script>
+        const serverForm = document.getElementById('serverForm');
+        const aiForm = document.getElementById('aiForm');
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loaderText');
+        const submitBtn = document.getElementById('submitBtn');
+        const aiBtn = document.getElementById('aiBtn');
+
+        if (serverForm) {
+            serverForm.addEventListener('submit', (e) => {
+                loader.style.display = 'block';
+                loader.classList.add('active');
+                submitBtn.disabled = true;
+            });
+        }
+
+        if (aiForm) {
+            aiForm.addEventListener('submit', function (e) {
+                e.preventDefault(); // Seite nicht sofort neu laden
+
+                // Animation zeigen
+                loader.style.display = 'block';
+                loader.classList.add('active');
+                aiBtn.disabled = true;
+
+                // Warte kurz, damit Animation sichtbar ist
+                setTimeout(() => {
+                    aiForm.submit(); // Jetzt tatsächlich abschicken
+                }, 600); // 0.6 Sekunden für optische Wirkung
+            });
+        }
+    </script>
+</body>
+</html>

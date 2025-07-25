@@ -7,18 +7,27 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.server.ConfigurableWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
 import com.github.lalyos.jfiglet.FigletFont;
+
+import lu212.sysStats.General.Logger;
 import lu212.sysStats.StatsServer.Server;
 
 @SpringBootApplication
+@EnableScheduling
 public class SysStatsWebApplication {
 
 	public static String webserverport = "8080";
 	public static String statsserverport;
 	public static String theme;
+	public static String ollamaIP;
 	
 	public static void main(String[] args) {
+		Logger.start();
+		Logger.info("Starte SysStatz...");
 		System.out.println("Starte SysStats...");
+		Logger.info("Lese Konfiguration aus...");
 		System.out.println("Lese Konfiguration aus...");
 		config();
 		System.out.println("----------Config----------");
@@ -26,17 +35,19 @@ public class SysStatsWebApplication {
 		System.out.println("Statsserver-Port: " + statsserverport);
 		System.out.println("Website-Theme: " + theme);
 		System.out.println("----------Config----------");
+		Logger.info("Starte SysStats Webserver...");
 		System.out.println("Starte SysStats Webserver...");
 		try {
+			Logger.info("Webserver wird auf Port " + webserverport + " gestartet.");
 			System.out.println("Webserver wird auf Port " + webserverport + " gestartet.");
 			SpringApplication.run(SysStatsWebApplication.class, args);
-			//ConfigurableApplicationContext ctx = SpringApplication.run(SysStatsWebApplication.class, args);
-	        //AppReloader.setContext(ctx, args);
 		} catch (Exception e) {
+			Logger.error("Webserver konnte nicht gestartet werden:");
 			System.err.println("Webserver konnte nicht gestartet werden:");
 			e.printStackTrace();
 			System.exit(0);
 		}
+		Logger.info("Starte StatsServer...");
 		System.out.println("Starte StatsServer...");
 		
 		String SysStatzLogo = null;
@@ -52,6 +63,7 @@ public class SysStatsWebApplication {
 		try {
 			Server.main(null);
 		} catch (IOException e) {
+			Logger.error("StatsServer konnte nicht gestartet werden:");
 			System.err.println("StatsServer konnte nicht gestartet werden:");
 			e.printStackTrace();
 			System.exit(0);
@@ -64,6 +76,7 @@ public class SysStatsWebApplication {
 		webserverport = config.getWebServerPort();
 		statsserverport = config.getStatsServerPort();
 		theme = config.getTheme();
+		ollamaIP = config.getOllamaServerIP();
 	}
 
 	@Bean
@@ -73,6 +86,7 @@ public class SysStatsWebApplication {
 	            int port = Integer.parseInt(webserverport);
 	            factory.setPort(port);
 	        } catch (NumberFormatException | NullPointerException e) {
+	        	Logger.warning("⚠ Ungültiger Port: '" + webserverport + "' → Fallback auf 8080");
 	            System.err.println("⚠ Ungültiger Port: '" + webserverport + "' → Fallback auf 8080");
 	            factory.setPort(Integer.parseInt(webserverport));
 	        }

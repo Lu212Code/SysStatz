@@ -12,6 +12,7 @@ public class ConfigManager {
     private String webServerPort;
     private String statsServerPort;
     private String theme;
+    private String ollamaserverip;
 
     public ConfigManager() {
         try {
@@ -28,7 +29,8 @@ public class ConfigManager {
         List<String> defaultLines = List.of(
             "webPort=8080",
             "statsPort=12345",
-            "theme=default"
+            "theme=default",
+            "ollamaserverip=default"
         );
         Files.write(CONFIG_PATH, defaultLines);
     }
@@ -42,6 +44,7 @@ public class ConfigManager {
                     case "webPort" -> webServerPort = parts[1];
                     case "statsPort" -> statsServerPort = parts[1];
                     case "theme" -> theme = parts[1];
+                    case "ollamaserverip" -> ollamaserverip = parts[1];
                 }
             }
         }
@@ -59,5 +62,9 @@ public class ConfigManager {
     
     public String getTheme() {
     	return theme + ".css";
+    }
+    
+    public String getOllamaServerIP() {
+    	return ollamaserverip;
     }
 }

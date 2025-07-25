@@ -172,8 +172,55 @@
 	            </tr>
 	        </tbody>
 	    </table>
+		
+		
+		
+		<h2>Erweiterte Auswertung</h2>
 
+		<form id="advancedQueryForm" style="max-width: 600px; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.8rem;">
+		  
+		  <label for="filterType"><strong>Filter auswählen:</strong><br>
+		    Wählen Sie eine Art der Auswertung, z.B. wie oft ein Wert einen Grenzwert überschreitet, oder den Durchschnitt.
+		  </label>
+		  <select id="filterType" name="filterType" required>
+		    <option value="">-- Bitte wählen --</option>
+		    <option value="countAbove">Anzahl der Werte über einem Schwellenwert</option>
+		    <option value="average">Durchschnittswert über den Zeitraum</option>
+		    <option value="maxValue">Höchster Wert</option>
+		    <option value="minValue">Niedrigster Wert</option>
+		  </select>
 
+		  <label for="component"><strong>Komponente auswählen:</strong><br>
+		    Wählen Sie die Komponente, deren Werte ausgewertet werden sollen.
+		  </label>
+		  <select id="component" name="component" required>
+		    <option value="">-- Bitte wählen --</option>
+		    <option value="cpuPercent">CPU-Auslastung (%)</option>
+		    <option value="ramUsed">RAM-Verbrauch (MB)</option>
+		    <option value="diskPercent">Festplatten-Auslastung (%)</option>
+		  </select>
+
+		  <label for="threshold" id="thresholdLabel" style="display:none;">
+		    <strong>Schwellenwert eingeben:</strong><br>
+		    Geben Sie hier den Grenzwert ein, z.B. 80 (wird nur bei "Anzahl Werte über Schwellenwert" benötigt).
+		  </label>
+		  <input type="number" id="threshold" name="threshold" min="0" step="any" style="display:none;" placeholder="z.B. 80">
+
+		  <button type="submit" style="align-self: start; padding: 0.5rem 1rem;">Auswerten</button>
+		</form>
+
+		<div id="queryResult" style="margin-top: 1.5rem; font-size: 1.2rem; color: #4a90e2; min-height: 2rem;"></div>
+		
+
+		<h2>Warnschwellen festlegen</h2>
+		<form id="thresholdForm">
+		    <input type="number" name="cpu" placeholder="CPU max (%)" min="1" max="100" required>
+		    <input type="number" name="ram" placeholder="RAM max (%)" min="1" max="100" required>
+		    <input type="number" name="disk" placeholder="Disk max (%)" min="1" max="100" required>
+		    <input type="email" name="email" placeholder="E-Mail für Alarm" required>
+		    <button type="submit">Trigger speichern</button>
+		</form>
+		<p id="saveStatus" style="color: lightgreen;"></p>
 </section>
 
 
@@ -410,6 +457,104 @@
 
     updateData();
     setInterval(updateData, 5000);
+	
+	
+	document.getElementById("thresholdForm").addEventListener("submit", async function(event) {
+	    event.preventDefault();
+
+	    const form = event.target;
+		const data = {
+		    cpu: parseFloat(form.cpu.value),
+		    ram: parseFloat(form.ram.value),
+		    disk: parseFloat(form.disk.value),
+		    email: form.email.value
+		};
+
+	    try {
+			const res = await fetch(`/api/trigger/${encodeURIComponent(serverName)}`, {
+	            method: "POST",
+	            headers: { "Content-Type": "application/json" },
+	            body: JSON.stringify(data)
+	        });
+
+	        if (res.ok) {
+	            document.getElementById("saveStatus").textContent = "Trigger erfolgreich gespeichert.";
+	        } else {
+	            document.getElementById("saveStatus").textContent = "Fehler beim Speichern.";
+	        }
+	    } catch (err) {
+	        console.error("Trigger speichern fehlgeschlagen:", err);
+	        document.getElementById("saveStatus").textContent = "Netzwerkfehler.";
+	    }
+	});
+	
+	
+	
+	const advancedForm = document.getElementById("advancedQueryForm");
+	const thresholdInput = document.getElementById("threshold");
+	const thresholdLabel = document.getElementById("thresholdLabel");
+	const queryResult = document.getElementById("queryResult");
+
+	// Zeige nur für passenden Filter den Schwellenwert Input an
+	document.getElementById("filterType").addEventListener("change", (e) => {
+	  const val = e.target.value;
+	  if(val === "countAbove") {
+	    thresholdInput.style.display = "inline-block";
+	    thresholdLabel.style.display = "inline-block";
+	    thresholdInput.required = true;
+	  } else {
+	    thresholdInput.style.display = "none";
+	    thresholdLabel.style.display = "none";
+	    thresholdInput.required = false;
+	  }
+	});
+
+	// Funktion: Lädt Verlaufsdaten und führt die Abfrage aus
+	async function performQuery(filterType, component, threshold) {
+	  try {
+	    const historyRes = await fetch(`/api/server/${encodeURIComponent(serverName)}/history`);
+	    if (!historyRes.ok) throw new Error("Fehler beim Laden der Verlaufsdaten");
+	    const history = await historyRes.json();
+
+	    // Werte aus Verlauf extrahieren
+	    const values = history.map(entry => {
+	      if(component === "ramUsed") return entry.ramUsed / 1024; // RAM in GB (oder MB falls gewünscht)
+	      else return entry[component];
+	    });
+
+	    let resultText = "";
+
+	    if(filterType === "countAbove") {
+	      const count = values.filter(v => v > threshold).length;
+	      resultText = `Anzahl der Werte von ${component} über ${threshold}: ${count}`;
+	    } else if(filterType === "average") {
+	      const avg = values.reduce((a,b) => a+b, 0) / values.length;
+	      resultText = `Durchschnittlicher Wert von ${component}: ${avg.toFixed(2)}`;
+	    } else if(filterType === "maxValue") {
+	      const max = Math.max(...values);
+	      resultText = `Maximalwert von ${component}: ${max.toFixed(2)}`;
+	    } else if(filterType === "minValue") {
+	      const min = Math.min(...values);
+	      resultText = `Minimalwert von ${component}: ${min.toFixed(2)}`;
+	    } else {
+	      resultText = "Unbekannter Filtertyp.";
+	    }
+
+	    queryResult.textContent = resultText;
+	  } catch(e) {
+	    queryResult.textContent = "Fehler bei der Auswertung: " + e.message;
+	  }
+	}
+
+	advancedForm.addEventListener("submit", (e) => {
+	  e.preventDefault();
+	  const formData = new FormData(advancedForm);
+	  const filterType = formData.get("filterType");
+	  const component = formData.get("component");
+	  const threshold = parseFloat(formData.get("threshold"));
+
+	  performQuery(filterType, component, threshold);
+	});
 </script>
 </body>
 </html>

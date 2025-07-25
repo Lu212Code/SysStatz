@@ -109,11 +109,14 @@
 
 <!-- Abschnitt: Allgemeine Einstellungen -->
 <section>
-    <button class="collapsible">⚙️ Allgemeine Einstellungen</button>
+    <button class="collapsible">Allgemeine Einstellungen</button>
     <div class="content">
         <form th:action="@{/settings/save}" method="post">
+			
+			<section th:if="${isAdmin}">
             <p>Webserver Port: <input type="text" name="webPort" th:value="${config.webPort}"></p>
             <p>Statsserver Port: <input type="text" name="statsPort" th:value="${config.statsPort}"></p>
+			</section>
             <p>Website Theme:
                 <select name="theme">
                     <option th:selected="${config.theme == 'default'}" value="default">Default</option>

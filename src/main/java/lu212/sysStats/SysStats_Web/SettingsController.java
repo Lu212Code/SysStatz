@@ -4,7 +4,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import jakarta.servlet.http.HttpSession;
+import lu212.sysStats.General.Logger;
+import lu212.sysStats.General.ThresholdConfig;
 import lu212.sysStats.General.UserStore;
 
 import java.io.*;
@@ -15,6 +23,8 @@ import java.util.*;
 public class SettingsController {
 
     private static final Path CONFIG_PATH = Paths.get("config.txt");
+    private final Path triggerFile = Paths.get("trigger.json");
+    public record TriggerDisplayEntry(String server, ThresholdConfig config) {}
 
     // GET /settings: Seite mit geladenen Einstellungen anzeigen
     @GetMapping("/settings")
@@ -27,7 +37,7 @@ public class SettingsController {
         
    	 	String theme = SysStatsWebApplication.theme;
    	 	model.addAttribute("theme", theme);
-        
+
         return "settings"; // Thymeleaf-Template settings.html
     }
 
@@ -35,11 +45,13 @@ public class SettingsController {
     @PostMapping("/settings/save")
     public String saveSettings(@ModelAttribute Config config) {
         saveConfig(config);
+        Logger.info("Einstellungen wurden gespeichert.");
         return "redirect:/settings";
     }
 
     // Hilfsmethode zum Laden der config.txt
     private Config loadConfig() {
+    	Logger.info("Konfiguration wird geladen...");
         Config config = new Config();
         if (Files.exists(CONFIG_PATH)) {
             try {
@@ -56,6 +68,7 @@ public class SettingsController {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                Logger.error("Konfiguration konnte nicht geladen werden.");
             }
         }
         return config;
@@ -70,5 +83,5 @@ public class SettingsController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }    
 }

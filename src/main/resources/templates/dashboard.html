@@ -5,7 +5,6 @@
     <title>SysStatz - Dashboard</title>
     <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
 	<style>
-		
 		button {
 			padding: 10px 20px;
 			background-color: #4a90e2;
@@ -37,8 +36,6 @@
 		.button-link:hover {
 		    background-color: #0056b3;
 		}
-
-		
 	</style>
 </head>
 <body>
@@ -49,15 +46,22 @@
 	</h1>
 </header>
 
-<nav>
-	<a th:href="@{/settings}">
-	    <button> <img src="/img/settings.png" alt="Settings Icon" style="height: 1em; margin-right: 5px;"> Einstellungen</button>
-	</a>
-	<a th:href="@{/logs}">
-	    <button> <img src="/img/log.png" alt="Logs Icon" style="height: 1em; margin-right: 5px;">Logs</button>
-	</a>
+<nav style="display: flex; justify-content: space-between; align-items: center; padding-right: 1rem;">
+	<div>
+		<a th:href="@{/settings}">
+		    <button> <img src="/img/settings.png" alt="Settings Icon" style="height: 1em; margin-right: 5px;"> Einstellungen</button>
+		</a>
+		<a th:href="@{/logs}">
+		    <button> <img src="/img/log.png" alt="Logs Icon" style="height: 1em; margin-right: 5px;"> Logs</button>
+		</a>
+		<a th:href="@{/analyze}">
+		    <button>Serverdaten analyzieren</button>
+		</a>
+	</div>
+	<div>
+		<input type="text" id="server-search" placeholder="Server suchen..." style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 1rem;">
+	</div>
 </nav>
-
 
 <div id="servers-container">
     <!-- Server-Infos werden hier dynamisch eingefügt -->
@@ -108,6 +112,7 @@ async function refreshData() {
 		            </a>
 		        `;
 		        container.appendChild(div);
+				div.setAttribute("data-server-name", server.name.toLowerCase());
 		    });
 		}
 
@@ -120,6 +125,21 @@ async function refreshData() {
 // Daten beim Laden der Seite und alle 5 Sekunden aktualisieren
 refreshData();
 setInterval(refreshData, 5000);
+
+
+document.getElementById('server-search').addEventListener('input', function () {
+    const query = this.value.toLowerCase();
+    const serverDivs = document.querySelectorAll('#servers-container > div');
+
+    serverDivs.forEach(div => {
+        const name = div.getAttribute('data-server-name');
+        if (!name.includes(query)) {
+            div.style.display = 'none';
+        } else {
+            div.style.display = '';
+        }
+    });
+});
 </script>
 </body>
 </html>

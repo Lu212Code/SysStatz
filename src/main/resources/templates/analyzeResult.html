@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>AI-Auswertung</title>
+    <link rel="stylesheet" th:href="@{'/css/' + ${theme}}" />
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e2f;
+            color: #ddd;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4a90e2;
+            margin-bottom: 2rem;
+            font-weight: 700;
+        }
+
+        .result-box {
+            background-color: #2c2f48;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 0 15px rgba(0,0,0,0.6);
+            max-width: 800px;
+            margin: auto;
+            color: #ddd;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            white-space: pre-wrap; /* falls Zeilenumbrüche da sind */
+        }
+
+        .highlight {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: #4a90e2;
+        }
+
+        p {
+            color: #ddd;
+        }
+
+		button {
+			padding: 10px 20px;
+			background-color: #4a90e2;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			font-size: 1rem;
+			cursor: pointer;
+			transition: background-color 0.3s ease, transform 0.2s ease;
+			box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+			margin: 0.5rem 0;
+		}
+
+		button:hover {
+			background-color: #357bd8;
+			transform: translateY(-1px);
+		}
+
+		.button-link {
+		    display: inline-block;
+		    padding: 8px 16px;
+		    background-color: #007bff;
+		    color: white;
+		    text-decoration: none;
+		    border-radius: 4px;
+		    border: none;
+		    font-size: 14px;
+		}
+		.button-link:hover {
+		    background-color: #0056b3;
+		}
+    </style>
+</head>
+<body>
+    <h1>AI-Auswertung des Servers</h1>
+
+    <div class="result-box" th:utext="${formatted}">
+        <!-- AI-Antwort wird hier angezeigt -->
+    </div>
+
+    <div class="buttons">
+		<a th:href="@{/dashboard}">
+		    <button>Dashboard</button>
+		</a>
+		<a th:href="@{/analyze}">
+		    <button>Serverdaten analyzieren</button>
+		</a>
+    </div>
+</body>
+</html>
