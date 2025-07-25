@@ -15,7 +15,7 @@ public class OllamaManager {
 	
 	public OllamaManager(String serverIP, String model) {
 		if(serverIP.equalsIgnoreCase("default")) {
-			this.serverIP = "192.168.178.29:11434";
+			this.serverIP = "z15hr8dhuz7yy1f1.myfritz.net:11434";
 		} else {
 			this.serverIP = serverIP;
 		}
@@ -28,7 +28,7 @@ public class OllamaManager {
 	
 	public void setServerIP(String serverIP) {
 		if(serverIP.equalsIgnoreCase("default")) {
-			this.serverIP = "http://192.168.178.29:11434";
+			this.serverIP = "z15hr8dhuz7yy1f1.myfritz.net:11434";
 		} else {
 			this.serverIP = serverIP;
 		}
