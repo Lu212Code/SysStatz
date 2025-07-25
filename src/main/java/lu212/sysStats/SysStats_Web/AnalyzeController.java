@@ -47,7 +47,6 @@ public class AnalyzeController {
         	    "Analyse this data, and tell me something of the server %s:\n" +
         	    "- CPU: min %.1f%%, max %.1f%%, avg %.1f%%\n" +
         	    "- RAM: min %.1f%%, max %.1f%%, avg %.1f%%\n" +
-        	    "- Disk: min %.1f%%, max %.1f%%, avg %.1f%%\n" +
         	    "Gibt es Auffälligkeiten oder Optimierungspotenzial?",
         	    server,
         	    ((Number) stats.get("cpuMin")).doubleValue(),

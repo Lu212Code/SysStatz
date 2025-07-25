@@ -177,7 +177,7 @@
 
 <nav>
 	<a th:href="@{/dashboard}">
-	    <button>Dashboard</button>
+	    <button> <img src="/img/dashboard.png" alt="Logs Icon" style="height: 1em; margin-right: 5px;"> Dashboard</button>
 	</a>
 	<a th:href="@{/pdf-export}">
 	    <button>Daten PDF erstellen</button>
@@ -187,7 +187,7 @@
 <body>
 	
     <form id="serverForm" method="get" action="/analyze">
-        <label for="server">Server auswählen:</label>
+        <label for="server"> <img src="/img/server.png" alt="Server Icon" style="height: 1em; margin-right: 5px;"> Server auswählen:</label>
         <select name="server" id="server" required>
             <option value="">-- Bitte wählen --</option>
             <option th:each="server : ${servers}" th:value="${server}" th:text="${server}"></option>
@@ -210,7 +210,7 @@
                 <li th:text="'Disk – Min: ' + ${stats.diskMin} + ' %, Max: ' + ${stats.diskMax} + ' %, Ø: ' + ${stats.diskAvg} + ' %'"></li>
             </ul>
             <input type="hidden" name="server" th:value="${selectedServer}" />
-            <button type="submit" id="aiBtn">Mit KI analysieren</button>
+            <button type="submit" id="aiBtn">Mit KI analysieren (bis zu 3 Minuten)</button>
         </form>
     </div>
 

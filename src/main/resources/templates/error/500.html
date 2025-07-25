@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Ein Fehler ist aufgetreten</title>
+    <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+    <meta http-equiv="refresh" content="4;url=/dashboard">
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e2f;
+            color: #ddd;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #e74c3c;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            color: #bbb;
+        }
+
+        .button-login {
+            padding: 10px 20px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .button-login:hover {
+            background-color: #357bd8;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <h1>500 - Ein Fehler ist aufgetreten</h1>
+    <p>Es ist etwas schiefgelaufen.<br>Du wirst in Kürze zum Dashboard weitergeleitet.</p>
+    <a class="button-login" href="/dashboard">Sofort zum Dashboard</a>
+</body>
+</html>

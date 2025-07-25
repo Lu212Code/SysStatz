@@ -18,6 +18,7 @@ public class UserStore {
             try {
                 List<String> lines = Files.readAllLines(USER_FILE);
                 for (String line : lines) {
+                    if (line.trim().isEmpty()) continue;
                     String[] parts = line.split("\\|");
                     if (parts.length == 3) {
                         String username = parts[0];
@@ -29,12 +30,9 @@ public class UserStore {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else {
-            // Wenn Datei fehlt: Admin als Standarduser anlegen
-            users.add(new User("admin", "geheim123", true));
-            saveUsers();
         }
     }
+
 
     public static void saveUsers() {
         try (BufferedWriter writer = Files.newBufferedWriter(USER_FILE)) {
@@ -65,5 +63,9 @@ public class UserStore {
     public static void deleteUser(String username) {
         users.removeIf(u -> u.getUsername().equalsIgnoreCase(username));
         saveUsers();
+    }
+    
+    public static boolean hasUsers() {
+        return !users.isEmpty();
     }
 }
