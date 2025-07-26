@@ -1,5 +1,7 @@
 package lu212.sysStats.SysStats_Web;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,9 +35,12 @@ public class WebController {
         
     	Config config = new Config();
    	 	String theme = SysStatsWebApplication.theme;
+   	 	
+   	 	Map<String, String> hardware = ServerStats.getHardwareInfo(name);
+   	 	
    	 	model.addAttribute("theme", theme);
+   	 	model.addAttribute("hardwareInfo", hardware);
         
         return "server-details"; // Ruft server-details.html auf
     }
-    
 }

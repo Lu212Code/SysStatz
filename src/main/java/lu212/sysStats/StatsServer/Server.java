@@ -17,8 +17,6 @@ public class Server {
     
     private final static Map<String, ClientHandler> clients = new ConcurrentHashMap<>();
     
-    private static String configClientName = "!123conntroller123!";
-    
     private static boolean debugMode = false;
     
     private static final Map<String, ServerTempInfo> tempServerData = new ConcurrentHashMap<>();
@@ -134,28 +132,34 @@ public class Server {
                     String line;
                     while ((line = in.readLine()) != null) {
 
-                        if (line.startsWith("SERVER:")) {
-                            String payload = line.substring("SERVER:".length()).trim();
-                            String[] parts = payload.split("\\s+", 2);
+                    	if (line.startsWith("HW:")) {
+                    	    String payload = line.substring("HW:".length()).trim();
+                    	    String[] parts = payload.split("\\s+", 2);
 
-                            if (parts.length == 2) {
-                                String key = parts[0].toUpperCase();
-                                String value = parts[1];
-                                // Ausgabe im Format NAME:TYP:WERT
-                                
-                                String wert = name + ":" + key + ":" + value;
-                                
-                                buildLongs(wert);
-                                
-                                
-                            } else {
-                            	Logger.warning("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
-                                send("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
-                            }
-                        } else {
-                        	Logger.info("SERVER: Nachricht empfangen: " + line);
-                            send("SERVER: Nachricht empfangen: " + line);
-                        }
+                    	    if (parts.length == 2) {
+                    	        String key = parts[0];
+                    	        String value = parts[1];
+                    	        handleHardwareInfo(name, key, value);
+                    	    } else {
+                    	        Logger.warning("Ungültige HW-Nachricht: " + line);
+                    	    }
+                    	} else if (line.startsWith("SERVER:")) {
+                    	    String payload = line.substring("SERVER:".length()).trim();
+                    	    String[] parts = payload.split("\\s+", 2);
+
+                    	    if (parts.length == 2) {
+                    	        String key = parts[0].toUpperCase();
+                    	        String value = parts[1];
+                    	        String wert = name + ":" + key + ":" + value;
+                    	        buildLongs(wert);
+                    	    } else {
+                    	        Logger.warning("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
+                    	        send("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
+                    	    }
+                    	} else {
+                    	    Logger.info("Unbekannte Nachricht von " + name + ": " + line);
+                    	    send("Unbekannte Nachricht empfangen: " + line);
+                    	}
                     }
                 } catch (IOException e) {
                 	Logger.warning("Verbindung zu " + name + " verloren.");
@@ -203,6 +207,15 @@ public class Server {
         
         sendToWebsite(serverName, bauteil, auslastung);
         
+    }
+    
+    private static void handleHardwareInfo(String serverName, String hardwareKey, String value) {
+        String message = String.format("Hardwareinfo von %s → %s: %s", serverName, hardwareKey, value);
+        Logger.info(message);
+        System.out.println(message);
+
+        // Optional: an Web-Frontend weiterreichen, z. B. speichern oder auf Seite anzeigen
+        ServerStats.saveHardwareInfo(serverName, hardwareKey, value);
     }
     
     private static void sendToWebsite(String Server, String bauteil, String Auslastung) {
@@ -357,13 +370,9 @@ public class Server {
             // Ausgabe (optional später ins Web senden)
             System.out.printf("PROC PID: %s, NAME: %s, CPU: %.2f%%, RAM: %.2f GB%n", pid, name, cpu, ram);
 
-            // TODO: Webfrontend-Update? CSV schreiben? Liste zwischenspeichern?
-            // z. B.:
-            // ServerStats.addProcessInfo(serverName, pid, name, cpu, ram);
-
         } catch (Exception e) {
         	Logger.warning("Fehler beim Parsen von PROC-Zeile: " + werte);
             System.err.println("Fehler beim Parsen von PROC-Zeile: " + werte);
         }
-    }
+    }    
 }

@@ -108,6 +108,192 @@
         .chart-wrapper .chartjs-render-monitor + div > ul {
             font-size: 0.85rem !important;
         }
+		
+		.hardware-table {
+		    width: 100%;
+		    border-collapse: collapse;
+		    margin-top: 1rem;
+		    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+		    background-color: #1e2433;
+		    border-radius: 8px;
+		    overflow: hidden;
+		}
+
+		.hardware-table th,
+		.hardware-table td {
+		    padding: 0.75rem 1rem;
+		    border: 1px solid #444;
+		    text-align: left;
+		}
+
+		.hardware-table th {
+		    background-color: #2a2f42;
+		    color: #fff;
+		    font-weight: bold;
+		}
+
+		.hardware-table tbody tr:nth-child(even) {
+		    background-color: #252b3a;
+		}
+
+		.hardware-table tbody tr:hover {
+		    background-color: #2f3648;
+		}
+		
+		/* Grundstil für alle selects im Formular */
+		#advancedQueryForm select {
+		    appearance: none;         /* Native Pfeil ausblenden */
+		    -webkit-appearance: none;
+		    -moz-appearance: none;
+		    background-color: #1e2433;
+		    color: #ddd;
+		    border: 2px solid #4a90e2;
+		    border-radius: 6px;
+		    padding: 0.5rem 1rem;
+		    font-size: 1rem;
+		    cursor: pointer;
+		    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+		    background-image:
+		        linear-gradient(45deg, transparent 50%, #4a90e2 50%),
+		        linear-gradient(135deg, #4a90e2 50%, transparent 50%),
+		        linear-gradient(to right, #1e2433, #1e2433);
+		    background-position:
+		        calc(100% - 20px) calc(1em + 2px),
+		        calc(100% - 15px) calc(1em + 2px),
+		        100% 0;
+		    background-size: 5px 5px, 5px 5px, 2.5em 2.5em;
+		    background-repeat: no-repeat;
+		}
+
+		/* Hover & Focus */
+		#advancedQueryForm select:hover,
+		#advancedQueryForm select:focus {
+		    border-color: #357bd8;
+		    box-shadow: 0 0 8px rgba(53, 123, 216, 0.7);
+		    outline: none;
+		}
+
+		/* Optional: wenn das select disabled ist */
+		#advancedQueryForm select:disabled {
+		    background-color: #2a2f42;
+		    color: #666;
+		    cursor: not-allowed;
+		}
+
+		/* Für die Labels */
+		#advancedQueryForm label {
+		    color: #ddd;
+		    font-weight: 600;
+		}
+
+		/* Button einheitlich gestalten */
+		#advancedQueryForm button {
+		    background-color: #4a90e2;
+		    color: white;
+		    border: none;
+		    border-radius: 6px;
+		    padding: 0.5rem 1.2rem;
+		    font-size: 1rem;
+		    cursor: pointer;
+		    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+		    transition: background-color 0.3s ease, transform 0.2s ease;
+		}
+
+		#advancedQueryForm button:hover,
+		#advancedQueryForm button:focus {
+		    background-color: #357bd8;
+		    transform: translateY(-1px);
+		    outline: none;
+		}
+		
+		/* Stil für Eingabefelder im Formular */
+		#advancedQueryForm input[type="number"],
+		#advancedQueryForm input[type="text"] {
+		    background-color: #1e2433;
+		    color: #ddd;
+		    border: 2px solid #4a90e2;
+		    border-radius: 6px;
+		    padding: 0.5rem 1rem;
+		    font-size: 1rem;
+		    outline: none;
+		    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+		    box-sizing: border-box;
+		    /* Verhindert zu große Breite bei flex */
+		    max-width: 100%;
+		}
+
+		/* Fokus & Hover */
+		#advancedQueryForm input[type="number"]:focus,
+		#advancedQueryForm input[type="text"]:focus,
+		#advancedQueryForm input[type="number"]:hover,
+		#advancedQueryForm input[type="text"]:hover {
+		    border-color: #357bd8;
+		    box-shadow: 0 0 8px rgba(53, 123, 216, 0.7);
+		}
+
+		/* Disabled */
+		#advancedQueryForm input[type="number"]:disabled,
+		#advancedQueryForm input[type="text"]:disabled {
+		    background-color: #2a2f42;
+		    color: #666;
+		    cursor: not-allowed;
+		}
+		
+		/* Eingabefelder im Warnschwellen-Formular */
+		#thresholdForm input[type="number"],
+		#thresholdForm input[type="email"] {
+		    background-color: #1e2433;
+		    color: #ddd;
+		    border: 2px solid #4a90e2;
+		    border-radius: 6px;
+		    padding: 0.5rem 1rem;
+		    font-size: 1rem;
+		    margin-right: 0.5rem;
+		    margin-bottom: 0.8rem;
+		    outline: none;
+		    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+		    box-sizing: border-box;
+		    width: calc(100% - 1rem); /* volle Breite minus Padding */
+		}
+
+		/* Fokus & Hover */
+		#thresholdForm input[type="number"]:focus,
+		#thresholdForm input[type="email"]:focus,
+		#thresholdForm input[type="number"]:hover,
+		#thresholdForm input[type="email"]:hover {
+		    border-color: #357bd8;
+		    box-shadow: 0 0 8px rgba(53, 123, 216, 0.7);
+		}
+
+		/* Button */
+		#thresholdForm button {
+		    background-color: #4a90e2;
+		    color: white;
+		    border: none;
+		    border-radius: 6px;
+		    padding: 0.5rem 1.2rem;
+		    font-size: 1rem;
+		    cursor: pointer;
+		    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+		    transition: background-color 0.3s ease, transform 0.2s ease;
+		}
+
+		/* Button Hover/Focus */
+		#thresholdForm button:hover,
+		#thresholdForm button:focus {
+		    background-color: #357bd8;
+		    transform: translateY(-1px);
+		    outline: none;
+		}
+
+		/* Form Layout: damit die Inputs nebeneinander auf großen Bildschirmen sind */
+		#thresholdForm {
+		    display: flex;
+		    flex-wrap: wrap;
+		    gap: 0.5rem;
+		    max-width: 600px;
+		    margin-top: 1rem;
+		}
     </style>
 </head>
 <body>
@@ -149,6 +335,22 @@
 	    </div>
 	</div>
 
+	<h2>Hardwareinformationen</h2>
+	<table class="hardware-table">
+	    <thead>
+	        <tr>
+	            <th>Komponente</th>
+	            <th>Wert</th>
+	        </tr>
+	    </thead>
+	    <tbody>
+	        <tr th:each="entry : ${hardwareInfo}">
+	            <td th:text="${entry.key}">Key</td>
+	            <td th:text="${entry.value}">Wert</td>
+	        </tr>
+	    </tbody>
+	</table>
+
 	
 	<h2>Top Prozesse</h2>
 	    <table style="width:100%; border-collapse: collapse; margin-top: 1rem;">
@@ -172,8 +374,6 @@
 	            </tr>
 	        </tbody>
 	    </table>
-		
-		
 		
 		<h2>Erweiterte Auswertung</h2>
 
@@ -369,11 +569,13 @@
 		    const historyRes = await fetch(`/api/server/${encodeURIComponent(serverName)}/history`);
 		    if (!historyRes.ok) throw new Error("Fehler beim Laden der Verlaufsdaten");
 		    const history = await historyRes.json();
+			const maxCombinedPoints = 70; // Begrenzung für kombiniertes Diagramm
+			const trimmedHistory = history.slice(-maxCombinedPoints);
 
-		    const timestamps = history.map(entry => new Date(entry.timestamp).toLocaleTimeString());
-		    const cpuHistory = history.map(entry => entry.cpuPercent);
-			const ramHistory = history.map(entry => entry.ramUsed / 1024);
-		    const diskHistory = history.map(entry => entry.diskPercent);
+			const timestamps = trimmedHistory.map(entry => new Date(entry.timestamp).toLocaleTimeString());
+			const cpuHistory = trimmedHistory.map(entry => entry.cpuPercent);
+			const ramHistory = trimmedHistory.map(entry => entry.ramUsed / 1024);
+			const diskHistory = trimmedHistory.map(entry => entry.diskPercent);
 
 		    if (!combinedChart) {
 		        const ctx = document.getElementById("combinedLineChart").getContext("2d");

@@ -36,6 +36,46 @@
 		.button-link:hover {
 		    background-color: #0056b3;
 		}
+		
+		nav {
+		  display: flex;
+		  justify-content: space-between;
+		  align-items: center;
+		  padding-right: 1rem;
+		  flex-wrap: wrap; /* falls Zeilenumbruch gewünscht */
+		}
+
+		nav > div {
+		  display: flex;
+		  gap: 0.5rem; /* Abstand zwischen Buttons */
+		  flex-wrap: wrap;
+		  align-items: center;
+		}
+
+		/* Responsive: bei schmalen Bildschirmen */
+		@media (max-width: 600px) {
+		  nav {
+		    flex-direction: column;
+		    align-items: flex-start;
+		    padding-right: 0;
+		  }
+
+		  nav > div {
+		    width: 100%;
+		    justify-content: flex-start;
+		    margin-bottom: 0.5rem;
+		  }
+
+		  nav > div:last-child {
+		    margin-bottom: 0;
+		  }
+
+		  /* Suchleiste volle Breite */
+		  nav > div:last-child input[type="text"] {
+		    width: 100%;
+		    box-sizing: border-box;
+		  }
+		}
 	</style>
 </head>
 <body>
