@@ -1,17 +1,14 @@
 package lu212.sysStats.SysStats_Web;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import lu212.sysStats.General.AppReloader;
 import lu212.sysStats.General.SysStatzInfo;
 
 import java.io.PrintStream;
@@ -105,6 +102,8 @@ public class ConsoleController {
 			System.out.println("--------------------Verfügbare Befehle--------------------");
 			System.out.println("stop - Server herunterfahren");
 			System.out.println("list - Zeigt alle verbundenen Server");
+			System.out.println("info - Zeigt Informationen der SysStatz Instanz.");
+			System.out.println("restart - Startet den Server neu.");
 			System.out.println("----------------------------------------------------------");
 		} else if ("info".equalsIgnoreCase(command.trim())) {
 			System.out.println("----------------------SysStatz - Info----------------------");
@@ -120,7 +119,11 @@ public class ConsoleController {
 		    System.out.println("-----------------------------------------------------------");
 		} else if ("restart".equalsIgnoreCase(command.trim())){
 			System.out.println("SysStatz Webserver wird neugestartet...");
-			AppReloader.restart();
+			SysStatsWebApplication.restart();
+		} else if ("stop".equalsIgnoreCase(command.trim())) {
+			System.out.println("Fahre SysStatz herunter...");
+			SysStatsWebApplication.shutdown();
+			System.exit(0);
 		} else {
 			System.err.println("Unbekannter Befehl: " + command);
 		}

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Server vergleichen</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+	<link rel="icon" href="/img/logo.png" type="image/png">
+    <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+    <style>
+		body {
+		    background-color: #1e1e2f;
+		    color: #ddd;
+		    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+		    padding: 20px;
+		    margin: 0;
+		}
+
+		h1 {
+		    text-align: center;
+		    color: #4a90e2;
+		    border-bottom: 2px solid #4a90e2;
+		    padding-bottom: 10px;
+		    margin-bottom: 20px;
+		}
+
+		.container {
+		    display: flex;
+		    justify-content: space-between;
+		    gap: 1rem;
+		    flex-wrap: wrap;
+		}
+
+		.server-panel {
+		    flex: 1;
+		    background-color: #1e2433; /* geänderte Farbe */
+		    padding: 1rem;
+		    border-radius: 12px; /* größer */
+		    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+		    min-width: 300px;
+		}
+
+		.server-panel h2 {
+		    color: #7fbfff;
+		    margin-top: 0;
+		    margin-bottom: 0.5rem;
+		}
+
+		select {
+		    width: 100%;
+		    padding: 8px;
+		    border-radius: 5px;
+		    border: 1px solid #444;
+		    background-color: #1e1e2f;
+		    color: #fff;
+		    margin-bottom: 1rem;
+		}
+
+		canvas {
+		    width: 100% !important;
+		    max-height: 400px;
+		    aspect-ratio: 3 / 2;
+		    background-color: #1e2433;
+		    border-radius: 12px;
+		    margin-bottom: 1rem;
+		}
+
+		table {
+		    width: 100%;
+		    border-collapse: collapse;
+		    margin-top: 1rem;
+		    background-color: #1e1e2f;
+		}
+
+		th, td {
+		    border: 1px solid #4a90e2;
+		    padding: 0.5rem;
+		    text-align: center;
+		}
+
+		th {
+		    background-color: #2c2f48;
+		    color: #7fbfff;
+		}
+
+		td {
+		    color: #eee;
+		}
+		
+		button {
+			padding: 10px 20px;
+			background-color: #4a90e2;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			font-size: 1rem;
+			cursor: pointer;
+			transition: background-color 0.3s ease, transform 0.2s ease;
+			box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+			margin: 0.5rem 0;
+		}
+
+		button:hover {
+			background-color: #357bd8;
+			transform: translateY(-1px);
+		}
+
+		.button-link {
+		    display: inline-block;
+		    padding: 8px 16px;
+		    background-color: #007bff;
+		    color: white;
+		    text-decoration: none;
+		    border-radius: 4px;
+		    border: none;
+		    font-size: 14px;
+		}
+		.button-link:hover {
+		    background-color: #0056b3;
+		}
+    </style>
+</head>
+<body>
+
+<h1>Serververgleich</h1>
+
+<a th:href="@{/dashboard}">
+    <button> <img src="/img/dashboard.png" alt="Logs Icon" style="height: 1em; margin-right: 5px;"> Dashboard</button>
+</a>
+
+<div class="container">
+    <div class="server-panel">
+        <h2>Server A</h2>
+        <select id="serverASelect"></select>
+        <canvas id="cpuChartA"></canvas>
+        <canvas id="ramChartA"></canvas>
+        <canvas id="diskChartA"></canvas>
+        <table>
+            <tr><th>CPU (%)</th><th>RAM (%)</th><th>Disk (%)</th></tr>
+            <tr><td id="cpuAvgA">-</td><td id="ramAvgA">-</td><td id="diskAvgA">-</td></tr>
+        </table>
+    </div>
+
+    <div class="server-panel">
+        <h2>Server B</h2>
+        <select id="serverBSelect"></select>
+        <canvas id="cpuChartB"></canvas>
+        <canvas id="ramChartB"></canvas>
+        <canvas id="diskChartB"></canvas>
+        <table>
+            <tr><th>CPU (%)</th><th>RAM (%)</th><th>Disk (%)</th></tr>
+            <tr><td id="cpuAvgB">-</td><td id="ramAvgB">-</td><td id="diskAvgB">-</td></tr>
+        </table>
+    </div>
+</div>
+
+<script>
+	const charts = {};
+	const serverASelect = document.getElementById('serverASelect');
+	const serverBSelect = document.getElementById('serverBSelect');
+	
+	async function fetchServers() {
+	    const response = await fetch('/api/servers');
+	    const data = await response.json();
+	    console.log("Serverliste geladen:", data);
+	    return data;
+	}
+
+	async function fetchHistory(serverName) {
+	    const response = await fetch(`/api/server/${serverName}/history`);
+	    const data = await response.json();
+	    console.log(`History für ${serverName} geladen:`, data);
+	    return data;
+	}
+
+	async function loadServerData(selectId, chartPrefix, tablePrefix) {
+	    console.log("loadServerData gestartet");
+	    const serverName = document.getElementById(selectId).value;
+	    const history = await fetchHistory(serverName);
+
+	    const labels = history.map(d => new Date(d.timestamp).toLocaleTimeString());
+	    const cpuData = history.map(d => d.cpuPercent);
+	    const ramData = history.map(d => d.ramUsed);
+	    const diskData = history.map(d => d.diskPercent);
+
+	    console.log("CPU:", cpuData);
+	    console.log("RAM:", ramData);
+	    console.log("Disk:", diskData);
+
+	    drawChart(`cpuChart${chartPrefix}`, labels, cpuData, 'CPU (%)');
+	    drawChart(`ramChart${chartPrefix}`, labels, ramData, 'RAM (%)');
+	    drawChart(`diskChart${chartPrefix}`, labels, diskData, 'Disk (%)');
+
+	    document.getElementById(`cpuAvg${tablePrefix}`).textContent = avg(cpuData).toFixed(1);
+	    document.getElementById(`ramAvg${tablePrefix}`).textContent = avg(ramData).toFixed(1);
+	    document.getElementById(`diskAvg${tablePrefix}`).textContent = avg(diskData).toFixed(1);
+	}
+
+	const colors = {
+	    'CPU (%)': {border: 'rgba(255, 99, 132, 1)', background: 'rgba(255, 99, 132, 0.2)'},
+	    'RAM (%)': {border: 'rgba(54, 162, 235, 1)', background: 'rgba(54, 162, 235, 0.25)'},
+	    'Disk (%)': {border: 'rgba(255, 206, 86, 1)', background: 'rgba(255, 206, 86, 0.2)'}
+	};
+	
+	function drawChart(id, labels, data, label) {
+	    const ctx = document.getElementById(id).getContext('2d');
+	    const color = colors[label] || {border: '#4a90e2', background: '#4a90e2'};
+	    if (charts[id]) charts[id].destroy();
+	    charts[id] = new Chart(ctx, {
+	        type: 'line',
+	        data: {
+	            labels,
+	            datasets: [{
+	                label,
+	                data,
+	                fill: true,
+	                borderColor: color.border,
+	                backgroundColor: color.background,
+	                tension: 0.3,
+	                pointRadius: 2,
+	                borderWidth: 2,
+	            }]
+	        },
+	        options: {
+	            responsive: true,
+	            maintainAspectRatio: false,
+	            plugins: {
+	                legend: {
+	                    display: true,
+	                    labels: { color: '#ddd', font: { size: 14 } }
+	                },
+	                datalabels: {
+	                    color: '#ddd',
+	                    font: { weight: 'bold' },
+	                    display: false,
+	                    align: 'top',
+	                    formatter: value => value.toFixed(1)
+	                }
+	            },
+	            scales: {
+	                x: { ticks: { color: '#ccc' }, grid: { color: '#333' } },
+	                y: { ticks: { color: '#ccc' }, grid: { color: '#333' }, beginAtZero: true }
+	            }
+	        },
+	        plugins: [ChartDataLabels],
+	    });
+	}
+
+
+
+	function avg(arr) {
+	    if (!arr.length) return 0;
+	    return arr.reduce((a, b) => a + b, 0) / arr.length;
+	}
+
+    async function init() {
+        const servers = await fetchServers();
+
+        servers.forEach(server => {
+            const opt1 = new Option(server.name, server.name);
+            const opt2 = new Option(server.name, server.name);
+            serverASelect.appendChild(opt1);
+            serverBSelect.appendChild(opt2);
+        });
+
+		serverASelect.addEventListener('change', () => loadServerData('serverASelect', 'A', 'A'));
+		serverBSelect.addEventListener('change', () => loadServerData('serverBSelect', 'B', 'B'));
+
+		if (servers.length >= 2) {
+		    serverASelect.value = servers[0].name;
+		    serverBSelect.value = servers[1].name;
+		    loadServerData('serverASelect', 'A', 'A');
+		    loadServerData('serverBSelect', 'B', 'B');
+		}
+    }
+
+    init();
+</script>
+</body>
+</html>

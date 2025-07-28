@@ -15,13 +15,16 @@ public class ServerStats {
     private static final Map<String, ServerInfo> serverMap = new HashMap<>();
     private static final Map<String, Map<String, String>> hardwareInfos = new ConcurrentHashMap<>();
 
-    public static void update(String name, int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv, List<ServerProcessInfo> processes) {
+    public static void update(String name, int cpuPercent, double ramUsed, double ramTotal, int diskPercent,
+    						double storageUsed, double storageTotal, String status, String boottime, String sent, String recv,
+    						String dsent, String drecv, List<ServerProcessInfo> processes, String scmd) {
+    	
         ServerInfo info = serverMap.get(name);
         if (info == null) {
-            info = new ServerInfo(name, cpuPercent, ramUsed, ramTotal, diskPercent, storageUsed, storageTotal, status, boottime, sent, recv, dsent, drecv, processes);
+            info = new ServerInfo(name, cpuPercent, ramUsed, ramTotal, diskPercent, storageUsed, storageTotal, status, boottime, sent, recv, dsent, drecv, processes, scmd);
             serverMap.put(name, info);
         } else {
-            info.update(cpuPercent, ramUsed, ramTotal, diskPercent, storageUsed, storageTotal, status, boottime, sent, recv, dsent, drecv, processes);
+            info.update(cpuPercent, ramUsed, ramTotal, diskPercent, storageUsed, storageTotal, status, boottime, sent, recv, dsent, drecv, processes, scmd);
         }
     }
 

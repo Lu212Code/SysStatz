@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>SysStatz - Einstellungen</title>
     <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+	<link rel="icon" href="/img/logo.png" type="image/png">
     <style>
         /* Allgemeines Styling (deins) */
         input[type="text"], input[type="password"], select {
@@ -115,6 +116,7 @@
 			<section th:if="${isAdmin}">
             <p>Webserver Port: <input type="text" name="webPort" th:value="${config.webPort}"></p>
             <p>Statsserver Port: <input type="text" name="statsPort" th:value="${config.statsPort}"></p>
+			<p>Ollama Server IP: <input type="text" name="ollamaserverip" th:value="${config.ollamaserverip}"></p>
 			</section>
             <p>Website Theme:
                 <select name="theme">

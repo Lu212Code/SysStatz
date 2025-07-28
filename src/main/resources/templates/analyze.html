@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>Datenanalyse – SysStatz</title>
+	<link rel="icon" href="/img/logo.png" type="image/png">
     <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
 
     <style>
@@ -166,6 +167,38 @@
 		li:nth-child(3) { /* Disk */
 		    color: #27ae60;
 		}
+		
+		#loaderServer,
+		#loaderAI {
+		    display: none;
+		    width: 80px;
+		    height: 80px;
+		    position: fixed;
+		    top: 50%;
+		    left: 50%;
+		    transform: translate(-50%, -50%);
+		    z-index: 999;
+		}
+		
+		#loaderServer,
+		#loaderAI {
+		    position: fixed;
+		    top: 50%;
+		    left: 50%;
+		    transform: translate(-50%, -50%);
+		    z-index: 999;
+		}
+		
+		.loader-center {
+		    display: none;
+		    width: 80px;
+		    height: 80px;
+		    position: fixed;
+		    top: 50%;
+		    left: 50%;
+		    transform: translate(-50%, -50%);
+		    z-index: 1000;
+		}
     </style>
 </head>
 
@@ -195,26 +228,33 @@
         <button type="submit" id="submitBtn">Daten laden</button>
     </form>
 
-    <div id="loader">
+    <div id="loaderServer" class="loader-center">
         <div class="circle"></div>
         <div class="circle"></div>
         <div class="circle"></div>
     </div>
 
-    <div th:if="${stats != null}">
-        <form id="aiForm" method="post" action="/analyze/ai" style="max-width: 600px; margin: 2rem auto;">
-            <h2 th:text="'Statistiken für ' + ${selectedServer}"></h2>
-            <ul>
-                <li th:text="'CPU – Min: ' + ${stats.cpuMin} + ' %, Max: ' + ${stats.cpuMax} + ' %, Ø: ' + ${stats.cpuAvg} + ' %'"></li>
-                <li th:text="'RAM – Min: ' + ${stats.ramMin} + ' %, Max: ' + ${stats.ramMax} + ' %, Ø: ' + ${stats.ramAvg} + ' %'"></li>
-                <li th:text="'Disk – Min: ' + ${stats.diskMin} + ' %, Max: ' + ${stats.diskMax} + ' %, Ø: ' + ${stats.diskAvg} + ' %'"></li>
-            </ul>
-            <input type="hidden" name="server" th:value="${selectedServer}" />
-            <button type="submit" id="aiBtn">Mit KI analysieren (bis zu 3 Minuten)</button>
-        </form>
-    </div>
+	<div th:if="${stats != null}">
+	    <form id="aiForm" method="post" action="/analyze/ai" style="max-width: 600px; margin: 2rem auto;">
+	        <h2 th:text="'Statistiken für ' + ${selectedServer}"></h2>
+	        <ul>
+	            <li th:text="'CPU – Min: ' + ${stats.cpuMin} + ' %, Max: ' + ${stats.cpuMax} + ' %, Ø: ' + ${stats.cpuAvg} + ' %'"></li>
+	            <li th:text="'RAM – Min: ' + ${stats.ramMin} + ' %, Max: ' + ${stats.ramMax} + ' %, Ø: ' + ${stats.ramAvg} + ' %'"></li>
+	            <li th:text="'Disk – Min: ' + ${stats.diskMin} + ' %, Max: ' + ${stats.diskMax} + ' %, Ø: ' + ${stats.diskAvg} + ' %'"></li>
+	        </ul>
+	        <input type="hidden" name="server" th:value="${selectedServer}" />
 
-    <div id="loader">
+	        <button type="submit" name="mode" value="simple" id="aiBtnSimple">
+	            Einfache KI-Auswertung<br><small style="font-weight: normal;">Wertet nur wenige Daten aus</small>
+	        </button>
+
+	        <button type="submit" name="mode" value="advanced" id="aiBtnAdvanced">
+	            Erweiterte KI-Auswertung<br><small style="font-weight: normal;">Wertet Daten von mehreren Tagen aus</small>
+	        </button>
+	    </form>
+	</div>
+
+    <div id="loaderAI" class="loader-center">
         <div class="circle"></div>
         <div class="circle"></div>
         <div class="circle"></div>
@@ -222,36 +262,41 @@
     </div>
 
     <script>
-        const serverForm = document.getElementById('serverForm');
-        const aiForm = document.getElementById('aiForm');
-        const loader = document.getElementById('loader');
-        const loaderText = document.getElementById('loaderText');
-        const submitBtn = document.getElementById('submitBtn');
-        const aiBtn = document.getElementById('aiBtn');
+		const serverForm = document.getElementById('serverForm');
+		const loaderServer = document.getElementById('loaderServer');
+		const aiForm = document.getElementById('aiForm');
+		const loaderAI = document.getElementById('loaderAI');
+		const loaderText = document.getElementById('loaderText');
 
-        if (serverForm) {
-            serverForm.addEventListener('submit', (e) => {
-                loader.style.display = 'block';
-                loader.classList.add('active');
-                submitBtn.disabled = true;
-            });
-        }
+		if (serverForm && loaderServer) {
+		    serverForm.addEventListener('submit', () => {
+		        loaderServer.style.display = 'block';
+		    });
+		}
 
-        if (aiForm) {
-            aiForm.addEventListener('submit', function (e) {
-                e.preventDefault(); // Seite nicht sofort neu laden
+		if (aiForm && loaderAI && loaderText) {
+		    const aiBtns = aiForm.querySelectorAll("button");
 
-                // Animation zeigen
-                loader.style.display = 'block';
-                loader.classList.add('active');
-                aiBtn.disabled = true;
+		    aiBtns.forEach(btn => {
+		        btn.addEventListener("click", (e) => {
+		            const selectedMode = btn.value;
 
-                // Warte kurz, damit Animation sichtbar ist
-                setTimeout(() => {
-                    aiForm.submit(); // Jetzt tatsächlich abschicken
-                }, 600); // 0.6 Sekunden für optische Wirkung
-            });
-        }
+		            e.preventDefault();
+		            loaderAI.style.display = 'block';
+		            loaderText.classList.add('active');
+		            aiBtns.forEach(b => b.disabled = true);
+
+		            // Mode als verstecktes Feld
+		            const hiddenMode = document.createElement("input");
+		            hiddenMode.type = "hidden";
+		            hiddenMode.name = "mode";
+		            hiddenMode.value = selectedMode;
+		            aiForm.appendChild(hiddenMode);
+
+		            setTimeout(() => aiForm.submit(), 500);
+		        });
+		    });
+		}
     </script>
 </body>
 </html>

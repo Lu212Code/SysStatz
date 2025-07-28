@@ -5,6 +5,7 @@
     <title th:text="'Details für ' + ${server.name}">Serverdetails</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+	<link rel="icon" href="/img/logo.png" type="image/png">
     <style>
         /* Grundlayout */
         body {
@@ -327,6 +328,22 @@
         <div class="chart-wrapper">
             <canvas id="storageDoughnutChart" aria-label="Storage Diagramm" role="img"></canvas>
         </div>
+		<div class="chart-wrapper">
+			<h2>Serverstandort</h2>
+
+			<div th:if="${geoInfo != null}">
+			    <p>
+			        Stadt: <span th:text="${geoInfo.city}">unbekannt</span><br/>
+			        Land: <span th:text="${geoInfo.country}">unbekannt</span><br/>
+			        Koordinaten: 
+			        <span th:text="${geoInfo.lat}">0.0</span>, 
+			        <span th:text="${geoInfo.lon}">0.0</span>
+			    </p>
+			</div>
+			<div th:if="${geoInfo == null}">
+			    <p>Keine Geo-Informationen für diesen Server verfügbar.</p>
+			</div>
+	</div>
     </div>
 	
 	<div class="charts-container" style="flex-direction: column;">
@@ -375,6 +392,10 @@
 	        </tbody>
 	    </table>
 		
+		<div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 2rem;">
+		
+		<!-- Erweiterte Auswertung -->
+		<div style="flex: 1; min-width: 300px; max-width: 600px;">
 		<h2>Erweiterte Auswertung</h2>
 
 		<form id="advancedQueryForm" style="max-width: 600px; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.8rem;">
@@ -410,8 +431,10 @@
 		</form>
 
 		<div id="queryResult" style="margin-top: 1.5rem; font-size: 1.2rem; color: #4a90e2; min-height: 2rem;"></div>
+		</div>
 		
 
+		<div style="flex: 1; min-width: 300px; max-width: 600px;">
 		<h2>Warnschwellen festlegen</h2>
 		<form id="thresholdForm">
 		    <input type="number" name="cpu" placeholder="CPU max (%)" min="1" max="100" required>
@@ -421,6 +444,9 @@
 		    <button type="submit">Trigger speichern</button>
 		</form>
 		<p id="saveStatus" style="color: lightgreen;"></p>
+		</div>
+		
+	</div>
 </section>
 
 
@@ -656,6 +682,42 @@
 
 		
     }
+	
+	function highlightSpikeInChart(spike) {
+	    const startTime = spike.spikeStartTimestamp;
+	    const endTime = spike.spikeEndTimestamp;
+
+	    // Beispiel: vertikale Linien beim Start und Ende des Spikes
+	    combinedLineChart.options.plugins.annotation.annotations = [
+	        {
+	            type: 'line',
+	            mode: 'vertical',
+	            scaleID: 'x', // je nachdem wie deine x-Achse heißt
+	            value: startTime,
+	            borderColor: 'red',
+	            borderWidth: 2,
+	            label: {
+	                content: 'Spike Start',
+	                enabled: true,
+	                position: 'start'
+	            }
+	        },
+	        {
+	            type: 'line',
+	            mode: 'vertical',
+	            scaleID: 'x',
+	            value: endTime,
+	            borderColor: 'red',
+	            borderWidth: 2,
+	            label: {
+	                content: 'Spike Ende',
+	                enabled: true,
+	                position: 'end'
+	            }
+	        }
+	    ];
+	    combinedLineChart.update();
+	}
 
     updateData();
     setInterval(updateData, 5000);
@@ -757,6 +819,19 @@
 
 	  performQuery(filterType, component, threshold);
 	});
+	
+	fetch(`/api/server/${serverName}/history/spike`)
+	    .then(res => res.json())
+	    .then(data => {
+	        if (data.spikeDetected) {
+	            document.getElementById('spikeAlert').style.display = 'block';
+	            document.getElementById('spikeStart').textContent = new Date(data.spikeStartTimestamp).toLocaleTimeString();
+	            document.getElementById('spikeEnd').textContent = new Date(data.spikeEndTimestamp).toLocaleTimeString();
+
+	            // Optional: Spike auch im Chart hervorheben
+	            highlightSpikeInChart(data);
+	        }
+	    });
 </script>
 </body>
 </html>

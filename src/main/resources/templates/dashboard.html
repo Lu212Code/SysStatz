@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>SysStatz - Dashboard</title>
     <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+	<link rel="icon" href="/img/logo.png" type="image/png">
 	<style>
 		button {
 			padding: 10px 20px;
@@ -109,6 +110,8 @@
 
 <script>
 	
+	const API_KEY = 'pv983qa4EHNZt';
+	
 	function format3(val) {
 	    const n = Number(val);
 	    if (!Number.isFinite(n)) return val;
@@ -125,8 +128,8 @@ async function refreshData() {
             console.error('Fehler beim Laden der Serverdaten');
             return;
         }
+		
         const servers = await response.json();
-
         const container = document.getElementById('servers-container');
         container.innerHTML = ''; // vorher leeren
 
@@ -138,22 +141,70 @@ async function refreshData() {
 		    message.style.textAlign = 'center';
 		    container.appendChild(message);
 		} else {
-		    servers.forEach(server => {
-		        const div = document.createElement('div');
-		        div.innerHTML = `
-		            <h2><img src="/img/server.png" alt="Server Icon" style="height: 1em;"> ${server.name}</h2>
-					<p>STATUS: ${server.status}</p>
-		            <p><img src="/img/cpu.png" alt="CPU Icon" style="height: 1em;"> CPU: ${server.cpuPercent}%</p>
-					<p><img src="/img/ram.png" alt="RAM Icon" style="height: 1em;"> RAM: ${format3(server.ramUsed)} Gb / ${format3(server.ramTotal)} Gb</p>
-		            <p><img src="/img/ssd.png" alt="SSD Icon" style="height: 1em;"> STORAGE:  ${server.storageUsed} Gb / ${server.storageTotal} Gb</p>
-					<p><img src="/img/network.png" alt="Logs Icon" style="height: 1em;"> NETWORK: ↑ ${format3(server.dsend)} ↓ ${format3(server.drecv)}</p>
-		            <a href="/server/${encodeURIComponent(server.name)}">
-		                <button>Details anzeigen</button>
-		            </a>
-		        `;
-		        container.appendChild(div);
-				div.setAttribute("data-server-name", server.name.toLowerCase());
-		    });
+			servers.forEach(server => {
+			    const div = document.createElement('div');
+
+			    const scmdEnabled = String(server.scmd).toLowerCase() === 'true';
+
+			    div.innerHTML = `
+			        <h2><img src="/img/server.png" alt="Server Icon" style="height: 1em;"> ${server.name}</h2>
+			        <p>STATUS: ${server.status}</p>
+			        <p><img src="/img/cpu.png" alt="CPU Icon" style="height: 1em;"> CPU: ${server.cpuPercent}%</p>
+			        <p><img src="/img/ram.png" alt="RAM Icon" style="height: 1em;"> RAM: ${format3(server.ramUsed)} Gb / ${format3(server.ramTotal)} Gb</p>
+			        <p><img src="/img/ssd.png" alt="SSD Icon" style="height: 1em;"> STORAGE:  ${server.storageUsed} Gb / ${server.storageTotal} Gb</p>
+			        <p><img src="/img/network.png" alt="Logs Icon" style="height: 1em;"> NETWORK: ↑ ${format3(server.dsend)} ↓ ${format3(server.drecv)}</p>
+			        <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+			            ${scmdEnabled ? `
+			            <div style="display: flex; gap: 5px; margin-top: 5px;">
+			                <button title="Stop" style="
+			                    background-color: #c84c4c;
+			                    border: none;
+			                    border-radius: 8px;
+			                    padding: 12px;
+			                    cursor: pointer;
+			                    display: flex;
+			                    align-items: center;
+			                    justify-content: center;
+			                    width: 48px;
+			                    height: 48px;
+			                    transition: background-color 0.2s ease;
+			                " onmouseover="this.style.backgroundColor='#a83838'"
+			                   onmouseout="this.style.backgroundColor='#c84c4c'"
+			                   onclick="sendServerCommand('${server.name}', 'stop')">
+			                    <img src="/img/stop.png" alt="Stop Icon" style="height: 24px;">
+			                </button>
+
+			                <button title="Reboot" style="
+			                    background-color: #7cb5e0;
+			                    border: none;
+			                    border-radius: 8px;
+			                    padding: 12px;
+			                    cursor: pointer;
+			                    display: flex;
+			                    align-items: center;
+			                    justify-content: center;
+			                    width: 48px;
+			                    height: 48px;
+			                    transition: background-color 0.2s ease;
+			                " onmouseover="this.style.backgroundColor='#5a9dc9'"
+			                   onmouseout="this.style.backgroundColor='#7cb5e0'"
+			                   onclick="sendServerCommand('${server.name}', 'reboot')">
+			                    <img src="/img/reboot.png" alt="Reboot Icon" style="height: 24px;">
+			                </button>
+			            </div>
+			            ` : ''}
+			        </div>
+			        <a href="/server/${encodeURIComponent(server.name)}">
+			            <button><img src="/img/details.png" alt="Details Icon" style="height: 1em; margin-right: 5px;"> Details anzeigen</button>
+			        </a>
+			        <a href="/compare">
+			            <button><img src="/img/compare.png" alt="Compare Icon" style="height: 1em; margin-right: 5px;"> Server vergleichen</button>
+			        </a>
+			    `;
+
+			    container.appendChild(div);
+			    div.setAttribute("data-server-name", server.name.toLowerCase());
+			});
 		}
 
 
@@ -180,6 +231,24 @@ document.getElementById('server-search').addEventListener('input', function () {
         }
     });
 });
+
+
+// Hilfsfunktion zum Senden von Stop/Reboot-Befehl
+async function sendServerCommand(name, action) {
+    const url = `/api/server/${encodeURIComponent(name)}/${action}?key=${API_KEY}`;
+    try {
+        const response = await fetch(url, { method: 'POST' });
+        const result = await response.json();
+        if (response.ok) {
+            alert(`Aktion erfolgreich: ${result.status}`);
+        } else {
+            alert(`Fehler: ${result.error || 'Unbekannt'}`);
+        }
+    } catch (err) {
+        console.error('Fehler beim Senden des Befehls:', err);
+        alert('Netzwerkfehler oder Server nicht erreichbar.');
+    }
+}
 </script>
 </body>
 </html>

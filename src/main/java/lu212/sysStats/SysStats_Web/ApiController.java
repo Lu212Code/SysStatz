@@ -1,6 +1,9 @@
 package lu212.sysStats.SysStats_Web;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,6 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lu212.sysStats.General.Logger;
 import lu212.sysStats.General.SysStatzInfo;
 import lu212.sysStats.General.ThresholdConfig;
+import lu212.sysStats.StatsServer.Server;
+import lu212.sysStats.StatsServer.Server.GeoInfoDTO;
 
 import java.io.File;
 import java.io.OutputStream;
@@ -21,15 +26,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 @RestController
 public class ApiController {
 
 	private final Map<String, Set<String>> sentTriggerEmails = new HashMap<>();
+	
 	
     @Autowired
     private TriggerService triggerService;
@@ -38,6 +40,18 @@ public class ApiController {
     public List<ServerInfo> getServers() {
         return ServerStats.getAllServers();
     }
+    
+    @GetMapping("/api/servers/locations")
+    public Map<String, GeoInfoDTO> getAllServerLocations() {
+        Map<String, Server.GeoInfo> geoMap = Server.getGeoLocations();
+        Map<String, GeoInfoDTO> result = new HashMap<>();
+        for (Map.Entry<String, Server.GeoInfo> entry : geoMap.entrySet()) {
+            Server.GeoInfo g = entry.getValue();
+            result.put(entry.getKey(), new GeoInfoDTO(g.city, g.country, g.lat, g.lon));
+        }
+        return result;
+    }
+
 
     @PostMapping("/api/trigger/{serverName}")
     public void setTrigger(@PathVariable String serverName, @RequestBody ThresholdConfig config) {
@@ -102,6 +116,22 @@ public class ApiController {
                 .findFirst()
                 .map(ServerInfo::getHistory)
                 .orElse(List.of());
+    }
+    
+    @GetMapping("/api/server/{name}/history/spike")
+    public ResponseEntity<SpikeDetectionResult> getCpuSpike(@PathVariable String name) {
+        List<ServerHistoryEntry> history = ServerStats.getAllServers().stream()
+            .filter(s -> s.getName().equalsIgnoreCase(name))
+            .findFirst()
+            .map(ServerInfo::getHistory)
+            .orElse(List.of());
+
+        List<CpuDataPoint> cpuData = history.stream()
+            .map(e -> new CpuDataPoint()) // anpassen, falls andere Methodennamen
+            .toList();
+
+        SpikeDetectionResult spikeResult = detectCpuSpike(cpuData);
+        return ResponseEntity.ok(spikeResult);
     }
     
     //Trigger prüfen
@@ -172,4 +202,165 @@ public class ApiController {
             return true;
         }
     }
+    
+    @RestController
+    @RequestMapping("/api/server")
+    public class AdminApiController {
+
+        @Value("${sysstatz.api.key}")
+        private String apiKey; // Aus application.properties
+
+        @PostMapping("/{name}/stop")
+        public ResponseEntity<Map<String, String>> stopServer(@PathVariable String name, @RequestParam String key) {
+            if (!apiKey.equals(key)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Ungültiger API-Key"));
+            }
+
+            try {
+            	Server.sendToClient(name, "SCMD:SHUTDOWN");
+                return ResponseEntity.ok(Map.of("status", "Server gestoppt", "server", name));
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Fehler beim Stoppen", "message", e.getMessage()));
+            }
+        }
+
+        @PostMapping("/{name}/reboot")
+        public ResponseEntity<Map<String, String>> rebootServer(@PathVariable String name, @RequestParam String key) {
+            if (!apiKey.equals(key)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Ungültiger API-Key"));
+            }
+
+            try {
+            	Server.sendToClient(name, "SCMD:REBOOT");
+                return ResponseEntity.ok(Map.of("status", "Server neugestartet", "server", name));
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Fehler beim Reboot", "message", e.getMessage()));
+            }
+        }
+        
+        @GetMapping("/admin/shutdown")
+        public void shutdownSysStatz(@RequestParam String key) {
+            if (apiKey.equals(key)) {
+            	
+            }
+        }
+    }
+    
+    public SpikeDetectionResult detectCpuSpike(List<CpuDataPoint> dataPoints) {
+        // Annahme: dataPoints sind sortiert nach timestamp aufsteigend
+        
+        for (int i = 0; i < dataPoints.size(); i++) {
+            CpuDataPoint start = dataPoints.get(i);
+            // Suche nach Peak innerhalb 10 Sekunden, mit CPU-Anstieg > 30%
+            for (int j = i + 1; j < dataPoints.size(); j++) {
+                CpuDataPoint current = dataPoints.get(j);
+                long deltaTime = current.getTimestamp() - start.getTimestamp();
+                if (deltaTime > 10_000) break; // mehr als 10 Sekunden keine Steigung gefunden
+                
+                double cpuDiff = current.getCpu() - start.getCpu();
+                if (cpuDiff > 10.0) {
+                	System.out.println("Peak gefunden...");
+                    // Peak gefunden, suche ob innerhalb 20 Sekunden danach CPU wieder um 25% fällt
+                    long peakTime = current.getTimestamp();
+                    double peakCpu = current.getCpu();
+                    
+                    for (int k = j + 1; k < dataPoints.size(); k++) {
+                        CpuDataPoint afterPeak = dataPoints.get(k);
+                        long afterPeakDelta = afterPeak.getTimestamp() - peakTime;
+                        if (afterPeakDelta > 20_000) break; // Zeitfenster vorbei
+                        
+                        double drop = peakCpu - afterPeak.getCpu();
+                        if (drop >= 5.0) {
+                        	System.out.println("Spike erkannt");
+                            // Spike erkannt: Start, Peak, Ende
+                            return new SpikeDetectionResult(true, start.getTimestamp(), peakTime, afterPeak.getTimestamp());
+                        }
+                    }
+                }
+            }
+        }
+        
+        return new SpikeDetectionResult(false, 0, 0, 0);
+    }
+    
+    public class CpuDataPoint {
+        private long timestamp;
+        private double cpu;
+
+        public CpuDataPoint() {}
+        public CpuDataPoint(long timestamp, double cpu) {
+            this.timestamp = timestamp;
+            this.cpu = cpu;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public void setTimestamp(long timestamp) {
+            this.timestamp = timestamp;
+        }
+
+        public double getCpu() {
+            return cpu;
+        }
+
+        public void setCpu(double cpu) {
+            this.cpu = cpu;
+        }
+    }
+
+    public class SpikeDetectionResult {
+        private boolean spikeDetected;
+        private long spikeStartTimestamp;
+        private long spikePeakTimestamp;
+        private long spikeEndTimestamp;
+
+        public SpikeDetectionResult() {}
+
+        public SpikeDetectionResult(boolean spikeDetected, long spikeStartTimestamp, long spikePeakTimestamp, long spikeEndTimestamp) {
+            this.spikeDetected = spikeDetected;
+            this.spikeStartTimestamp = spikeStartTimestamp;
+            this.spikePeakTimestamp = spikePeakTimestamp;
+            this.spikeEndTimestamp = spikeEndTimestamp;
+        }
+
+        public boolean isSpikeDetected() {
+            return spikeDetected;
+        }
+
+        public void setSpikeDetected(boolean spikeDetected) {
+            this.spikeDetected = spikeDetected;
+        }
+
+        public long getSpikeStartTimestamp() {
+            return spikeStartTimestamp;
+        }
+
+        public void setSpikeStartTimestamp(long spikeStartTimestamp) {
+            this.spikeStartTimestamp = spikeStartTimestamp;
+        }
+
+        public long getSpikePeakTimestamp() {
+            return spikePeakTimestamp;
+        }
+
+        public void setSpikePeakTimestamp(long spikePeakTimestamp) {
+            this.spikePeakTimestamp = spikePeakTimestamp;
+        }
+
+        public long getSpikeEndTimestamp() {
+            return spikeEndTimestamp;
+        }
+
+        public void setSpikeEndTimestamp(long spikeEndTimestamp) {
+            this.spikeEndTimestamp = spikeEndTimestamp;
+        }
+    }
+
+    
 }

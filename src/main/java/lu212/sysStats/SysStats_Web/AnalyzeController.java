@@ -34,31 +34,40 @@ public class AnalyzeController {
     }
 
     @PostMapping("/analyze/ai")
-    public String analyzeWithAI(@RequestParam String server, Model model) {
+    public String analyzeWithAI(@RequestParam String server,
+    							@RequestParam String mode, Model model) {
         List<int[]> data = readServerData(server);
         if (data.isEmpty()) {
             model.addAttribute("formatted", "<p>Keine Daten verfügbar.</p>");
             return "analyzeResult";
         }
 
+        String prompt;
+        
         Map<String, Object> stats = computeStats(data);
 
-        String prompt = String.format(
-        	    "Analyse this data, and tell me something of the server %s:\n" +
-        	    "- CPU: min %.1f%%, max %.1f%%, avg %.1f%%\n" +
-        	    "- RAM: min %.1f%%, max %.1f%%, avg %.1f%%\n" +
-        	    "Gibt es Auffälligkeiten oder Optimierungspotenzial?",
-        	    server,
-        	    ((Number) stats.get("cpuMin")).doubleValue(),
-        	    ((Number) stats.get("cpuMax")).doubleValue(),
-        	    ((Number) stats.get("cpuAvg")).doubleValue(),
-        	    ((Number) stats.get("ramMin")).doubleValue(),
-        	    ((Number) stats.get("ramMax")).doubleValue(),
-        	    ((Number) stats.get("ramAvg")).doubleValue(),
-        	    ((Number) stats.get("diskMin")).doubleValue(),
-        	    ((Number) stats.get("diskMax")).doubleValue(),
-        	    ((Number) stats.get("diskAvg")).doubleValue()
+        if(mode.equals("advanced")) {
+        	prompt = SmartServerAnalyzer.analyze(server);
+        } else {
+        	System.out.println("Starte einfache AI-Analyse...");
+        prompt = String.format(
+        	   "Analyse this data, and tell me something of the server %s:\n" +
+        	   "- CPU: min %.1f%%, max %.1f%%, avg %.1f%%\n" +
+        	   "- RAM: min %.1f%%, max %.1f%%, avg %.1f%%\n" +
+        	   "- Disk: min %.1f%%, max %.1f%%, avg %.1f%%\n"+
+        	   "Gibt es Auffälligkeiten oder Optimierungspotenzial?",
+        	   server,
+        	   ((Number) stats.get("cpuMin")).doubleValue(),
+        	   ((Number) stats.get("cpuMax")).doubleValue(),
+        	   ((Number) stats.get("cpuAvg")).doubleValue(),
+        	   ((Number) stats.get("ramMin")).doubleValue(),
+        	   ((Number) stats.get("ramMax")).doubleValue(),
+        	   ((Number) stats.get("ramAvg")).doubleValue(),
+        	   ((Number) stats.get("diskMin")).doubleValue(),
+        	   ((Number) stats.get("diskMax")).doubleValue(),
+        	   ((Number) stats.get("diskAvg")).doubleValue()
         	);
+        }
 
 
         String rawResponse = OllamaAPI.sendRequest(prompt);

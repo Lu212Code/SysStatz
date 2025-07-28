@@ -6,6 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.server.ConfigurableWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -22,6 +23,7 @@ public class SysStatsWebApplication {
 	public static String statsserverport;
 	public static String theme;
 	public static String ollamaIP;
+	private static ConfigurableApplicationContext context;
 	
 	public static void main(String[] args) {
 		Logger.start();
@@ -40,7 +42,7 @@ public class SysStatsWebApplication {
 		try {
 			Logger.info("Webserver wird auf Port " + webserverport + " gestartet.");
 			System.out.println("Webserver wird auf Port " + webserverport + " gestartet.");
-			SpringApplication.run(SysStatsWebApplication.class, args);
+			context = SpringApplication.run(SysStatsWebApplication.class, args);
 		} catch (Exception e) {
 			Logger.error("Webserver konnte nicht gestartet werden:");
 			System.err.println("Webserver konnte nicht gestartet werden:");
@@ -93,4 +95,19 @@ public class SysStatsWebApplication {
 	    };
 	}
 	
+    public static void shutdown() {
+        if (context != null) {
+            context.close();
+        }
+    }
+    
+    public static void restart() {
+        Thread thread = new Thread(() -> {
+            context.close(); // alte App stoppen
+            context = SpringApplication.run(SysStatsWebApplication.class);
+        });
+
+        thread.setDaemon(false);
+        thread.start();
+    }
 }

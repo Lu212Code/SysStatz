@@ -16,6 +16,6 @@ public class Config {
     public String getTheme() { return theme; }
     public void setTheme(String theme) { this.theme = theme; }
     
-    public String getOllamaPort() { return ollamaserverip; }
-    public void setOllamaPort(String ollamaserverip) { this.ollamaserverip = ollamaserverip; }
+    public String getOllamaserverip() { return ollamaserverip; }
+    public void setOllamaserverip(String ollamaserverip) { this.ollamaserverip = ollamaserverip; }
 }
