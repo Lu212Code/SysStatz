@@ -35,8 +35,9 @@ public class ServerStatsGenerator {
 
             List<ServerProcessInfo> dummyProcesses = new ArrayList<>(); // Leere Liste oder zufällige Prozesse hinzufügen
 
-            ServerStats.update(serverName, cpu, ramUsed, ramTotal, diskPercent, storageUsed, storageTotal,
-                    status, boottime, sent, recv, dsent, drecv, dummyProcesses, scmd, temp);
+            //Muss angepasst werden, das es auch alle neuen Daten sendet.
+            //ServerStats.update(serverName, cpu, ramUsed, ramTotal, diskPercent, storageUsed, storageTotal,
+            //        status, boottime, sent, recv, dsent, drecv, dummyProcesses, scmd, temp);
         }
     }
 

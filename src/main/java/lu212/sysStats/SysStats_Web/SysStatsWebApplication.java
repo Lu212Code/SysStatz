@@ -64,19 +64,19 @@ public class SysStatsWebApplication {
 		System.out.println(SysStatzLogo);
 		System.out.println("-----------------------ver.-0.1-------------------------");
 		
-		int i = 0;
-		while(i==0) {
-		ServerStatsGenerator.generateRandomServers(5, ServerStatsGenerator.LoadLevel.SEHR_HOCH);
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		}
+//		int i = 0;
+//		while(i==0) {
+//		ServerStatsGenerator.generateRandomServers(5, ServerStatsGenerator.LoadLevel.SEHR_HOCH);
+//		try {
+//			Thread.sleep(5000);
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+//		}
 		
 		
 		try {
-			Server.main(null);
+			Server.startServer(null);
 		} catch (IOException e) {
 			Logger.error("StatsServer konnte nicht gestartet werden:");
 			System.err.println("StatsServer konnte nicht gestartet werden:");

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Iterator;
 
 import lu212.sysStats.StatsServer.Server.ServerProcessInfo;
@@ -30,9 +31,61 @@ public class ServerInfo {
     private List<ServerProcessInfo> processes = new ArrayList<>();
     private String scmd;
     private String temp;
+    private Map<Integer, Double> cpuCoreLoads;
+    private double swapUsed;
+    private double swapTotal;
+    private String cpuVoltage;
+    private String loadavg1;
+    private String loadavg5;
+    private String loadavg15;
 
-    public ServerInfo(String name, int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv, List<ServerProcessInfo> processes, String scmd, String temp) {
-        this.name = name;
+    public ServerInfo(String name, int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal,
+            String status, String boottime, String sent, String recv, String dsent, String drecv,
+            List<ServerProcessInfo> processes, String scmd, String temp, Map<Integer, Double> cpuCoreLoads,
+            String swapTotal, String swapUsed, String cpuVoltage,
+            String loadavg1, String loadavg5, String loadavg15) {
+this.name = name;
+this.cpuPercent = cpuPercent;
+this.ramUsed = ramUsed;
+this.ramTotal = ramTotal;
+this.diskPercent = diskPercent;
+this.storageUsed = storageUsed;
+this.storageTotal = storageTotal;
+this.status = status;
+this.boottime = boottime;
+this.uptime = berechneUptime(this.boottime);
+this.sent = sent;
+this.recv = recv;
+this.dsent = dsent;
+this.drecv = drecv;
+this.processes = processes != null ? processes : new ArrayList<>();
+this.scmd = scmd;
+this.temp = temp;
+this.cpuCoreLoads = cpuCoreLoads;
+
+// Sicheres Parsen von Swap-Werten
+try {
+  this.swapTotal = Double.parseDouble(swapTotal);
+} catch (Exception e) {
+  this.swapTotal = 0;
+}
+try {
+  this.swapUsed = Double.parseDouble(swapUsed);
+} catch (Exception e) {
+  this.swapUsed = 0;
+}
+
+this.cpuVoltage = cpuVoltage;
+this.loadavg1 = loadavg1;
+this.loadavg5 = loadavg5;
+this.loadavg15 = loadavg15;
+}
+
+    public void update(int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed,
+            double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv,
+            List<ServerProcessInfo> processes, String scmd, String temp, Map<Integer, Double> cpuCoreLoads,
+            String swapTotal, String swapUsed,
+            String cpuVoltage, String loadavg1, String loadavg5, String loadavg15) {
         this.cpuPercent = cpuPercent;
         this.ramUsed = ramUsed;
         this.ramTotal = ramTotal;
@@ -40,7 +93,6 @@ public class ServerInfo {
         this.storageUsed = storageUsed;
         this.storageTotal = storageTotal;
         this.status = status;
-        this.boottime = boottime;
         this.uptime = berechneUptime(this.boottime);
         this.sent = sent;
         this.recv = recv;
@@ -49,24 +101,21 @@ public class ServerInfo {
         this.processes = processes != null ? processes : new ArrayList<>();
         this.scmd = scmd;
         this.temp = temp;
-    }
-
-    public void update(int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv, List<ServerProcessInfo> processes, String scmd, String temp) {
-        this.cpuPercent = cpuPercent;
-        this.ramUsed = ramUsed;
-        this.ramTotal = ramTotal;
-        this.diskPercent = diskPercent;
-        this.storageUsed = storageUsed;
-        this.storageTotal = storageTotal;
-        this.status = status;
-        this.uptime = berechneUptime(this.boottime);
-        this.sent = sent;
-        this.recv = recv;
-        this.dsent = dsent;
-        this.drecv = drecv;
-        this.processes = processes != null ? processes : new ArrayList<>();
-        this.scmd = scmd;
-        this.temp = temp;
+        this.cpuCoreLoads = cpuCoreLoads;
+        try {
+        this.swapTotal = Double.parseDouble(swapTotal);
+        this.swapUsed = Double.parseDouble(swapUsed);
+        } catch (Exception e) {
+        	e.printStackTrace();
+        }
+        this.cpuVoltage = cpuVoltage;
+        this.loadavg1 = loadavg1;
+        this.loadavg5 = loadavg5;
+        this.loadavg15 = loadavg15;
+        this.cpuVoltage = cpuVoltage;
+        this.loadavg1 = loadavg1;
+        this.loadavg5 = loadavg5;
+        this.loadavg15 = loadavg15;
 
         // boottime nur setzen, wenn noch nicht gesetzt (also null oder leer)
         if (this.boottime == null || this.boottime.isEmpty()) {
@@ -80,7 +129,10 @@ public class ServerInfo {
             ramUsed,
             diskPercent,
             dsent,
-            drecv
+            drecv,
+            this.swapTotal,
+            this.swapUsed,
+            cpuCoreLoads
         ));
 
         // 7 Tage alte Daten entfernen
@@ -115,6 +167,9 @@ public class ServerInfo {
     public List<ServerHistoryEntry> getHistory() { return history; }
     public String getScmd() { return scmd; }
     public String getTemp() { return temp; }
+    public Map<Integer, Double> getCpuCore() { return cpuCoreLoads; }
+	public double getSwapUsed() { return swapUsed; }
+	public double getSwapTotal() { return swapTotal; }
 
     
     public static String berechneUptime(String boottimeStr) {

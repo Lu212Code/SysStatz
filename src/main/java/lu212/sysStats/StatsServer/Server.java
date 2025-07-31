@@ -25,14 +25,22 @@ public class Server {
 	private static final Map<String, ServerTempInfo> tempServerData = new ConcurrentHashMap<>();
 	
 	public static final Map<String, GeoInfo> geoLocations = new ConcurrentHashMap<>();
+	
+	private static Map<Integer, Double> cpuCoreLoads = new HashMap<>();
 
-	public static void main(String[] args) throws IOException {
-
+	public static void startServer(String[] args) throws IOException {
 		new Server().start();
 	}
 
 	private void start() throws IOException {
+		try {
 		PORT = Integer.parseInt(SysStatsWebApplication.statsserverport);
+		} catch (Exception e) {
+			Logger.error("Fehler beim Parsen des StatsServer Ports: " + SysStatsWebApplication.statsserverport);
+			System.out.println("Fehler beim Parsen des StatsServer Ports: " + SysStatsWebApplication.statsserverport);
+			PORT = 12345;
+		}
+		
 		ServerSocket serverSocket = new ServerSocket(PORT);
 		Logger.info("StatsServer läuft auf Port " + PORT);
 		System.out.println("StatsServer läuft auf Port " + PORT);
@@ -246,8 +254,6 @@ public class Server {
 					double ramGB = Double.parseDouble(teile[3].replace(",", "."));
 					long ramMB = (long) (ramGB * 1024);
 
-					System.out.printf("Prozess erhalten → PID: %d, Name: %s, CPU: %.2f%%, RAM: %d MB%n", pid, name, cpu,
-							ramMB);
 
 					ServerProcessInfo pInfo = new ServerProcessInfo(pid, name, cpu, ramMB);
 					temp.processes.add(pInfo);
@@ -267,10 +273,22 @@ public class Server {
 			Logger.info("DISK:" + Server + ":" + Auslastung);
 		}
 
-		if (bauteil.equalsIgnoreCase("RAM")) {
-			temp.ram = Auslastung;
-			Logger.info("RAM:" + Server + ":" + Auslastung);
+		if (bauteil.equalsIgnoreCase("RAM_USED_MB")) {
+		    temp.ramUsed = Auslastung;
 		}
+		if (bauteil.equalsIgnoreCase("RAM_AVAILABLE_MB")) {
+		    temp.ramAvailable = Auslastung;
+		}
+		if (bauteil.equalsIgnoreCase("RAM_TOTAL_MB")) {
+		    temp.ramTotal = Auslastung;
+		}
+		if (bauteil.equalsIgnoreCase("SWAP_USED_MB")) {
+		    temp.swapUsed = Auslastung;
+		}
+		if (bauteil.equalsIgnoreCase("SWAP_TOTAL_MB")) {
+		    temp.swapTotal = Auslastung;
+		}
+
 
 		if (bauteil.equalsIgnoreCase("NET_SENT")) {
 			temp.sent = Auslastung;
@@ -295,22 +313,49 @@ public class Server {
 		if (bauteil.equalsIgnoreCase("TEMP")) {
 			temp.temp = Auslastung;
 		}
-
-		if (temp.cpu != null && temp.ram != null && temp.disk != null && temp.sent != null && temp.recv != null
-				&& temp.dsent != null && temp.drecv != null && temp.processes != null && temp.scmd != null && temp.temp != null) {
+		
+		if (bauteil.equalsIgnoreCase("LOADAVG_1")) {
+		    temp.loadavg1 = Auslastung;
+		}
+		if (bauteil.equalsIgnoreCase("LOADAVG_5")) {
+		    temp.loadavg5 = Auslastung;
+		}
+		if (bauteil.equalsIgnoreCase("LOADAVG_15")) {
+		    temp.loadavg15 = Auslastung;
+		}
+		
+		if (bauteil.startsWith("CPU_CORE")) {
+		    try {
+		        int coreIndex = Integer.parseInt(bauteil.substring("CPU_CORE".length()));
+		        double load = Double.parseDouble(Auslastung.replace(",", "."));
+		        temp.cpuCoreLoads.put(coreIndex, load);
+		    } catch (NumberFormatException e) {
+		        Logger.warning("Ungültiger CPU_CORE Index oder Wert: " + bauteil + " " + Auslastung);
+		    }
+		}
+		
+		if (bauteil.equalsIgnoreCase("CPUVOLTAGE")) {
+		    temp.cpuVoltage = Auslastung;
+		    Logger.info("CPU Voltage von " + Server + ": " + Auslastung);
+		}
+		
+		
+		if (temp.cpu != null && temp.ramUsed  != null && temp.ramTotal != null && temp.disk != null && temp.sent != null && temp.recv != null
+				&& temp.dsent != null && temp.drecv != null && temp.processes != null && temp.scmd != null && temp.temp != null && temp.swapTotal != null
+				&& temp.swapUsed != null && cpuCoreLoads != null) {
 			
-			if(debugMode) {
+			if(false) {
 				System.out.println(temp.cpu);
-				System.out.println(temp.ram);
 				System.out.println(temp.disk);
-				System.out.println(temp.temp + "\n");
+				System.out.println(temp.temp);
 				System.out.println(temp.processes);
+				System.out.println(temp.swapTotal + "/" + temp.swapUsed);
+				System.out.println(temp.ramAvailable + "/" + temp.ramTotal + "/" + temp.ramUsed);
 			}
 			
 			try {
-				String[] teileRam = temp.ram.split("/");
-				double ramUsed = Double.parseDouble(teileRam[0]);
-				double ramTotal = Double.parseDouble(teileRam[1]);
+		        double ramUsed = Double.parseDouble(temp.ramUsed);
+		        double ramTotal = Double.parseDouble(temp.ramTotal);
 
 				String[] teileDisk = temp.disk.split("/");
 				double diskUsed = Double.parseDouble(teileDisk[0]);
@@ -327,12 +372,14 @@ public class Server {
 				int diskPercent = (int) ((diskUsed / diskTotal) * 100);
 
 				ServerStats.update(Server, temp.cpu, ramUsed, ramTotal, diskPercent, diskUsed, diskTotal, "Online",
-						formatiert, temp.sent, temp.recv, temp.dsent, temp.drecv, temp.processes, temp.scmd, temp.temp);
+						formatiert, temp.sent, temp.recv, temp.dsent, temp.drecv, temp.processes, temp.scmd, temp.temp,
+						temp.cpuCoreLoads, temp.swapTotal, temp.swapUsed);
 
 			} catch (Exception e) {
-				Logger.warning("RAM- oder Disk-Daten konnten nicht verarbeitet werden: RAM=" + temp.ram + ", DISK="
+				e.printStackTrace();
+				Logger.warning("RAM- oder Disk-Daten konnten nicht verarbeitet werden: RAM=" + temp.ramUsed + "/" + temp.ramTotal + ", DISK="
 						+ temp.disk);
-				System.err.println("RAM- oder Disk-Daten konnten nicht verarbeitet werden: RAM=" + temp.ram + ", DISK="
+				System.err.println("RAM- oder Disk-Daten konnten nicht verarbeitet werden: RAM=" + temp.ramUsed + "/" + temp.ramTotal + ", DISK="
 						+ temp.disk);
 			}
 
@@ -343,7 +390,11 @@ public class Server {
 
 	private static class ServerTempInfo {
 		Integer cpu = null;
-		String ram = null;
+		String ramUsed;
+		String ramAvailable;
+		String ramTotal;
+		String swapUsed;
+		String swapTotal;
 		String disk = null;
 		String sent = null;
 		String recv = null;
@@ -351,7 +402,12 @@ public class Server {
 		String drecv = null;
 		String scmd = null;
 		String temp = null;
-
+		String loadavg1 = null;
+		String loadavg5 = null;
+		String loadavg15 = null;
+		Map<Integer, Double> cpuCoreLoads = new HashMap<>();
+		String cpuVoltage = null;
+		
 		public List<ServerProcessInfo> processes = new ArrayList<>();
 	}
 

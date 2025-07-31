@@ -118,6 +118,7 @@
 		    background-color: #1e2433;
 		    border-radius: 8px;
 		    overflow: hidden;
+		    font-family: Arial, sans-serif;
 		}
 
 		.hardware-table th,
@@ -125,6 +126,8 @@
 		    padding: 0.75rem 1rem;
 		    border: 1px solid #444;
 		    text-align: left;
+		    vertical-align: middle;
+		    color: #ddd;
 		}
 
 		.hardware-table th {
@@ -140,6 +143,21 @@
 		.hardware-table tbody tr:hover {
 		    background-color: #2f3648;
 		}
+
+		.hardware-table .no-data {
+		    text-align: center;
+		    padding: 1rem;
+		    color: #aaa;
+		}
+
+		/* Icon-Stil für kleine, vertikal zentrierte Bilder */
+		.hardware-table th .icon,
+		.hardware-table td .icon {
+		    height: 1em;
+		    vertical-align: middle;
+		    margin-right: 0.3em;
+		}
+
 		
 		/* Grundstil für alle selects im Formular */
 		#advancedQueryForm select {
@@ -295,6 +313,21 @@
 		    max-width: 600px;
 		    margin-top: 1rem;
 		}
+		
+		#cpuCoreTableBody td {
+		    padding: 4px 8px;
+		}
+
+		#cpuCoreTableBody td:nth-child(3) {
+		    width: 60px; /* feste Breite für Balken-Zelle */
+		}
+		
+		.hardware-table th:nth-child(3),
+		.hardware-table td:nth-child(3) {
+		  width: 70px; /* oder je nach Platz */
+		  padding: 4px 8px;
+		  vertical-align: middle;
+		}
     </style>
 </head>
 <body>
@@ -325,6 +358,9 @@
         <div class="chart-wrapper">
             <canvas id="ramLineChart" aria-label="RAM Verwendung Diagramm" role="img"></canvas>
         </div>
+		<div class="chart-wrapper">
+		    <canvas id="swapChart" aria-label="Swap Speicher" role="img"></canvas>
+		</div>
         <div class="chart-wrapper">
             <canvas id="storageDoughnutChart" aria-label="Storage Diagramm" role="img"></canvas>
         </div>
@@ -351,6 +387,21 @@
 	        <canvas id="combinedLineChart" aria-label="Verlauf CPU, RAM, Storage" role="img" style="height: 300px;"></canvas>
 	    </div>
 	</div>
+	
+	<h2>CPU Kernauslastung</h2>
+	<table class="hardware-table">
+	  <thead>
+	    <tr>
+	      <th>Kern</th>
+	      <th>Last (%)</th>
+	      <th>Auslastungsbalken</th> <!-- Neue Spalte für Balken -->
+	    </tr>
+	  </thead>
+	  <tbody id="cpuCoreTableBody"></tbody>
+	</table>
+
+
+
 
 	<h2>Hardwareinformationen</h2>
 	<table class="hardware-table">
@@ -370,27 +421,32 @@
 
 	
 	<h2>Top Prozesse</h2>
-	    <table style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-	        <thead>
-	            <tr style="background-color:#2a2f42; color:#fff;">
-	                <th style="padding: 0.5rem; border: 1px solid #444;">PID</th>
-	                <th style="padding: 0.5rem; border: 1px solid #444;">Name</th>
-	                <th style="padding: 0.5rem; border: 1px solid #444;"><img src="/img/cpu.png" alt="CPU Icon" style="height: 1em;">CPU (%)</th>
-	                <th style="padding: 0.5rem; border: 1px solid #444;"><img src="/img/ram.png" alt="RAM Icon" style="height: 1em;">RAM (MB)</th>
-	            </tr>
-	        </thead>
-	        <tbody>
-	            <tr th:each="proc : ${server.processes}">
-	                <td style="padding: 0.5rem; border: 1px solid #555;" th:text="${proc.pid}">PID</td>
-	                <td style="padding: 0.5rem; border: 1px solid #555;" th:text="${proc.name}">Name</td>
-	                <td style="padding: 0.5rem; border: 1px solid #555;" th:text="${#numbers.formatDecimal(proc.cpu, 1, 2)}">CPU</td>
-	                <td style="padding: 0.5rem; border: 1px solid #555;" th:text="${proc.ram}">RAM</td>
-	            </tr>
-	            <tr th:if="${#lists.isEmpty(server.processes)}">
-	                <td colspan="4" style="text-align:center; padding:1rem; color:#aaa;">Keine Prozessdaten verfügbar</td>
-	            </tr>
-	        </tbody>
-	    </table>
+	<table class="hardware-table">
+	  <thead>
+	    <tr>
+	      <th>PID</th>
+	      <th>Name</th>
+	      <th>
+	        <img src="/img/cpu.png" alt="CPU Icon" class="icon"> CPU (%)
+	      </th>
+	      <th>
+	        <img src="/img/ram.png" alt="RAM Icon" class="icon"> RAM (MB)
+	      </th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    <tr th:each="proc : ${server.processes}">
+	      <td th:text="${proc.pid}">PID</td>
+	      <td th:text="${proc.name}">Name</td>
+	      <td th:text="${#numbers.formatDecimal(proc.cpu, 1, 2)}">CPU</td>
+	      <td th:text="${proc.ram}">RAM</td>
+	    </tr>
+	    <tr th:if="${#lists.isEmpty(server.processes)}">
+	      <td colspan="4" class="no-data">Keine Prozessdaten verfügbar</td>
+	    </tr>
+	  </tbody>
+	</table>
+
 		
 		<div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 2rem;">
 		
@@ -417,7 +473,7 @@
 		  <select id="component" name="component" required>
 		    <option value="">-- Bitte wählen --</option>
 		    <option value="cpuPercent">CPU-Auslastung (%)</option>
-		    <option value="ramUsed">RAM-Verbrauch (MB)</option>
+		    <option value="ramUsed">RAM-Verbrauch (GB)</option>
 		    <option value="diskPercent">Festplatten-Auslastung (%)</option>
 		  </select>
 
@@ -463,6 +519,32 @@
     const ramCtx = document.getElementById('ramLineChart').getContext('2d');
     const storageCtx = document.getElementById('storageDoughnutChart').getContext('2d');
 
+	const centerTextPlugin = {
+	    id: 'centerText',
+	    beforeDraw: function(chart) {
+	        if (chart.config.options.plugins.centerText) {
+	            const ctx = chart.ctx;
+	            const text = chart.config.options.plugins.centerText.text;
+	            const fontSize = chart.config.options.plugins.centerText.fontSize || '16';
+	            const color = chart.config.options.plugins.centerText.color || '#fff';
+
+	            const chartArea = chart.chartArea;
+	            const centerX = (chartArea.left + chartArea.right) / 2;
+	            const centerY = (chartArea.top + chartArea.bottom) / 2;
+
+	            ctx.save();
+	            ctx.font = `${fontSize}px sans-serif`;
+	            ctx.fillStyle = color;
+	            ctx.textAlign = 'center';
+	            ctx.textBaseline = 'middle';
+	            ctx.fillText(text, centerX, centerY);
+	            ctx.restore();
+	        }
+	    }
+	};
+	Chart.register(centerTextPlugin);
+
+	
     const cpuChart = new Chart(cpuCtx, {
         type: 'line',
         data: {
@@ -524,15 +606,49 @@
             }
         }
     });
+	
+	
+	const swapCtx = document.getElementById('swapChart').getContext('2d');
+	let swapChart = new Chart(swapCtx, {
+	    type: 'doughnut',
+	    data: {
+	        labels: ['Verwendet', 'Frei'],
+	        datasets: [{
+	            data: [0, 0],
+	            backgroundColor: ['rgba(255, 159, 64, 0.8)', 'rgba(100, 100, 100, 0.3)'],
+	            borderWidth: 0
+	        }]
+	    },
+	    options: {
+	        responsive: true,
+	        maintainAspectRatio: false,
+	        cutout: '70%',
+	        plugins: {
+	            legend: {
+	                position: 'bottom',
+	                labels: {
+	                    color: '#ddd',
+	                    font: { size: 14 }
+	                }
+	            },
+				centerText: {
+				  	text: 'Swap',
+			     	fontSize: 18,
+	           		color: '#fff'
+			     }
+	        }
+	    }
+	});
 
     let storageChart;
 	let combinedChart;
 
     async function updateData() {
+		let server;
         try {
             const res = await fetch(`/api/server/${encodeURIComponent(serverName)}`);
             if (!res.ok) throw new Error("Fehler beim Laden");
-            const server = await res.json();
+            server = await res.json();
 			console.log(server);
 
             // Text aktualisieren
@@ -577,7 +693,12 @@
                                     color: '#ddd',
                                     font: { size: 14 }
                                 }
-                            }
+                            },
+							centerText: {
+							    text: 'Speicher',
+							    fontSize: 18,
+							    color: '#fff'
+							}
                         }
                     }
                 });
@@ -681,6 +802,14 @@
 		}
 
 		
+		// Swap-Werte als Zahl interpretieren
+		const swapUsed = parseFloat(server.swapUsed ?? 0);
+		const swapTotal = parseFloat(server.swapTotal ?? 0);
+		const swapFree = swapTotal - swapUsed;
+
+		// Swap-Diagramm aktualisieren
+		swapChart.data.datasets[0].data = [swapUsed, swapFree];
+		swapChart.update();
     }
 	
 	document.getElementById("thresholdForm").addEventListener("submit", async function(event) {
@@ -779,6 +908,81 @@
 
 	  performQuery(filterType, component, threshold);
 	});
+	
+	document.addEventListener("DOMContentLoaded", () => {
+	    updateData();
+		setInterval(updateData, 4000);
+	});
+	
+	function updateCpuCores() {
+	    fetch(`/api/server/${serverName}`)
+	        .then(response => response.json())
+	        .then(server => {
+	            const cpuCoreTableBody = document.getElementById("cpuCoreTableBody");
+	            const cores = server.cpuCore || {};
+
+	            const existingRows = {};
+	            Array.from(cpuCoreTableBody.rows).forEach(row => {
+	                const coreName = row.cells[0].textContent; // z.B. "Kern 0"
+	                existingRows[coreName] = row;
+	            });
+
+	            Object.entries(cores).forEach(([core, load]) => {
+	                const coreName = `Kern ${core}`;
+	                const loadText = `${load.toFixed(2)} %`;
+
+	                if (existingRows[coreName]) {
+	                    // Wert aktualisieren
+	                    existingRows[coreName].cells[1].textContent = loadText;
+
+	                    // Balken aktualisieren
+	                    const bar = existingRows[coreName].cells[2].firstElementChild;
+	                    bar.style.width = `${load}%`;
+	                    delete existingRows[coreName];
+	                } else {
+	                    // Neue Zeile anlegen
+	                    const row = document.createElement("tr");
+
+	                    const coreCell = document.createElement("td");
+	                    coreCell.textContent = coreName;
+	                    row.appendChild(coreCell);
+
+	                    const loadCell = document.createElement("td");
+	                    loadCell.textContent = loadText;
+	                    row.appendChild(loadCell);
+
+	                    // Balken-Zelle mit Div Balken
+	                    const barCell = document.createElement("td");
+	                    const bar = document.createElement("div");
+	                    bar.style.width = `${load}%`;
+	                    bar.style.height = "10px";
+						bar.style.backgroundColor = "rgba(255, 99, 132, 0.8)"; // CPU-Farbton, etwas transparent
+	                    bar.style.borderRadius = "3px";
+	                    bar.style.transition = "width 0.5s ease";
+	                    barCell.appendChild(bar);
+	                    row.appendChild(barCell);
+
+	                    row.style.verticalAlign = "middle"; // Optional
+
+	                    cpuCoreTableBody.appendChild(row);
+	                }
+	            });
+
+	            // Entferne nicht mehr vorhandene Zeilen
+	            for (const remainingRow of Object.values(existingRows)) {
+	                cpuCoreTableBody.removeChild(remainingRow);
+	            }
+
+	            console.log("Aktualisierte CPU-Kerne:", cores);
+	        })
+	        .catch(error => {
+	            console.error("Fehler beim Abrufen der CPU-Kerne:", error);
+	        });
+	}
+
+	// alle 5 Sekunden aktualisieren
+	setInterval(updateCpuCores, 5000);
+	updateCpuCores(); // direkt einmal initial aufrufen
 </script>
 </body>
 </html>
