@@ -29,8 +29,9 @@ public class ServerInfo {
     private String drecv;
     private List<ServerProcessInfo> processes = new ArrayList<>();
     private String scmd;
+    private String temp;
 
-    public ServerInfo(String name, int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv, List<ServerProcessInfo> processes, String scmd) {
+    public ServerInfo(String name, int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv, List<ServerProcessInfo> processes, String scmd, String temp) {
         this.name = name;
         this.cpuPercent = cpuPercent;
         this.ramUsed = ramUsed;
@@ -47,9 +48,10 @@ public class ServerInfo {
         this.drecv = drecv;
         this.processes = processes != null ? processes : new ArrayList<>();
         this.scmd = scmd;
+        this.temp = temp;
     }
 
-    public void update(int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv, List<ServerProcessInfo> processes, String scmd) {
+    public void update(int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv, List<ServerProcessInfo> processes, String scmd, String temp) {
         this.cpuPercent = cpuPercent;
         this.ramUsed = ramUsed;
         this.ramTotal = ramTotal;
@@ -64,6 +66,7 @@ public class ServerInfo {
         this.drecv = drecv;
         this.processes = processes != null ? processes : new ArrayList<>();
         this.scmd = scmd;
+        this.temp = temp;
 
         // boottime nur setzen, wenn noch nicht gesetzt (also null oder leer)
         if (this.boottime == null || this.boottime.isEmpty()) {
@@ -111,6 +114,7 @@ public class ServerInfo {
     public List<ServerProcessInfo> getProcesses() { return processes; }
     public List<ServerHistoryEntry> getHistory() { return history; }
     public String getScmd() { return scmd; }
+    public String getTemp() { return temp; }
 
     
     public static String berechneUptime(String boottimeStr) {

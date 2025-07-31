@@ -118,22 +118,6 @@ public class ApiController {
                 .orElse(List.of());
     }
     
-    @GetMapping("/api/server/{name}/history/spike")
-    public ResponseEntity<SpikeDetectionResult> getCpuSpike(@PathVariable String name) {
-        List<ServerHistoryEntry> history = ServerStats.getAllServers().stream()
-            .filter(s -> s.getName().equalsIgnoreCase(name))
-            .findFirst()
-            .map(ServerInfo::getHistory)
-            .orElse(List.of());
-
-        List<CpuDataPoint> cpuData = history.stream()
-            .map(e -> new CpuDataPoint()) // anpassen, falls andere Methodennamen
-            .toList();
-
-        SpikeDetectionResult spikeResult = detectCpuSpike(cpuData);
-        return ResponseEntity.ok(spikeResult);
-    }
-    
     //Trigger prüfen
     private void checkTrigger(ServerInfo server) {
         triggerService.getTrigger(server.getName()).ifPresent(triggerList -> {
@@ -250,42 +234,7 @@ public class ApiController {
         }
     }
     
-    public SpikeDetectionResult detectCpuSpike(List<CpuDataPoint> dataPoints) {
-        // Annahme: dataPoints sind sortiert nach timestamp aufsteigend
-        
-        for (int i = 0; i < dataPoints.size(); i++) {
-            CpuDataPoint start = dataPoints.get(i);
-            // Suche nach Peak innerhalb 10 Sekunden, mit CPU-Anstieg > 30%
-            for (int j = i + 1; j < dataPoints.size(); j++) {
-                CpuDataPoint current = dataPoints.get(j);
-                long deltaTime = current.getTimestamp() - start.getTimestamp();
-                if (deltaTime > 10_000) break; // mehr als 10 Sekunden keine Steigung gefunden
-                
-                double cpuDiff = current.getCpu() - start.getCpu();
-                if (cpuDiff > 10.0) {
-                	System.out.println("Peak gefunden...");
-                    // Peak gefunden, suche ob innerhalb 20 Sekunden danach CPU wieder um 25% fällt
-                    long peakTime = current.getTimestamp();
-                    double peakCpu = current.getCpu();
-                    
-                    for (int k = j + 1; k < dataPoints.size(); k++) {
-                        CpuDataPoint afterPeak = dataPoints.get(k);
-                        long afterPeakDelta = afterPeak.getTimestamp() - peakTime;
-                        if (afterPeakDelta > 20_000) break; // Zeitfenster vorbei
-                        
-                        double drop = peakCpu - afterPeak.getCpu();
-                        if (drop >= 5.0) {
-                        	System.out.println("Spike erkannt");
-                            // Spike erkannt: Start, Peak, Ende
-                            return new SpikeDetectionResult(true, start.getTimestamp(), peakTime, afterPeak.getTimestamp());
-                        }
-                    }
-                }
-            }
-        }
-        
-        return new SpikeDetectionResult(false, 0, 0, 0);
-    }
+  
     
     public class CpuDataPoint {
         private long timestamp;

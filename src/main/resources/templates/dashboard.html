@@ -143,16 +143,35 @@ async function refreshData() {
 		} else {
 			servers.forEach(server => {
 			    const div = document.createElement('div');
+				
+				const cpuUsage = parseFloat(server.cpuPercent);
+				    let borderColor = '';
+				    let warningText = '';
+
+				    if (cpuUsage >= 90) {
+				        borderColor = 'red';
+				        warningText = '<p style="color: red; font-weight: bold;">⚠ WARNING: CPU über 90%</p>';
+				    } else if (cpuUsage >= 70) {
+				        borderColor = 'orange';
+				        warningText = '<p style="color: orange; font-weight: bold;">⚠ WARNING: CPU über 70%</p>';
+				    }
+
+				    div.style.border = borderColor ? `3px solid ${borderColor}` : '';
+				    div.style.borderRadius = '8px';
+				    div.style.padding = '10px';
+				    div.style.marginBottom = '10px';
 
 			    const scmdEnabled = String(server.scmd).toLowerCase() === 'true';
 
 			    div.innerHTML = `
 			        <h2><img src="/img/server.png" alt="Server Icon" style="height: 1em;"> ${server.name}</h2>
+					${warningText}
 			        <p>STATUS: ${server.status}</p>
 			        <p><img src="/img/cpu.png" alt="CPU Icon" style="height: 1em;"> CPU: ${server.cpuPercent}%</p>
 			        <p><img src="/img/ram.png" alt="RAM Icon" style="height: 1em;"> RAM: ${format3(server.ramUsed)} Gb / ${format3(server.ramTotal)} Gb</p>
 			        <p><img src="/img/ssd.png" alt="SSD Icon" style="height: 1em;"> STORAGE:  ${server.storageUsed} Gb / ${server.storageTotal} Gb</p>
 			        <p><img src="/img/network.png" alt="Logs Icon" style="height: 1em;"> NETWORK: ↑ ${format3(server.dsend)} ↓ ${format3(server.drecv)}</p>
+					<p><img src="/img/temp.png" alt="Logs Icon" style="height: 1em;">CPU-TEMP: ${server.temp}</p>
 			        <div style="display: flex; gap: 5px; margin-bottom: 5px;">
 			            ${scmdEnabled ? `
 			            <div style="display: flex; gap: 5px; margin-top: 5px;">

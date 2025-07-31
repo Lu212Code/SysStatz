@@ -134,8 +134,6 @@ public class Server {
 				try {
 					String line;
 					while ((line = in.readLine()) != null) {
-
-						System.out.println("----" + line);
 						
 						if (line.startsWith("HW:")) {
 							String payload = line.substring("HW:".length()).trim();
@@ -215,7 +213,6 @@ public class Server {
 	private static void handleHardwareInfo(String serverName, String hardwareKey, String value) {
 		String message = String.format("Hardwareinfo von %s → %s: %s", serverName, hardwareKey, value);
 		Logger.info(message);
-		System.out.println(message);
 
 		// Optional: an Web-Frontend weiterreichen, z. B. speichern oder auf Seite
 		// anzeigen
@@ -231,7 +228,6 @@ public class Server {
 				double inDouble = Double.parseDouble(newAuslastung);
 				temp.cpu = (int) inDouble;
 				Logger.info("CPU:" + Server + ":" + temp.cpu);
-				System.out.println("CPU:" + Server + ":" + temp.cpu);
 			} catch (Exception e) {
 				Logger.warning("CPU konnte nicht gelesen werden: " + Auslastung);
 				System.err.println("CPU konnte nicht gelesen werden: " + Auslastung);
@@ -269,13 +265,11 @@ public class Server {
 		if (bauteil.equalsIgnoreCase("DISKUSAGE")) {
 			temp.disk = Auslastung;
 			Logger.info("DISK:" + Server + ":" + Auslastung);
-			System.out.println("DISK:" + Server + ":" + Auslastung);
 		}
 
 		if (bauteil.equalsIgnoreCase("RAM")) {
 			temp.ram = Auslastung;
 			Logger.info("RAM:" + Server + ":" + Auslastung);
-			System.out.println("RAM:" + Server + ":" + Auslastung);
 		}
 
 		if (bauteil.equalsIgnoreCase("NET_SENT")) {
@@ -297,10 +291,22 @@ public class Server {
 		if (bauteil.equalsIgnoreCase("SCMD")) {
 			temp.scmd = Auslastung;
 		}
+		
+		if (bauteil.equalsIgnoreCase("TEMP")) {
+			temp.temp = Auslastung;
+		}
 
-		System.out.println(temp.scmd);
 		if (temp.cpu != null && temp.ram != null && temp.disk != null && temp.sent != null && temp.recv != null
-				&& temp.dsent != null && temp.drecv != null && temp.processes != null && temp.scmd != null) {
+				&& temp.dsent != null && temp.drecv != null && temp.processes != null && temp.scmd != null && temp.temp != null) {
+			
+			if(debugMode) {
+				System.out.println(temp.cpu);
+				System.out.println(temp.ram);
+				System.out.println(temp.disk);
+				System.out.println(temp.temp + "\n");
+				System.out.println(temp.processes);
+			}
+			
 			try {
 				String[] teileRam = temp.ram.split("/");
 				double ramUsed = Double.parseDouble(teileRam[0]);
@@ -321,7 +327,7 @@ public class Server {
 				int diskPercent = (int) ((diskUsed / diskTotal) * 100);
 
 				ServerStats.update(Server, temp.cpu, ramUsed, ramTotal, diskPercent, diskUsed, diskTotal, "Online",
-						formatiert, temp.sent, temp.recv, temp.dsent, temp.drecv, temp.processes, temp.scmd);
+						formatiert, temp.sent, temp.recv, temp.dsent, temp.drecv, temp.processes, temp.scmd, temp.temp);
 
 			} catch (Exception e) {
 				Logger.warning("RAM- oder Disk-Daten konnten nicht verarbeitet werden: RAM=" + temp.ram + ", DISK="
@@ -344,6 +350,7 @@ public class Server {
 		String dsent = null;
 		String drecv = null;
 		String scmd = null;
+		String temp = null;
 
 		public List<ServerProcessInfo> processes = new ArrayList<>();
 	}
@@ -428,9 +435,6 @@ public class Server {
 	        String country = geo.optString("country", "unbekannt");
 	        double lat = geo.optDouble("lat", 0.0);
 	        double lon = geo.optDouble("lon", 0.0);
-
-	        Logger.info("Geolocation von " + serverName + ": " + city + ", " + country + " (" + lat + ", " + lon + ")");
-	        System.out.println("Geolocation von " + serverName + ": " + city + ", " + country + " (" + lat + ", " + lon + ")");
 
 	        // Beispiel: Speichere die Daten in einer Map (muss als Feld definiert sein)
 	        geoLocations.put(serverName, new GeoInfo(city, country, lat, lon));

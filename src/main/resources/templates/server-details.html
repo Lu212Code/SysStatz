@@ -683,46 +683,6 @@
 		
     }
 	
-	function highlightSpikeInChart(spike) {
-	    const startTime = spike.spikeStartTimestamp;
-	    const endTime = spike.spikeEndTimestamp;
-
-	    // Beispiel: vertikale Linien beim Start und Ende des Spikes
-	    combinedLineChart.options.plugins.annotation.annotations = [
-	        {
-	            type: 'line',
-	            mode: 'vertical',
-	            scaleID: 'x', // je nachdem wie deine x-Achse heißt
-	            value: startTime,
-	            borderColor: 'red',
-	            borderWidth: 2,
-	            label: {
-	                content: 'Spike Start',
-	                enabled: true,
-	                position: 'start'
-	            }
-	        },
-	        {
-	            type: 'line',
-	            mode: 'vertical',
-	            scaleID: 'x',
-	            value: endTime,
-	            borderColor: 'red',
-	            borderWidth: 2,
-	            label: {
-	                content: 'Spike Ende',
-	                enabled: true,
-	                position: 'end'
-	            }
-	        }
-	    ];
-	    combinedLineChart.update();
-	}
-
-    updateData();
-    setInterval(updateData, 5000);
-	
-	
 	document.getElementById("thresholdForm").addEventListener("submit", async function(event) {
 	    event.preventDefault();
 
@@ -819,19 +779,6 @@
 
 	  performQuery(filterType, component, threshold);
 	});
-	
-	fetch(`/api/server/${serverName}/history/spike`)
-	    .then(res => res.json())
-	    .then(data => {
-	        if (data.spikeDetected) {
-	            document.getElementById('spikeAlert').style.display = 'block';
-	            document.getElementById('spikeStart').textContent = new Date(data.spikeStartTimestamp).toLocaleTimeString();
-	            document.getElementById('spikeEnd').textContent = new Date(data.spikeEndTimestamp).toLocaleTimeString();
-
-	            // Optional: Spike auch im Chart hervorheben
-	            highlightSpikeInChart(data);
-	        }
-	    });
 </script>
 </body>
 </html>

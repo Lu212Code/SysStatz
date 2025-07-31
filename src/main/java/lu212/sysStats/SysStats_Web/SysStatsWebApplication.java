@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.github.lalyos.jfiglet.FigletFont;
 
 import lu212.sysStats.General.Logger;
+import lu212.sysStats.General.ServerStatsGenerator;
 import lu212.sysStats.StatsServer.Server;
 
 @SpringBootApplication
@@ -47,6 +48,7 @@ public class SysStatsWebApplication {
 			Logger.error("Webserver konnte nicht gestartet werden:");
 			System.err.println("Webserver konnte nicht gestartet werden:");
 			e.printStackTrace();
+			shutdown();
 			System.exit(0);
 		}
 		Logger.info("Starte StatsServer...");
@@ -62,12 +64,24 @@ public class SysStatsWebApplication {
 		System.out.println(SysStatzLogo);
 		System.out.println("-----------------------ver.-0.1-------------------------");
 		
+		int i = 0;
+		while(i==0) {
+		ServerStatsGenerator.generateRandomServers(5, ServerStatsGenerator.LoadLevel.SEHR_HOCH);
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		}
+		
+		
 		try {
 			Server.main(null);
 		} catch (IOException e) {
 			Logger.error("StatsServer konnte nicht gestartet werden:");
 			System.err.println("StatsServer konnte nicht gestartet werden:");
 			e.printStackTrace();
+			shutdown();
 			System.exit(0);
 		}
 	}

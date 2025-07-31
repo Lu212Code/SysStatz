@@ -1,33 +1,152 @@
 <!DOCTYPE html>
-<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SysStatz – Willkommen</title>
-	<link rel="icon" href="/img/logo.png" type="image/png">
-	<link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+    <link rel="icon" href="/img/logo.png" type="image/png">
+    <style>
+        * {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(120deg, #0f2027, #203a43, #2c5364);
+            background-size: 400% 400%;
+            animation: gradientFlow 15s ease infinite;
+            color: white;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        @keyframes gradientFlow {
+            0% {background-position: 0% 50%;}
+            50% {background-position: 100% 50%;}
+            100% {background-position: 0% 50%;}
+        }
+
+        header {
+            padding: 2em 1em;
+            animation: fadeInTop 1.5s ease-out;
+        }
+
+        @keyframes fadeInTop {
+            0% {opacity: 0; transform: translateY(-30px);}
+            100% {opacity: 1; transform: translateY(0);}
+        }
+
+        header img {
+            height: 80px;
+            animation: floatLogo 3s ease-in-out infinite;
+        }
+
+        @keyframes floatLogo {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0); }
+        }
+
+        .login-section {
+            padding: 2em 1em;
+            animation: fadeIn 2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+
+        .login-section h2 {
+            font-size: 2.5em;
+            margin-bottom: 0.2em;
+        }
+
+        .login-section p {
+            font-size: 1.2em;
+            margin-bottom: 1.5em;
+        }
+
+        .button-login {
+            padding: 0.8em 2em;
+            background: #00c6ff;
+            background: linear-gradient(90deg, #0072ff, #00c6ff);
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.5);
+        }
+
+        .button-login:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 198, 255, 0.9);
+        }
+
+        .video-preview {
+            display: flex;
+            justify-content: center;
+            gap: 1em;
+            padding: 3em 1em;
+            flex-wrap: wrap;
+        }
+
+        .video-preview video {
+            width: 300px;
+            height: 180px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        footer {
+            padding: 1.5em;
+            background-color: rgba(255, 255, 255, 0.05);
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .login-section h2 {
+                font-size: 2em;
+            }
+
+            .video-preview video {
+                width: 90%;
+                height: auto;
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <header class="header">
-		<p>
-		  <img src="/img/logo.png" alt="SysStatz Logo" style="height: 5em; vertical-align: middle; margin-right: 5px;">
-		  Serverüberwachung einfach gemacht
-		</p>
-    </header>
+<header>
+    <img src="/img/logo.png" alt="SysStatz Logo">
+    <h1>Serverüberwachung. Neu gedacht.</h1>
+</header>
 
-    <main class="main-content">
-        <section class="login-section">
-            <h2>Login</h2>
-            <p>Bitte melden Sie sich an, um auf Ihr Dashboard zuzugreifen.</p>
-            <a th:href="@{/login}" class="button-login">Jetzt einloggen</a>
-        </section>
-    </main>
+<main class="login-section">
+    <h2>Willkommen bei SysStatz</h2>
+    <p>Starten Sie mit Ihrem persönlichen Dashboard.</p>
+    <a href="/login" class="button-login">Jetzt einloggen</a>
+</main>
 
-    <footer class="footer">
-        <h3>Hilfe & Dokumentation</h3>
-        <p>Weitere Anleitungen und Informationen folgen in Kürze.</p>
-    </footer>
-
+<section class="video-preview">
+    <video autoplay muted loop playsinline>
+        <source src="/videos/overview.mp4" type="video/mp4">
+    </video>
+    <video autoplay muted loop playsinline>
+        <source src="/videos/themes.mp4" type="video/mp4">
+    </video>
+    <video autoplay muted loop playsinline>
+        <source src="/videos/liveview.mp4" type="video/mp4">
+    </video>
+</section>
 </body>
 </html>
