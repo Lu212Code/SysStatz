@@ -5,6 +5,7 @@ public class Config {
     private String statsPort;
     private String theme;
     private String ollamaserverip;
+    private String twoFactorRequired;
 
     // Getter und Setter
     public String getWebPort() { return webPort; }
@@ -18,4 +19,12 @@ public class Config {
     
     public String getOllamaserverip() { return ollamaserverip; }
     public void setOllamaserverip(String ollamaserverip) { this.ollamaserverip = ollamaserverip; }
+    
+    public String getTwoFactorRequired() {
+        return twoFactorRequired;
+    }
+
+    public void setTwoFactorRequired(String twoFactorRequired) {
+        this.twoFactorRequired = twoFactorRequired;
+    }
 }

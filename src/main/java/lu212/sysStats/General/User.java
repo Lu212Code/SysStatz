@@ -4,11 +4,16 @@ public class User {
     private String username;
     private String password;
     private boolean isAdmin;
+    
+    private boolean twoFactorEnabled;
+    private String twoFactorSecret; // Base32-Secret für TOTP
 
     public User(String username, String password, boolean isAdmin) {
         this.username = username;
         this.password = password;
         this.isAdmin = isAdmin;
+        this.twoFactorEnabled = false;
+        this.twoFactorSecret = null;
     }
 
     // Getter & Setter
@@ -20,4 +25,11 @@ public class User {
 
     public boolean isAdmin() { return isAdmin; }
     public void setAdmin(boolean admin) { isAdmin = admin; }
+    
+    // Getter/Setter
+    public boolean isTwoFactorEnabled() { return twoFactorEnabled; }
+    public void setTwoFactorEnabled(boolean enabled) { this.twoFactorEnabled = enabled; }
+
+    public String getTwoFactorSecret() { return twoFactorSecret; }
+    public void setTwoFactorSecret(String secret) { this.twoFactorSecret = secret; }
 }

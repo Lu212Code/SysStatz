@@ -117,6 +117,13 @@
             <p>Webserver Port: <input type="text" name="webPort" th:value="${config.webPort}"></p>
             <p>Statsserver Port: <input type="text" name="statsPort" th:value="${config.statsPort}"></p>
 			<p>Ollama Server IP: <input type="text" name="ollamaserverip" th:value="${config.ollamaserverip}"></p>
+			<p>
+			  <label>
+				<input type="checkbox" name="twoFactorRequired" value="true" th:checked="${config.twoFactorRequired}" />
+			    2-Faktor-Authentifizierung erzwingen
+			  </label>
+			</p>
+
 			</section>
             <p>Website Theme:
                 <select name="theme">

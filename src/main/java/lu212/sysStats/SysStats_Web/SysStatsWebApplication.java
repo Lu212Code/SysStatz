@@ -24,6 +24,7 @@ public class SysStatsWebApplication {
 	public static String statsserverport;
 	public static String theme;
 	public static String ollamaIP;
+	public static String twoFactorRequired;
 	private static ConfigurableApplicationContext context;
 	
 	public static void main(String[] args) {
@@ -93,6 +94,7 @@ public class SysStatsWebApplication {
 		statsserverport = config.getStatsServerPort();
 		theme = config.getTheme();
 		ollamaIP = config.getOllamaServerIP();
+		twoFactorRequired = config.getTwoFactor();
 	}
 
 	@Bean

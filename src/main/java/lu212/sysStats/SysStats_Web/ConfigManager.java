@@ -13,6 +13,7 @@ public class ConfigManager {
     private String statsServerPort;
     private String theme;
     private String ollamaserverip;
+    private String twoFactorRequired;
 
     public ConfigManager() {
         try {
@@ -30,7 +31,8 @@ public class ConfigManager {
             "webPort=8080",
             "statsPort=12345",
             "theme=default",
-            "ollamaserverip=default"
+            "ollamaserverip=default",
+            "twoFactorRequired=false"
         );
         Files.write(CONFIG_PATH, defaultLines);
     }
@@ -45,6 +47,7 @@ public class ConfigManager {
                     case "statsPort" -> statsServerPort = parts[1];
                     case "theme" -> theme = parts[1];
                     case "ollamaserverip" -> ollamaserverip = parts[1];
+                    case "twoFactorRequired" -> twoFactorRequired = parts[1];
                 }
             }
         }
@@ -66,5 +69,9 @@ public class ConfigManager {
     
     public String getOllamaServerIP() {
     	return ollamaserverip;
+    }
+    
+    public String getTwoFactor() {
+    	return twoFactorRequired;
     }
 }

@@ -1,2 +1,1 @@
 TestUser1|12345|true
-TestUser2|1|false

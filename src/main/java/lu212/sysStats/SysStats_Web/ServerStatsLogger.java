@@ -17,6 +17,11 @@ public class ServerStatsLogger {
     public void logServerStats() {
         List<ServerInfo> servers = ServerStats.getAllServers();
         for (ServerInfo server : servers) {
+            if (server == null) {
+                System.out.println("⚠️  Leerer Server-Eintrag übersprungen.");
+                continue;
+            }
+            
             int cpu = (int) Math.round(server.getCpuPercent());
             int ram = (int) Math.round(server.getRamUsed() / (double) server.getRamTotal() * 100);
             int disk = (int) Math.round(server.getStorageUsed() / (double) server.getStorageTotal() * 100);

@@ -44,7 +44,7 @@ public class Server {
     public void start() {
         try {
 
-        	InputStream keystoreStream = getClass().getClassLoader().getResourceAsStream("static/keystore.jks");
+        	InputStream keystoreStream = getClass().getClassLoader().getResourceAsStream("keystore.jks");
         	if (keystoreStream == null) {
         	    throw new FileNotFoundException("Keystore-Datei nicht gefunden im Ressourcen-Ordner!");
         	}
@@ -72,7 +72,7 @@ public class Server {
             while (true) {
             	SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
             	clientSocket.startHandshake(); // <- wichtig!
-                new Thread(() -> handleNewClient(clientSocket)).start();
+            	new Thread(() -> handleNewClient(clientSocket)).start();
             }
 
         } catch (Exception e) {

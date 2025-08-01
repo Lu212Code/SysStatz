@@ -57,6 +57,7 @@ public class SettingsController {
                             case "statsPort" -> config.setStatsPort(parts[1]);
                             case "theme" -> config.setTheme(parts[1]);
                             case "ollamaserverip" -> config.setOllamaserverip(parts[1]);
+                            case "twoFactorRequired" -> config.setTwoFactorRequired(parts[1]);
                         }
                     }
                 }
@@ -95,6 +96,9 @@ public class SettingsController {
             }
             if (newConfig.getOllamaserverip() != null) {
                 configMap.put("ollamaserverip", newConfig.getOllamaserverip());
+            }
+            if (newConfig.getTwoFactorRequired() != null) {
+                configMap.put("twoFactorRequired", newConfig.getTwoFactorRequired());
             }
 
             // Zurückschreiben

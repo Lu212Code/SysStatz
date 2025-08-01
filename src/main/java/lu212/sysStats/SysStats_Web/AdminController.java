@@ -69,6 +69,7 @@ public class AdminController {
         User user = UserStore.getUserByName(username);
         if (user != null) {
             user.setAdmin(!user.isAdmin());
+            UserStore.saveUsers();  // Speichern nicht vergessen!
         }
         return "redirect:/admin/manageUsers";
     }
