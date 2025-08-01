@@ -14,6 +14,15 @@ import lu212.sysStats.SysStats_Web.SysStatsWebApplication;
 import org.json.JSONObject;
 import org.json.JSONException;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
+
+import java.io.FileInputStream;
+import java.security.KeyStore;
+
 public class Server {
 
 	private static int PORT = 12345;
@@ -32,24 +41,44 @@ public class Server {
 		new Server().start();
 	}
 
-	private void start() throws IOException {
-		try {
-		PORT = Integer.parseInt(SysStatsWebApplication.statsserverport);
-		} catch (Exception e) {
-			Logger.error("Fehler beim Parsen des StatsServer Ports: " + SysStatsWebApplication.statsserverport);
-			System.out.println("Fehler beim Parsen des StatsServer Ports: " + SysStatsWebApplication.statsserverport);
-			PORT = 12345;
-		}
-		
-		ServerSocket serverSocket = new ServerSocket(PORT);
-		Logger.info("StatsServer läuft auf Port " + PORT);
-		System.out.println("StatsServer läuft auf Port " + PORT);
+    public void start() {
+        try {
 
-		while (true) {
-			Socket clientSocket = serverSocket.accept();
-			new Thread(() -> handleNewClient(clientSocket)).start();
-		}
-	}
+        	InputStream keystoreStream = getClass().getClassLoader().getResourceAsStream("static/keystore.jks");
+        	if (keystoreStream == null) {
+        	    throw new FileNotFoundException("Keystore-Datei nicht gefunden im Ressourcen-Ordner!");
+        	}
+
+        	KeyStore ks = KeyStore.getInstance("JKS");
+        	ks.load(keystoreStream, "changeit".toCharArray());
+        	keystoreStream.close();
+
+            // 2. KeyManagerFactory initialisieren
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            kmf.init(ks, "changeit".toCharArray());
+
+            // 3. SSLContext initialisieren
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(kmf.getKeyManagers(), null, null);
+
+            // 4. SSLServerSocketFactory
+            SSLServerSocketFactory ssf = sslContext.getServerSocketFactory();
+
+            // 5. SSLServerSocket erstellen
+            SSLServerSocket serverSocket = (SSLServerSocket) ssf.createServerSocket(PORT);
+
+            System.out.println("SSL Server läuft auf Port " + PORT);
+
+            while (true) {
+            	SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
+            	clientSocket.startHandshake(); // <- wichtig!
+                new Thread(() -> handleNewClient(clientSocket)).start();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 	private void handleNewClient(Socket socket) {
 		try {
