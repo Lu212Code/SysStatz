@@ -20,21 +20,18 @@ Website: sysstatz.de
 
 ## 🚀 Schnellstart
 
-### 📥 Server starten
+### 📥 Server starten (Java 17+ benötigt)
 
 ```bash
-git clone https://github.com/DEIN-NAME/sysstatz.git
-cd sysstatz/server
-./mvnw spring-boot:run
+bash <(curl -s http://sysstatz.de/install/install_sysstatz.sh)
 ```
 
 Webinterface aufrufen: [http://localhost:8080](http://localhost:8080)
 
-### 📦 Client starten (Java)
+### 📦 Client starten (Java 17+ benötigt)
 
 ```bash
-cd sysstatz/client
-java -jar SysStatzClient.jar
+bash <(curl -s http://sysstatz.de/install/install_sysstatz_client.sh)
 ```
 
 Konfiguration erfolgt automatisch beim ersten Start (Clientname, Server-IP, Intervall).
