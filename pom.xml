@@ -74,22 +74,35 @@
         	<version>1.5.4</version>
     	</dependency>
     	
-<dependency>
-    <groupId>org.jboss.aerogear</groupId>
-    <artifactId>aerogear-otp-java</artifactId>
-    <version>1.0.0</version>
-</dependency>
+    	<dependency>
+  			<groupId>org.bouncycastle</groupId>
+  			<artifactId>bcprov-jdk15on</artifactId>
+  			<version>1.70</version>
+		</dependency>
+		
+		<dependency>
+		  <groupId>org.bouncycastle</groupId>
+		  <artifactId>bcpkix-jdk15on</artifactId>
+		  <version>1.70</version>
+		</dependency>
 
-<dependency>
-  <groupId>com.google.zxing</groupId>
-  <artifactId>core</artifactId>
-  <version>3.5.2</version>
-</dependency>
-<dependency>
-  <groupId>com.google.zxing</groupId>
-  <artifactId>javase</artifactId>
-  <version>3.5.2</version>
-</dependency>
+		
+		<dependency>
+		    <groupId>org.jboss.aerogear</groupId>
+		    <artifactId>aerogear-otp-java</artifactId>
+		    <version>1.0.0</version>
+		</dependency>
+		
+		<dependency>
+		  <groupId>com.google.zxing</groupId>
+		  <artifactId>core</artifactId>
+		  <version>3.5.2</version>
+		</dependency>
+		<dependency>
+		  <groupId>com.google.zxing</groupId>
+		  <artifactId>javase</artifactId>
+		  <version>3.5.2</version>
+		</dependency>
 
 
 

@@ -58,6 +58,7 @@ public class SettingsController {
                             case "theme" -> config.setTheme(parts[1]);
                             case "ollamaserverip" -> config.setOllamaserverip(parts[1]);
                             case "twoFactorRequired" -> config.setTwoFactorRequired(parts[1]);
+                            case "clientPassword" -> config.setClientPassword(parts[1]);
                         }
                     }
                 }
@@ -99,6 +100,9 @@ public class SettingsController {
             }
             if (newConfig.getTwoFactorRequired() != null) {
                 configMap.put("twoFactorRequired", newConfig.getTwoFactorRequired());
+            }
+            if (newConfig.getClientPassword() !=null) {
+            	configMap.put("clientPassword", newConfig.getClientPassword());
             }
 
             // Zurückschreiben

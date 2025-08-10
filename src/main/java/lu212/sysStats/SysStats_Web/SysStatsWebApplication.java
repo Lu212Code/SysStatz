@@ -13,7 +13,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.github.lalyos.jfiglet.FigletFont;
 
 import lu212.sysStats.General.Logger;
-import lu212.sysStats.General.ServerStatsGenerator;
 import lu212.sysStats.StatsServer.Server;
 
 @SpringBootApplication
@@ -25,6 +24,8 @@ public class SysStatsWebApplication {
 	public static String theme;
 	public static String ollamaIP;
 	public static String twoFactorRequired;
+	public static String clientPassword;
+	
 	private static ConfigurableApplicationContext context;
 	
 	public static void main(String[] args) {
@@ -65,17 +66,6 @@ public class SysStatsWebApplication {
 		System.out.println(SysStatzLogo);
 		System.out.println("-----------------------ver.-0.1-------------------------");
 		
-//		int i = 0;
-//		while(i==0) {
-//		ServerStatsGenerator.generateRandomServers(5, ServerStatsGenerator.LoadLevel.SEHR_HOCH);
-//		try {
-//			Thread.sleep(5000);
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
-//		}
-		
-		
 		try {
 			Server.startServer(null);
 		} catch (IOException e) {
@@ -95,6 +85,7 @@ public class SysStatsWebApplication {
 		theme = config.getTheme();
 		ollamaIP = config.getOllamaServerIP();
 		twoFactorRequired = config.getTwoFactor();
+		clientPassword = config.getClientPassword();
 	}
 
 	@Bean

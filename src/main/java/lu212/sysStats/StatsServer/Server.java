@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 
+import lu212.sysStats.General.KeystoreManager;
 import lu212.sysStats.General.Logger;
 import lu212.sysStats.SysStats_Web.ServerStats;
 import lu212.sysStats.SysStats_Web.SysStatsWebApplication;
@@ -36,49 +37,62 @@ public class Server {
 	public static final Map<String, GeoInfo> geoLocations = new ConcurrentHashMap<>();
 	
 	private static Map<Integer, Double> cpuCoreLoads = new HashMap<>();
+	
+	private static String SERVER_PASSWORD;
+	
+	private static final int MAX_MESSAGE_LENGTH = 4096;
+	
+	private static final int MAX_CLIENTS = 50;
 
 	public static void startServer(String[] args) throws IOException {
 		new Server().start();
 	}
 
-    public void start() {
-        try {
+	public void start() {
+	    try {
+	    	SERVER_PASSWORD = SysStatsWebApplication.clientPassword;
+	    	
+	        // Keystore laden oder erzeugen
+	        KeyStore ks = KeystoreManager.loadOrCreateKeystore();
 
-        	InputStream keystoreStream = getClass().getClassLoader().getResourceAsStream("keystore.jks");
-        	if (keystoreStream == null) {
-        	    throw new FileNotFoundException("Keystore-Datei nicht gefunden im Ressourcen-Ordner!");
-        	}
+	        // Passwort laden
+	        String keystorePassword = KeystoreManager.loadKeystorePassword();
 
-        	KeyStore ks = KeyStore.getInstance("JKS");
-        	ks.load(keystoreStream, "changeit".toCharArray());
-        	keystoreStream.close();
+	        // KeyManagerFactory initialisieren
+	        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+	        kmf.init(ks, keystorePassword.toCharArray());
 
-            // 2. KeyManagerFactory initialisieren
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            kmf.init(ks, "changeit".toCharArray());
+	        // SSLContext initialisieren
+	        SSLContext sslContext = SSLContext.getInstance("TLS");
+	        sslContext.init(kmf.getKeyManagers(), null, null);
 
-            // 3. SSLContext initialisieren
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(kmf.getKeyManagers(), null, null);
+	        // SSLServerSocketFactory erstellen
+	        SSLServerSocketFactory ssf = sslContext.getServerSocketFactory();
 
-            // 4. SSLServerSocketFactory
-            SSLServerSocketFactory ssf = sslContext.getServerSocketFactory();
+	        // SSLServerSocket erstellen
+	        SSLServerSocket serverSocket = (SSLServerSocket) ssf.createServerSocket(PORT);
 
-            // 5. SSLServerSocket erstellen
-            SSLServerSocket serverSocket = (SSLServerSocket) ssf.createServerSocket(PORT);
+	        System.out.println("SSL Server läuft auf Port " + PORT);
 
-            System.out.println("SSL Server läuft auf Port " + PORT);
+	        while (true) {
+	            SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
+                synchronized (clients) {
+                    if (clients.size() >= MAX_CLIENTS) {
+                        System.out.println("Maximale Anzahl Clients erreicht. Verbindung wird abgelehnt.");
+                        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                        out.println("SERVER: Maximal erlaubte Client-Anzahl erreicht, bitte später erneut verbinden.");
+                        clientSocket.close();
+                        continue; // Verbindung nicht akzeptieren, Schleife weiter
+                    }
+                }
+	            clientSocket.startHandshake();
+	            new Thread(() -> handleNewClient(clientSocket)).start();
+	        }
 
-            while (true) {
-            	SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
-            	clientSocket.startHandshake(); // <- wichtig!
-            	new Thread(() -> handleNewClient(clientSocket)).start();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
 
 	private void handleNewClient(Socket socket) {
 		try {
@@ -94,6 +108,17 @@ public class Server {
 				return;
 			}
 			out.println("NAME_ANGEKOMMEN");
+			
+			out.println("GIB_PASSWORT");
+			String password = in.readLine();
+
+			if (!SERVER_PASSWORD.equals(password)) {
+			    out.println("PASSWORT_FALSCH");
+			    socket.close();
+			    return;
+			}
+
+			out.println("PASSWORT_OK");
 
 			ClientHandler handler = new ClientHandler(name, socket, in, out);
 			clients.put(name, handler);
@@ -135,7 +160,14 @@ public class Server {
 			if (debugMode) {
 				try {
 					String line;
-					while ((line = in.readLine()) != null) {
+					while ((line = readLineWithLimit(in, MAX_MESSAGE_LENGTH)) != null) {
+						
+			            if (!line.matches("[\\p{Print}\\s]*")) {
+			                send("FEHLER: Ungültige Zeichen in Nachricht");
+			                socket.close();
+			                return;
+			            }
+						
 						Logger.info("Raw-Nachricht von " + name + ": " + line);
 						System.out.println("Raw-Nachricht von " + name + ": " + line);
 
@@ -535,5 +567,20 @@ public class Server {
 	
 	public static Map<String, GeoInfo> getGeoLocations() {
 	    return geoLocations;
+	}
+	
+	private String readLineWithLimit(BufferedReader in, int maxLength) throws IOException {
+	    StringBuilder sb = new StringBuilder();
+	    int ch;
+	    while ((ch = in.read()) != -1) {
+	        if (ch == '\n') break;          // Zeilenende
+	        if (ch == '\r') continue;       // Wagenrücklauf ignorieren
+	        sb.append((char) ch);
+	        if (sb.length() > maxLength) {
+	            throw new IOException("Nachricht zu lang");
+	        }
+	    }
+	    if (sb.length() == 0 && ch == -1) return null; // Stream Ende
+	    return sb.toString();
 	}
 }

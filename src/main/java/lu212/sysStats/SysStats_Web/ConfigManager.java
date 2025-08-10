@@ -14,6 +14,7 @@ public class ConfigManager {
     private String theme;
     private String ollamaserverip;
     private String twoFactorRequired;
+    private String clientPassword;
 
     public ConfigManager() {
         try {
@@ -32,7 +33,8 @@ public class ConfigManager {
             "statsPort=12345",
             "theme=default",
             "ollamaserverip=default",
-            "twoFactorRequired=false"
+            "twoFactorRequired=false",
+            "clientPassword=changeit"
         );
         Files.write(CONFIG_PATH, defaultLines);
     }
@@ -48,6 +50,7 @@ public class ConfigManager {
                     case "theme" -> theme = parts[1];
                     case "ollamaserverip" -> ollamaserverip = parts[1];
                     case "twoFactorRequired" -> twoFactorRequired = parts[1];
+                    case "clientPassword" -> clientPassword = parts[1];
                 }
             }
         }
@@ -73,5 +76,9 @@ public class ConfigManager {
     
     public String getTwoFactor() {
     	return twoFactorRequired;
+    }
+    
+    public String getClientPassword() {
+    	return clientPassword;
     }
 }
