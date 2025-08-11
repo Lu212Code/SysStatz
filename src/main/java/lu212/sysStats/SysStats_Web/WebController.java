@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import jakarta.servlet.http.HttpSession;
 import lu212.sysStats.StatsServer.Server;
 
 @Controller
@@ -22,7 +23,7 @@ public class WebController {
 	}
 
 	@GetMapping("/server/{name}")
-	public String serverDetails(@PathVariable String name, Model model) {
+	public String serverDetails(@PathVariable String name, Model model, HttpSession session) {
 		// Server anhand des Namens suchen
 		ServerInfo server = ServerStats.getAllServers().stream().filter(s -> s.getName().equalsIgnoreCase(name))
 				.findFirst().orElse(null);
@@ -32,6 +33,7 @@ public class WebController {
 		}
 
 		model.addAttribute("server", server);
+		model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
 
 		Config config = new Config();
 		String theme = SysStatsWebApplication.theme;
@@ -50,9 +52,11 @@ public class WebController {
 	}
 
 	@GetMapping("/compare")
-	public String compareServers(Model model) {
+	public String compareServers(Model model, HttpSession session) {
 		String theme = SysStatsWebApplication.theme;
 		model.addAttribute("theme", theme);
+		model.addAttribute("activePage", "compare");
+		model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
 		return "compare"; // `compare.html` in `templates/`
 	}
 }

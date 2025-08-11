@@ -2,6 +2,8 @@ package lu212.sysStats.SysStats_Web;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lu212.sysStats.General.Logger;
 import lu212.sysStats.General.ThresholdConfig;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
@@ -42,11 +44,14 @@ public class TriggerService {
                 triggers.clear();
                 triggers.putAll(mapFromFile);
                 System.out.println("Trigger aus Datei geladen: " + triggers.size());
+                Logger.info("Trigger aus Datei geladen: " + triggers.size());
             } catch (IOException e) {
                 System.err.println("Fehler beim Laden der Trigger aus Datei: " + e.getMessage());
+                Logger.error("Fehler beim Laden der Trigger aus Datei: " + e.getMessage());
             }
         } else {
             System.out.println("Trigger-Datei existiert nicht, starte mit leerer Liste.");
+            Logger.info("Trigger-Datei existiert nicht, starte mit leerer Liste.");
         }
     }
 
@@ -55,8 +60,10 @@ public class TriggerService {
         try {
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, triggers);
             System.out.println("Trigger in Datei gespeichert.");
+            Logger.info("Trigger in Datei gespeichert.");
         } catch (IOException e) {
             System.err.println("Fehler beim Speichern der Trigger: " + e.getMessage());
+            Logger.error("Fehler beim Speichern der Trigger: " + e.getMessage());
         }
     }
 }

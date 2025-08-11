@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <title>Alerts Übersicht</title>
+    <link rel="icon" href="/img/logo.png" type="image/png">
+    <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e2f;
+            color: #ddd;
+            margin: 0;
+            padding: 20px 40px 40px 40px;
+			margin-left: 60px;
+			transition: margin-left 0.3s ease;
+        }
+
+        h1 {
+            font-weight: 700;
+            font-size: 2rem;
+            color: #4a90e2;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 8px;
+            user-select: none;
+        }
+
+        #search {
+            padding: 10px 14px;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 6px;
+            border: 1px solid #4a90e2;
+            font-size: 1.1rem;
+            background-color: #2c2f48;
+            color: #ddd;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.6);
+            margin-bottom: 25px;
+            transition: border-color 0.3s ease;
+        }
+        #search:focus {
+            outline: none;
+            border-color: #7fbfff;
+            box-shadow: 0 0 8px #7fbfff;
+            background-color: #353a5a;
+            color: #eee;
+        }
+
+        #alerts-list {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.6);
+            user-select: text;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .alert-item.red {
+            background-color: #5f242e;
+            border: 1px solid #c84c4c;
+            color: #f88a8f;
+            box-shadow: 0 0 15px #c84c4c;
+        }
+        .alert-item.red:hover {
+            background-color: #7a2e3a;
+            box-shadow: 0 0 25px #e05151;
+        }
+
+        .alert-item.yellow {
+            background-color: #5f5729;
+            border: 1px solid #d1b45f;
+            color: #f0df94;
+            box-shadow: 0 0 15px #d1b45f;
+        }
+        .alert-item.yellow:hover {
+            background-color: #7a7035;
+            box-shadow: 0 0 25px #f6e478;
+        }
+
+        .alert-text {
+            flex-grow: 1;
+            padding-right: 15px;
+            word-break: break-word;
+        }
+
+        .btn-delete {
+            background-color: #c84c4c;
+            border: none;
+            color: white;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 8px 16px;
+            font-size: 1rem;
+            transition: background-color 0.3s ease, transform 0.15s ease;
+            user-select: none;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+        }
+        .btn-delete:hover {
+            background-color: #a83838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(168,56,56,0.8);
+        }
+        .btn-delete:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        }
+
+        #no-alerts {
+            color: #777;
+            font-style: italic;
+            font-size: 1.2rem;
+            margin-top: 3rem;
+            text-align: center;
+            user-select: none;
+        }
+		
+		/* Sidebar-Container */
+				.sidebar {
+				    position: fixed;
+				    top: 0;
+				    left: 0;
+				    height: 100%;
+				    background-color: #2b2f36;
+				    width: 60px;
+				    transition: width 0.3s ease;
+				    overflow-x: hidden;
+				    box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+				    display: flex;
+				    flex-direction: column;
+				    align-items: center;
+				    padding-top: 0.5rem;
+				    z-index: 1000;
+				}
+
+				/* Ausgeklappt */
+				.sidebar.expanded {
+				    width: 200px;
+				    align-items: flex-start;
+				    padding-left: 10px;
+				}
+
+				/* Menü-Button */
+				.sidebar-toggle {
+				    background: transparent;
+				    border: none;
+				    padding: 6px;
+				    cursor: pointer;
+				    margin-bottom: 1rem;
+				    transition: transform 0.2s ease;
+				}
+
+				.sidebar-toggle img {
+				    height: 24px;
+				    filter: brightness(0) invert(1);
+				}
+
+				.sidebar-toggle:hover {
+				    transform: scale(1.1);
+				}
+
+				/* Links in Sidebar */
+				.sidebar a {
+				    display: flex;
+				    align-items: center;
+				    padding: 10px;
+				    color: white;
+				    text-decoration: none;
+				    border-radius: 6px;
+				    width: 100%;
+				    transition: background-color 0.2s;
+				}
+				
+				.sidebar a.active {
+				    background-color: #357bd8;
+				    box-shadow: 0 0 10px #357bd8;
+				    font-weight: bold;
+				}
+
+
+				/* Eingeklappt → nur Icon mittig */
+				.sidebar:not(.expanded) a {
+				    justify-content: center;
+				    padding: 10px 0;
+				}
+
+				/* Hover */
+				.sidebar a:hover {
+				    background-color: #4a90e2;
+				    color: white;
+				}
+
+				.sidebar a:hover img {
+				    filter: brightness(1.5) drop-shadow(0 0 3px #fff);
+				}
+
+
+				/* Icon */
+				.sidebar img {
+				    height: 28px; /* größer */
+				    margin-right: 10px;
+				    filter: brightness(1.2); /* Icons etwas heller */
+				    transition: filter 0.3s ease;
+				}
+
+				.sidebar a:hover img,
+				.sidebar a.active img {
+				    filter: brightness(1.5) drop-shadow(0 0 2px #4a90e2);
+				}
+
+
+				/* Text ausblenden, wenn eingeklappt */
+				.sidebar:not(.expanded) .link-text {
+				    display: none;
+				}
+
+				/* Wenn Sidebar ausgeklappt ist, mehr Abstand */
+				body.sidebar-expanded {
+				  margin-left: 200px;
+				}
+    </style>
+</head>
+<body>
+    <h1>Alerts Übersicht</h1>
+	
+	<div class="sidebar" id="sidebar">
+	    <button class="sidebar-toggle" onclick="toggleSidebar()">
+	        <img src="/img/menu.png" alt="Menu" style="height: 24px;">
+	    </button>
+		<a th:href="@{/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' active' : ''">
+		    <img src="/img/dashboard.png" alt="Dashboard">
+		    <span class="link-text">Dashboard</span>
+	    <a th:href="@{/analyze}" th:classappend="${activePage == 'analyze'} ? ' active' : ''">
+	        <img src="/img/analyse.png" alt="Analyse">
+	        <span class="link-text">Analyse</span>
+	    </a>
+	    <a th:href="@{/settings}" th:classappend="${activePage == 'settings'} ? ' active' : ''">
+	        <img src="/img/settings.png" alt="Einstellungen">
+	        <span class="link-text">Einstellungen</span>
+	    </a>
+	    <a th:href="@{/logs}" th:classappend="${activePage == 'logs'} ? ' active' : ''">
+	        <img src="/img/log.png" alt="Logs">
+	        <span class="link-text">Logs</span>
+	    </a>
+	    <a th:href="@{/compare}" th:classappend="${activePage == 'compare'} ? ' active' : ''">
+	        <img src="/img/compare.png" alt="Vergleichen">
+	        <span class="link-text">Vergleichen</span>
+	    </a>
+		<a th:href="@{/alerts}" th:classappend="${activePage == 'alerts'} ? ' active' : ''">
+		    <img src="/img/alert.png" alt="Meldungen ">
+		    <span class="link-text">Meldungen</span>
+		</a>
+		<a th:href="@{/pdf-export}" th:classappend="${activePage == 'pdf-export'} ? ' active' : ''">
+		    <img src="/img/pdf.png" alt="PDF-Creator ">
+		    <span class="link-text">PDF-Creator</span>
+		</a>
+		<a th:if="${isAdmin}" th:href="@{/admin/manageUsers}" th:classappend="${activePage == 'manageUsers'} ? ' active' : ''">
+		    <img src="/img/users.png" alt="Benutzer">
+		    <span class="link-text">Benutzer</span>
+		</a>
+		<a th:if="${isAdmin}" th:href="@{/filemanager}" th:classappend="${activePage == 'filemanager'} ? ' active' : ''">
+		    <img src="/img/folder.png" alt="Ordner">
+		    <span class="link-text">Dateimanager</span>
+		</a>
+	</div>
+	
+    <input type="text" id="search" placeholder="Alerts durchsuchen...">
+
+    <div id="alerts-list" th:if="${alerts != null and #lists.size(alerts) > 0}">
+        <div th:each="alert : ${alerts}" 
+             class="alert-item" 
+             th:classappend="${alert.level.name().toLowerCase()}" >
+            <div class="alert-text" th:text="${alert.text}">Alert Text</div>
+            <button class="btn-delete" 
+                    type="button"
+                    th:attr="data-text=${alert.text}, data-level=${alert.level.name()}"
+                    onclick="deleteAlert(this)">Löschen</button>
+        </div>
+    </div>
+
+    <p id="no-alerts" th:if="${alerts == null or #lists.size(alerts) == 0}">Keine Alerts vorhanden.</p>
+
+<script>
+    const searchInput = document.getElementById('search');
+    const alertsList = document.getElementById('alerts-list');
+    const noAlerts = document.getElementById('no-alerts');
+
+    searchInput.addEventListener('input', () => {
+        const filter = searchInput.value.toLowerCase();
+        const alertItems = alertsList ? alertsList.querySelectorAll('.alert-item') : [];
+
+        let visibleCount = 0;
+        alertItems.forEach(item => {
+            const text = item.querySelector('.alert-text').textContent.toLowerCase();
+            if(text.includes(filter)) {
+                item.style.display = 'flex';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        if (visibleCount === 0) {
+            noAlerts.style.display = 'block';
+            noAlerts.textContent = 'Keine Alerts gefunden.';
+        } else {
+            noAlerts.style.display = 'none';
+        }
+    });
+
+    async function deleteAlert(button) {
+        const text = button.getAttribute('data-text');
+        const level = button.getAttribute('data-level');
+
+        if(!confirm(`Alert löschen?\n"${text}"`)) return;
+
+        try {
+            const response = await fetch('/alerts/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: new URLSearchParams({ text, level })
+            });
+            const result = await response.text();
+            if(result === 'OK') {
+                // Entferne Alert aus DOM
+                button.parentElement.remove();
+
+                // Falls keine Alerts mehr, zeige Hinweis
+                if(alertsList.children.length === 0) {
+                    noAlerts.style.display = 'block';
+                    noAlerts.textContent = 'Keine Alerts vorhanden.';
+                }
+            } else {
+                alert('Fehler beim Löschen: ' + result);
+            }
+        } catch (e) {
+            alert('Netzwerkfehler beim Löschen.');
+        }
+    }
+	
+	function toggleSidebar() {
+	    const sidebar = document.getElementById('sidebar');
+	    sidebar.classList.toggle('expanded');
+
+	    // body margin anpassen
+	    if (sidebar.classList.contains('expanded')) {
+	        document.body.classList.add('sidebar-expanded');
+	    } else {
+	        document.body.classList.remove('sidebar-expanded');
+	    }
+	}
+</script>
+</body>
+</html>

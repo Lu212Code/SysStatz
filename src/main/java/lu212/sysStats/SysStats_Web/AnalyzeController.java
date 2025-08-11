@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpSession;
 import lu212.sysStats.General.OllamaAPI;
 
 import java.io.*;
@@ -14,9 +15,11 @@ import java.util.*;
 public class AnalyzeController {
 
     @GetMapping("/analyze")
-    public String showAnalyzePage(@RequestParam(required = false) String server, Model model) {
+    public String showAnalyzePage(@RequestParam(required = false) String server, Model model, HttpSession session) {
         List<String> servers = listAvailableServers();
         model.addAttribute("servers", servers);
+        model.addAttribute("activePage", "analyze");
+        model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
 
         if (server != null && !server.isEmpty()) {
             List<int[]> data = readServerData(server);

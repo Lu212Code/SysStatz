@@ -16,7 +16,11 @@ import lu212.sysStats.General.ThresholdConfig;
 import lu212.sysStats.StatsServer.Server;
 import lu212.sysStats.StatsServer.Server.GeoInfoDTO;
 
+import lu212.sysStats.General.AlertUtil;
+import lu212.sysStats.General.AlertUtil.Level;
+
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -130,18 +134,33 @@ public class ApiController {
                     System.out.println("Sende Trigger Mail für CPU...");
                     Logger.info("Sende Trigger Mail für CPU...");
                     sendMail(config.email, server.getName(), "CPU überschritten: " + cpu + " %");
+                    try {
+						AlertUtil.addAlert("Die CPU von " + server.getName() + " hat " + cpu + " % überschritten.", Level.RED);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
                 }
 
                 if (ram > config.ram && canSendMail(server.getName(), "RAM")) {
                     System.out.println("Sende Trigger Mail für RAM...");
                     Logger.info("Sende Trigger Mail für RAM...");
                     sendMail(config.email, server.getName(), "RAM überschritten: " + ram + " %");
+                    try {
+						AlertUtil.addAlert("Der RAM von " + server.getName() + " hat " + ram + "% überschritten.", Level.RED);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
                 }
 
                 if (disk > config.disk && canSendMail(server.getName(), "Disk")) {
                     System.out.println("Sende Trigger Mail für Disk...");
                     Logger.info("Sende Trigger Mail für Disk...");
                     sendMail(config.email, server.getName(), "Speicher überschritten: " + disk + " %");
+                    try {
+						AlertUtil.addAlert("Der Speicher von " + server.getName() + " hat " + disk + "% überschritten.", Level.RED);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
                 }
             }
         });

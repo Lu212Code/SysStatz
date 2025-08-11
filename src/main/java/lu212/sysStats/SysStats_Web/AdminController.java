@@ -16,6 +16,7 @@ public class AdminController {
     @GetMapping("/manageUsers")
     public String manageUsers(Model model, HttpSession session) {
         Boolean isAdmin = (Boolean) session.getAttribute("isAdmin");
+        model.addAttribute("activePage", "manageUsers");
         if (isAdmin == null || !isAdmin) {
             return "redirect:/login";
         }

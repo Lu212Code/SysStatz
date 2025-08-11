@@ -179,6 +179,8 @@ public class LoginController {
 
 			String theme = SysStatsWebApplication.theme;
 			model.addAttribute("theme", theme);
+	        model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
+	        model.addAttribute("activePage", "dashboard");
 
 			return "dashboard";
 		} else {

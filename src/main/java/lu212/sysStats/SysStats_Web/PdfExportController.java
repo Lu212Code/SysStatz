@@ -22,23 +22,38 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.lowagie.text.Image;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 public class PdfExportController {
 
-    @GetMapping("/pdf-export")
-    public String showExportPage(Model model) {
-        File dataDir = new File("data");
-        List<String> servers = Arrays.stream(Objects.requireNonNull(dataDir.listFiles((dir, name) -> name.endsWith(".txt"))))
-                .map(f -> f.getName().replace(".txt", ""))
-                .collect(Collectors.toList());
+	@GetMapping("/pdf-export")
+	public String showExportPage(Model model, HttpSession session) {
+	    File dataDir = new File("data");
+	    List<String> servers;
 
-        model.addAttribute("servers", servers);
-        
-   	 	String theme = SysStatsWebApplication.theme;
-   	 	model.addAttribute("theme", theme);
-   	 	
-        return "pdf-export";
-    }
+	    if (dataDir.exists() && dataDir.isDirectory()) {
+	        File[] files = dataDir.listFiles((dir, name) -> name.endsWith(".txt"));
+	        if (files != null) {
+	            servers = Arrays.stream(files)
+	                    .map(f -> f.getName().replace(".txt", ""))
+	                    .collect(Collectors.toList());
+	        } else {
+	            servers = List.of(); // leere Liste statt null
+	        }
+	    } else {
+	        servers = List.of(); // leere Liste statt null
+	    }
+
+	    model.addAttribute("servers", servers);
+	    model.addAttribute("activePage", "pdf-export");
+	    model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
+
+	    String theme = SysStatsWebApplication.theme;
+	    model.addAttribute("theme", theme);
+
+	    return "pdf-export";
+	}
 
     @PostMapping("/generate-pdf")
     public String generatePdf(@RequestParam List<String> servers,

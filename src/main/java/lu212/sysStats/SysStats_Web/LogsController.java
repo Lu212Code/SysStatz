@@ -5,15 +5,19 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 public class LogsController {
 
 	
     // GET /logs: Seite mit geladenen Logs anzeigen
     @GetMapping("/logs")
-    public String logsPage(Model model) {
+    public String logsPage(Model model, HttpSession session) {
    	 	String theme = SysStatsWebApplication.theme;
    	 	model.addAttribute("theme", theme);
+   	 	model.addAttribute("activePage", "logs");
+   	 	model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
         return "logs"; // Thymeleaf-Template settings.html
     }
 }

@@ -27,6 +27,7 @@ public class SettingsController {
         
         model.addAttribute("users", UserStore.getAll());
         model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
+        model.addAttribute("activePage", "settings");
         
    	 	String theme = SysStatsWebApplication.theme;
    	 	model.addAttribute("theme", theme);

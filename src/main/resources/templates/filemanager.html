@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>File Manager</title>
+	<link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+	<link rel="icon" href="/img/logo.png" type="image/png">
+	<style>
+		/* Gemeinsame Styles für Eingabefelder */
+		input[type="text"],
+		input[type="file"] {
+		    width: 100%;
+		    max-width: 400px;
+		    padding: 10px 12px;
+		    font-size: 1rem;
+		    border-radius: 6px;
+		    border: 1px solid #4a90e2;
+		    background-color: #2c2f48;
+		    color: #ddd;
+		    box-shadow: inset 0 2px 5px rgba(0,0,0,0.6);
+		    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+		    cursor: pointer;
+		    user-select: text;
+		    outline: none;
+		    margin-bottom: 12px;
+		}
+
+		input[type="text"]:focus,
+		input[type="file"]:focus {
+		    border-color: #7fbfff;
+		    box-shadow: 0 0 8px #7fbfff;
+		    background-color: #353a5a;
+		    color: #eee;
+		}
+
+		/* Spezieller Style für Datei-Input (file) */
+		input[type="file"] {
+		    cursor: pointer;
+		}
+
+		/* Optional: Style für den "Durchsuchen"-Button in Datei-Input (funktioniert in manchen Browsern) */
+		input[type="file"]::-webkit-file-upload-button {
+		    padding: 8px 16px;
+		    background-color: #4a90e2;
+		    color: white;
+		    border: none;
+		    border-radius: 6px;
+		    cursor: pointer;
+		    transition: background-color 0.3s ease;
+		}
+
+		input[type="file"]::-webkit-file-upload-button:hover {
+		    background-color: #357bd8;
+		}
+		
+		button {
+		            padding: 10px 20px;
+		            background-color: #4a90e2;
+		            color: white;
+		            border: none;
+		            border-radius: 6px;
+		            font-size: 1rem;
+		            cursor: pointer;
+		            transition: background-color 0.3s ease, transform 0.2s ease;
+		            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+		            margin: 0.5rem 0;
+		        }
+
+		        button:hover {
+		            background-color: #357bd8;
+		            transform: translateY(-1px);
+		        }
+				
+				/* Sidebar-Container */
+						.sidebar {
+						    position: fixed;
+						    top: 0;
+						    left: 0;
+						    height: 100%;
+						    background-color: #2b2f36;
+						    width: 60px;
+						    transition: width 0.3s ease;
+						    overflow-x: hidden;
+						    box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+						    display: flex;
+						    flex-direction: column;
+						    align-items: center;
+						    padding-top: 0.5rem;
+						    z-index: 1000;
+						}
+
+						/* Ausgeklappt */
+						.sidebar.expanded {
+						    width: 200px;
+						    align-items: flex-start;
+						    padding-left: 10px;
+						}
+
+						/* Menü-Button */
+						.sidebar-toggle {
+						    background: transparent;
+						    border: none;
+						    padding: 6px;
+						    cursor: pointer;
+						    margin-bottom: 1rem;
+						    transition: transform 0.2s ease;
+						}
+
+						.sidebar-toggle img {
+						    height: 24px;
+						    filter: brightness(0) invert(1);
+						}
+
+						.sidebar-toggle:hover {
+						    transform: scale(1.1);
+						}
+
+		/* Links in Sidebar */
+		.sidebar a {
+			display: flex;
+			align-items: center;
+			padding: 10px;
+			color: white;
+			text-decoration: none;
+			border-radius: 6px;
+			width: 100%;
+			transition: background-color 0.2s;
+		}
+						
+		.sidebar a.active {
+		background-color: #357bd8;
+		box-shadow: 0 0 10px #357bd8;
+		font-weight: bold;
+		}
+
+
+		/* Eingeklappt → nur Icon mittig */
+		.sidebar:not(.expanded) a {
+		justify-content: center;
+		padding: 10px 0;
+		}
+
+		/* Hover */
+		.sidebar a:hover {
+		background-color: #4a90e2;
+		color: white;
+		}
+
+		.sidebar a:hover img {
+		filter: brightness(1.5) drop-shadow(0 0 3px #fff);
+		}
+
+
+		/* Icon */
+		.sidebar img {
+		height: 28px; /* größer */
+		margin-right: 10px;
+		filter: brightness(1.2); /* Icons etwas heller */
+		transition: filter 0.3s ease;
+		}
+
+		.sidebar a:hover img,
+		.sidebar a.active img {
+		filter: brightness(1.5) drop-shadow(0 0 2px #4a90e2);
+		}
+
+
+		/* Text ausblenden, wenn eingeklappt */
+		.sidebar:not(.expanded) .link-text {
+		display: none;
+		}
+						
+		/* Standardbreite der Sidebar (eingeklappt) */
+		body {
+		margin-left: 60px;
+		transition: margin-left 0.3s ease;
+		}
+
+		/* Wenn Sidebar ausgeklappt ist, mehr Abstand */
+		body.sidebar-expanded {
+		margin-left: 200px;
+		}	
+	</style>
+</head>
+
+<body>
+<header>
+    <h1>File Manager</h1>
+</header>
+
+<div class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <img src="/img/menu.png" alt="Menu" style="height: 24px;">
+    </button>
+	<a th:href="@{/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' active' : ''">
+	    <img src="/img/dashboard.png" alt="Dashboard">
+	    <span class="link-text">Dashboard</span>
+    <a th:href="@{/analyze}" th:classappend="${activePage == 'analyze'} ? ' active' : ''">
+        <img src="/img/analyse.png" alt="Analyse">
+        <span class="link-text">Analyse</span>
+    </a>
+    <a th:href="@{/settings}" th:classappend="${activePage == 'settings'} ? ' active' : ''">
+        <img src="/img/settings.png" alt="Einstellungen">
+        <span class="link-text">Einstellungen</span>
+    </a>
+    <a th:href="@{/logs}" th:classappend="${activePage == 'logs'} ? ' active' : ''">
+        <img src="/img/log.png" alt="Logs">
+        <span class="link-text">Logs</span>
+    </a>
+    <a th:href="@{/compare}" th:classappend="${activePage == 'compare'} ? ' active' : ''">
+        <img src="/img/compare.png" alt="Vergleichen">
+        <span class="link-text">Vergleichen</span>
+    </a>
+	<a th:href="@{/alerts}" th:classappend="${activePage == 'alerts'} ? ' active' : ''">
+	    <img src="/img/alert.png" alt="Meldungen ">
+	    <span class="link-text">Meldungen</span>
+	</a>
+	<a th:href="@{/pdf-export}" th:classappend="${activePage == 'pdf-export'} ? ' active' : ''">
+	    <img src="/img/pdf.png" alt="PDF-Creator ">
+	    <span class="link-text">PDF-Creator</span>
+	</a>
+	<a th:if="${isAdmin}" th:href="@{/admin/manageUsers}" th:classappend="${activePage == 'manageUsers'} ? ' active' : ''">
+	    <img src="/img/users.png" alt="Benutzer">
+	    <span class="link-text">Benutzer</span>
+	</a>
+	<a th:if="${isAdmin}" th:href="@{/filemanager}" th:classappend="${activePage == 'filemanager'} ? ' active' : ''">
+	    <img src="/img/folder.png" alt="Ordner">
+	    <span class="link-text">Dateimanager</span>
+	</a>
+</div>
+
+<section style="margin-top:20px;">
+    <form action="#" th:action="@{/filemanager/create-folder}" method="post" style="margin-bottom:10px;">
+        <input type="text" name="folderName" placeholder="Neuen Ordner erstellen" required />
+        <button type="submit" class="button-login">Ordner erstellen</button>
+    </form>
+
+    <form action="#" th:action="@{/filemanager/create-file}" method="post" style="margin-bottom:20px;">
+        <input type="text" name="fileName" placeholder="Neue Datei erstellen" required />
+        <button type="submit" class="button-login">Datei erstellen</button>
+    </form>
+	
+	<form action="#" th:action="@{/filemanager/upload}" method="post" enctype="multipart/form-data" style="margin-bottom: 20px;">
+	    <input type="file" name="file" required />
+	    <button type="submit" class="button-login">Datei hochladen</button>
+	</form>
+
+    <div id="servers-container">
+        <div th:each="file : ${files}" style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background-color:#2c2f48; padding: 10px; border-radius: 8px;">
+            <div>
+                <span th:text="${file.directory} ? '📁' : '📄'"></span>
+                <span th:text="${file.name}"></span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <a th:if="${!file.directory}" th:href="@{/filemanager/edit(fileName=${file.name})}">
+                    <button class="button-login" style="margin-right:5px;">Bearbeiten</button>
+                </a>
+                <a th:href="@{/filemanager/download(fileName=${file.name})}">
+                    <button class="button-login">Download</button>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const isAdmin = [[${isAdmin}]];
+    if (!isAdmin) {
+        window.location.href = /*[[@{/dashboard}]]*/ '/dashboard';
+    }
+    /*]]>*/
+	
+	function toggleSidebar() {
+	    const sidebar = document.getElementById('sidebar');
+	    sidebar.classList.toggle('expanded');
+
+	    // body margin anpassen
+	    if (sidebar.classList.contains('expanded')) {
+	        document.body.classList.add('sidebar-expanded');
+	    } else {
+	        document.body.classList.remove('sidebar-expanded');
+	    }
+	}
+</script>
+</body>
+</html>
