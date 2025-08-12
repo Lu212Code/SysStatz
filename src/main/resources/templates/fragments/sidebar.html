@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <div th:fragment="sidebar">
+		<div class="sidebar" id="sidebar">
+		    <button class="sidebar-toggle" onclick="toggleSidebar()">
+		        <img src="/img/menu.png" alt="Menu" style="height: 24px;">
+		    </button>
+			<a th:href="@{/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' active' : ''" data-tooltip="Dashboard">
+			    <img src="/img/dashboard.png" alt="Dashboard">
+			    <span class="link-text">Dashboard</span>
+			</a>
+		    <a th:href="@{/analyze}" th:classappend="${activePage == 'analyze'} ? ' active' : ''" data-tooltip="KI Analyse">
+		        <img src="/img/analyse.png" alt="Analyse">
+		        <span class="link-text">KI Analyse</span>
+		    </a>
+			<a th:href="@{/longterm-analysis}" th:classappend="${activePage == 'longterm'} ? ' active' : ''" data-tooltip="Lz. Analyse">
+			    <img src="/img/lt-analys.png" alt="Lz. Analyse">
+			    <span class="link-text">Lz. Analyse</span>
+			</a>
+		    <a th:href="@{/settings}" th:classappend="${activePage == 'settings'} ? ' active' : ''" data-tooltip="Einstellungen">
+		        <img src="/img/settings.png" alt="Einstellungen">
+		        <span class="link-text">Einstellungen</span>
+		    </a>
+		    <a th:href="@{/logs}" th:classappend="${activePage == 'logs'} ? ' active' : ''" data-tooltip="Logs">
+		        <img src="/img/log.png" alt="Logs">
+		        <span class="link-text">Logs</span>
+		    </a>
+		    <a th:href="@{/compare}" th:classappend="${activePage == 'compare'} ? ' active' : ''" data-tooltip="Vergleichen">
+		        <img src="/img/compare.png" alt="Vergleichen">
+		        <span class="link-text">Vergleichen</span>
+		    </a>
+			<a th:href="@{/alerts}" th:classappend="${activePage == 'alerts'} ? ' active' : ''" data-tooltip="Meldungen">
+			    <img src="/img/alert.png" alt="Meldungen ">
+			    <span class="link-text">Meldungen</span>
+			</a>
+			<a th:href="@{/pdf-export}" th:classappend="${activePage == 'pdf-export'} ? ' active' : ''" data-tooltip="PDF-Creator">
+			    <img src="/img/pdf.png" alt="PDF-Creator ">
+			    <span class="link-text">PDF-Creator</span>
+			</a>
+			<a th:if="${isAdmin}" th:href="@{/admin/manageUsers}" th:classappend="${activePage == 'manageUsers'} ? ' active' : ''" data-tooltip="Benutzer">
+			    <img src="/img/users.png" alt="Benutzer">
+			    <span class="link-text">Benutzer</span>
+			</a>
+			<a th:if="${isAdmin}" th:href="@{/filemanager}" th:classappend="${activePage == 'filemanager'} ? ' active' : ''" data-tooltip="Dateimanager">
+			    <img src="/img/folder.png" alt="Ordner">
+			    <span class="link-text">Dateimanager</span>
+			</a>
+		</div>
+    </div>
+  </body>
+</html>

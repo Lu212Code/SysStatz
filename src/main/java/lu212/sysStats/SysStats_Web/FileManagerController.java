@@ -30,6 +30,8 @@ public class FileManagerController {
 
     @GetMapping
     public String fileManagerPage(HttpSession session, Model model) throws IOException {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
         List<FileInfo> files = fileManagerService.listFiles();
         model.addAttribute("files", files);
 		String theme = SysStatsWebApplication.theme;
@@ -37,22 +39,37 @@ public class FileManagerController {
         model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
         model.addAttribute("activePage", "filemanager");
         return "filemanager";
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
     }
 
     @PostMapping("/create-folder")
-    public String createFolder(@RequestParam String folderName) throws IOException {
+    public String createFolder(@RequestParam String folderName, HttpSession session) throws IOException {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
         fileManagerService.createFolder(folderName.trim());
         return "redirect:/filemanager";
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
     }
 
     @PostMapping("/create-file")
-    public String createFile(@RequestParam String fileName) throws IOException {
+    public String createFile(@RequestParam String fileName, HttpSession session) throws IOException {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
         fileManagerService.createFile(fileName.trim());
         return "redirect:/filemanager";
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
     }
 
     @GetMapping("/edit")
     public String editFile(@RequestParam String fileName, Model model, HttpSession session) throws IOException {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
         String content = fileManagerService.readFile(fileName);
         model.addAttribute("fileName", fileName);
         model.addAttribute("content", content);
@@ -61,16 +78,24 @@ public class FileManagerController {
 		String theme = SysStatsWebApplication.theme;
 		model.addAttribute("theme", theme);
         return "filemanager_edit";
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
     }
 
     @PostMapping("/save")
-    public String saveFile(@RequestParam String fileName, @RequestParam String content) throws IOException {
+    public String saveFile(@RequestParam String fileName, @RequestParam String content, HttpSession session) throws IOException {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
         fileManagerService.saveFile(fileName, content);
         return "redirect:/filemanager";
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
     }
 
     @GetMapping("/download")
-    public ResponseEntity<StreamingResponseBody> downloadFile(@RequestParam String fileName) throws IOException {
+    public ResponseEntity<StreamingResponseBody> downloadFile(@RequestParam String fileName, HttpSession session) throws IOException {
         Path file = fileManagerService.getFilePath(fileName);
         if (!Files.exists(file)) {
             return ResponseEntity.notFound().build();

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Langzeit-Analyse</title>
+	<link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+	<link rel="icon" href="/img/logo.png" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e2f;
+            color: #ddd;
+            margin: 0;
+            padding: 0 20px 40px 20px;
+			margin-left: 60px;
+			transition: margin-left 0.3s ease;
+        }
+        header {
+            background-color: #282c34;
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 2px solid #4a90e2;
+        }
+        header h1 {
+            margin: 0;
+            font-weight: 700;
+            color: #4a90e2;
+            font-size: 2rem;
+            letter-spacing: 1px;
+        }
+        select {
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            background-color: #2c2f48;
+            color: #ddd;
+            font-size: 1rem;
+            margin: 20px auto;
+            display: block;
+        }
+        canvas {
+            background: #2c2f48;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+        }
+        .analysis-box {
+            background-color: #2c2f48;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+            max-width: 800px;
+            margin: auto;
+        }
+        .analysis-box h3 {
+            margin-top: 0;
+            color: #7fbfff;
+            border-bottom: 1px solid #4a90e2;
+            padding-bottom: 6px;
+        }
+        .analysis-item {
+            margin: 6px 0;
+            font-size: 1rem;
+            color: #ccc;
+        }
+    </style>
+	<link rel="stylesheet" href="/css/sidebar.css">
+</head>
+<body>
+
+<header>
+    <h1>Langzeit-Analyse</h1>
+</header>
+
+<div th:replace="fragments/sidebar :: sidebar"></div>
+
+<select id="serverSelect">
+    <option value="">-- Server auswählen --</option>
+</select>
+
+<canvas id="cpuChart"></canvas>
+<canvas id="ramChart"></canvas>
+<canvas id="diskChart"></canvas>
+
+<div class="analysis-box">
+    <h3>Analyse</h3>
+    <div id="analysisContent">Bitte einen Server auswählen.</div>
+</div>
+
+<script>
+    const serverSelect = document.getElementById('serverSelect');
+    const analysisContent = document.getElementById('analysisContent');
+
+    const cpuChart = makeChart('cpuChart', 'CPU %', '#f39c12');
+    const ramChart = makeChart('ramChart', 'RAM %', '#4a90e2');
+    const diskChart = makeChart('diskChart', 'Disk %', '#27ae60');
+
+    function makeChart(id, label, color) {
+        return new Chart(document.getElementById(id), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label, data: [], borderColor: color, fill: false, tension: 0.1 }] },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { type: 'time', time: { unit: 'minute' }, ticks: { color: '#ccc' } },
+                    y: { ticks: { color: '#ccc' } }
+                },
+                plugins: { legend: { labels: { color: '#ccc' } } }
+            }
+        });
+    }
+
+    // Serverliste vom Backend holen
+	fetch('/api/servers-from-files')
+	  .then(r => r.json())
+	  .then(servers => {
+	    servers.forEach(serverName => {
+	      const opt = document.createElement('option');
+	      opt.value = serverName;
+	      opt.textContent = serverName;
+	      serverSelect.appendChild(opt);
+	    });
+	  });
+
+	  serverSelect.addEventListener('change', () => {
+	    if (!serverSelect.value) return;
+	    fetch(`/api/server/${encodeURIComponent(serverSelect.value)}/longterm`)
+	      .then(r => r.json())
+	      .then(data => {
+	        const times = data.map(d => new Date(d.timestamp * 1000));  // timestamp nicht time
+	        const cpuVals = data.map(d => d.cpu);
+	        const ramVals = data.map(d => d.ram);
+	        const diskVals = data.map(d => d.disk);
+
+	        updateChart(cpuChart, times, cpuVals);
+	        updateChart(ramChart, times, ramVals);
+	        updateChart(diskChart, times, diskVals);
+
+	        analysisContent.innerHTML = generateAnalysis(cpuVals, ramVals, diskVals);
+	      });
+	  });
+
+    function updateChart(chart, labels, data) {
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = data;
+        chart.update();
+    }
+
+    function generateAnalysis(cpu, ram, disk) {
+        function avg(arr) { return (arr.reduce((a,b) => a+b, 0) / arr.length).toFixed(1); }
+        function max(arr) { return Math.max(...arr).toFixed(1); }
+        function min(arr) { return Math.min(...arr).toFixed(1); }
+        function risingTrend(arr) {
+            let streak = 0, maxStreak = 0;
+            for (let i = 1; i < arr.length; i++) {
+                if (arr[i] > arr[i-1]) streak++; else streak = 0;
+                maxStreak = Math.max(maxStreak, streak);
+            }
+            return maxStreak >= 5; // z.B. 5 aufeinanderfolgende Anstiege
+        }
+        function volatility(arr) {
+            let diffs = [];
+            for (let i = 1; i < arr.length; i++) diffs.push(Math.abs(arr[i] - arr[i-1]));
+            return (diffs.reduce((a,b) => a+b, 0) / diffs.length).toFixed(2);
+        }
+
+        return `
+            <div class="analysis-item"><b>CPU:</b> ⌀ ${avg(cpu)}%, Max ${max(cpu)}%, Min ${min(cpu)}%, 
+                ${risingTrend(cpu) ? '📈 Längerer Anstieg erkannt' : '➡ keine Auffälligkeit'}, 
+                Volatilität: ${volatility(cpu)}%</div>
+            <div class="analysis-item"><b>RAM:</b> ⌀ ${avg(ram)}%, Max ${max(ram)}%, Min ${min(ram)}%, 
+                ${risingTrend(ram) ? '📈 Längerer Anstieg erkannt' : '➡ keine Auffälligkeit'}, 
+                Volatilität: ${volatility(ram)}%</div>
+            <div class="analysis-item"><b>Disk:</b> ⌀ ${avg(disk)}%, Max ${max(disk)}%, Min ${min(disk)}%, 
+                ${risingTrend(disk) ? '📈 Längerer Anstieg erkannt' : '➡ keine Auffälligkeit'}, 
+                Volatilität: ${volatility(disk)}%</div>
+        `;
+    }
+</script>
+<script src="/js/sidebar.js"></script>
+</body>
+</html>

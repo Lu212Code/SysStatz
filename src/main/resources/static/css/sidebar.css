@@ -1,0 +1,204 @@
+/* Sidebar-Container */
+		.sidebar {
+		    position: fixed;
+		    top: 0;
+		    left: 0;
+		    height: 100%;
+		    background-color: #2b2f36;
+		    width: 60px;
+		    transition: width 0.3s ease;
+		    overflow-x: hidden;
+			box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+			background: linear-gradient(180deg, #2b2f36 0%, #1f2228 100%);
+		    display: flex;
+		    flex-direction: column;
+		    align-items: center;
+		    padding-top: 0.5rem;
+		    z-index: 1000;
+		}
+		
+		.sidebar.no-transition {
+		  transition: none !important;
+		}
+		
+		body.no-transition {
+		  transition: none !important;
+		}
+
+		/* Ausgeklappt */
+		.sidebar.expanded {
+		    width: 200px;
+		    align-items: flex-start;
+		    padding-left: 10px;
+		}
+
+		/* Menü-Button */
+		.sidebar-toggle {
+		    background: transparent;
+		    border: none;
+		    padding: 6px;
+		    cursor: pointer;
+		    margin-bottom: 1rem;
+		    transition: transform 0.2s ease;
+			border-radius: 50%;
+		}
+
+		.sidebar-toggle img {
+		    height: 24px;
+		    filter: brightness(0) invert(1);
+		}
+
+		.sidebar-toggle:hover {
+		    transform: scale(1.1);
+		}
+
+		/* Links in Sidebar */
+		.sidebar a {
+		    display: flex;
+		    align-items: center;
+		    padding: 10px;
+		    color: white;
+		    text-decoration: none;
+		    border-radius: 8px;
+		    width: 100%;
+		    transition: background-color 0.3s;
+			border-radius: 8px;
+			margin-bottom: 8px;
+			justify-content: flex-start;
+		}
+		
+		.sidebar a.active {
+		    background-color: #357bd8;
+			background: linear-gradient(90deg, #357bd8, #2f66d9);
+			box-shadow: 0 0 12px #357bd8aa;
+		    font-weight: bold;
+		}
+
+
+		/* Eingeklappt → nur Icon mittig */
+		.sidebar:not(.expanded) a {
+		    justify-content: center;
+		    padding: 10px 0;
+			position: relative;
+		}
+		
+		.sidebar:not(.expanded) a:hover::after {
+		  content: attr(data-tooltip);
+		  position: absolute;
+		  left: 60px;
+		  background: #222831;
+		  color: white;
+		  padding: 5px 10px;
+		  border-radius: 4px;
+		  white-space: nowrap;
+		  font-size: 0.85rem;
+		  top: 50%;
+		  transform: translateY(-50%);
+		  box-shadow: 0 0 8px rgba(0,0,0,0.7);
+		  pointer-events: none;
+		  z-index: 10;
+		}
+
+		/* Hover */
+		.sidebar a:hover {
+		    background-color: #4a90e2;
+		    color: white;
+		}
+
+		.sidebar a:hover img {
+		    filter: brightness(1.5) drop-shadow(0 0 3px #fff);
+		}
+
+
+		/* Icon */
+		.sidebar img {
+		    height: 28px; /* größer */
+		    margin-right: 0;
+		    filter: brightness(1.2); /* Icons etwas heller */
+		    transition: filter 0.3s ease, transform 0.3s ease;
+		}
+
+		.sidebar a:hover img,
+		.sidebar a.active img {
+		    filter: brightness(1.5) drop-shadow(0 0 2px #4a90e2);
+		}
+
+
+		/* Text ausblenden, wenn eingeklappt */
+		.sidebar:not(.expanded) .link-text {
+		    display: none;
+		}
+		
+		/* Standardbreite der Sidebar (eingeklappt) */
+		body {
+		  margin-left: 60px;
+		  transition: margin-left 0.3s ease;
+		}
+
+		/* Wenn Sidebar ausgeklappt ist, mehr Abstand */
+		body.sidebar-expanded {
+		  margin-left: 200px;
+		}
+		
+		.sidebar a {
+		  transition: background-color 0.3s, color 0.3s;
+		}
+
+		.sidebar a img {
+		  transition: filter 0.3s, transform 0.3s;
+		}
+
+		.sidebar a:hover img {
+		  transform: scale(1.15);
+		  filter: brightness(1.7) drop-shadow(0 0 4px #4a90e2);
+		}
+
+		.sidebar:not(.expanded) .link-text {
+		  opacity: 0;
+		  transition: opacity 0.3s ease;
+		}
+
+		.sidebar.expanded .link-text {
+		  opacity: 1;
+		}
+		
+		.sidebar-toggle {
+		  padding: 0;
+		  width: 36px;
+		  height: 36px;
+		  display: flex;
+		  justify-content: center;
+		  align-items: center;
+		  border-radius: 50%;
+		}
+
+		.sidebar-toggle:hover {
+		  background: #4a90e2;
+		  transform: scale(1.1);
+		}
+		
+		.sidebar a > img {
+		  display: block;
+		}
+		
+		.sidebar.expanded a {
+		  padding-left: 16px; /* Mehr Platz links */
+		}
+		
+		.sidebar:not(.expanded) .sidebar-toggle img {
+		  margin: 0; /* Kein margin, um in Kreis zentriert zu bleiben */
+		}
+		
+		.sidebar .link-text {
+		  white-space: nowrap;          /* Kein Zeilenumbruch */
+		  overflow: hidden;
+		  transition: opacity 0.3s ease, max-width 0.3s ease;
+		  max-width: 0;                 /* Eingeklappt: kein Platz */
+		  opacity: 0;
+		  margin-left: 12px;            /* Abstand vom Icon */
+		}
+
+		.sidebar.expanded .link-text {
+		  max-width: 150px;             /* Genug Platz für den Text */
+		  opacity: 1;
+		}

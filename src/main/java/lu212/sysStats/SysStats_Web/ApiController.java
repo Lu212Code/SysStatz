@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -92,6 +93,60 @@ public class ApiController {
         }
 
         return server;
+    }
+    
+    @GetMapping("/api/server/{name}/longterm")
+    public ResponseEntity<?> getLongTermStats(@PathVariable String name) {
+        File file = new File("data/" + name + ".txt");
+        if (!file.exists()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Datei nicht gefunden"));
+        }
+
+        try {
+            List<Map<String, Object>> result = new java.util.ArrayList<>();
+
+            java.nio.file.Files.lines(file.toPath()).forEach(line -> {
+                String[] parts = line.split("\\|");
+                if (parts.length == 4) {
+                    try {
+                        long timestamp = Long.parseLong(parts[0]);
+                        double cpu = Double.parseDouble(parts[1]);
+                        double ram = Double.parseDouble(parts[2]);
+                        double disk = Double.parseDouble(parts[3]);
+
+                        result.add(Map.of(
+                                "timestamp", timestamp,
+                                "cpu", cpu,
+                                "ram", ram,
+                                "disk", disk
+                        ));
+                    } catch (NumberFormatException ignored) {}
+                }
+            });
+
+            return ResponseEntity.ok(result);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Fehler beim Lesen der Datei"));
+        }
+    }
+    
+    @GetMapping("/api/servers-from-files")
+    public List<String> getServersFromFiles() {
+        File dataDir = new File("data");
+        if (!dataDir.exists() || !dataDir.isDirectory()) {
+            return List.of();
+        }
+        String[] files = dataDir.list((dir, name) -> name.endsWith(".txt"));
+        if (files == null) {
+            return List.of();
+        }
+        // Entferne .txt-Endung und sortiere
+        return Arrays.stream(files)
+                .map(name -> name.substring(0, name.length() - 4))
+                .sorted()
+                .toList();
     }
 
     @GetMapping("/api/version")

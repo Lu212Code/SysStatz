@@ -24,6 +24,8 @@ public class WebController {
 
 	@GetMapping("/server/{name}")
 	public String serverDetails(@PathVariable String name, Model model, HttpSession session) {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
 		// Server anhand des Namens suchen
 		ServerInfo server = ServerStats.getAllServers().stream().filter(s -> s.getName().equalsIgnoreCase(name))
 				.findFirst().orElse(null);
@@ -49,14 +51,36 @@ public class WebController {
 		model.addAttribute("geoInfo", geoInfo);
 
 		return "server-details"; // Ruft server-details.html auf
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
 	}
 
 	@GetMapping("/compare")
 	public String compareServers(Model model, HttpSession session) {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
 		String theme = SysStatsWebApplication.theme;
 		model.addAttribute("theme", theme);
 		model.addAttribute("activePage", "compare");
 		model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
 		return "compare"; // `compare.html` in `templates/`
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
 	}
+	
+    @GetMapping("/longterm-analysis")
+    public String showLongtermAnalysisPage(Model model, HttpSession session) {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
+		String theme = SysStatsWebApplication.theme;
+		model.addAttribute("theme", theme);
+    	model.addAttribute("activePage", "longterm");
+    	model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
+        return "longterm-analysis";
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
+    }
 }

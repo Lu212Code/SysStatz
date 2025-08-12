@@ -15,7 +15,10 @@ public class AdminController {
 
     @GetMapping("/manageUsers")
     public String manageUsers(Model model, HttpSession session) {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
         Boolean isAdmin = (Boolean) session.getAttribute("isAdmin");
+        model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
         model.addAttribute("activePage", "manageUsers");
         if (isAdmin == null || !isAdmin) {
             return "redirect:/login";
@@ -26,6 +29,9 @@ public class AdminController {
         
         model.addAttribute("users", UserStore.getAll());
         return "manageUsers";  // Name der Thymeleaf Vorlage (manageUsers.html)
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
     }
 
 

@@ -14,6 +14,7 @@ import com.github.lalyos.jfiglet.FigletFont;
 
 import lu212.sysStats.General.Logger;
 import lu212.sysStats.StatsServer.Server;
+import lu212.sysStats.SysStats_Web.AlertService.Alert.Level;
 
 @SpringBootApplication
 @EnableScheduling
@@ -65,6 +66,14 @@ public class SysStatsWebApplication {
 		System.out.println("--------------------------------------------------------");
 		System.out.println(SysStatzLogo);
 		System.out.println("-----------------------ver.-0.1-------------------------");
+		
+		AlertService al = new AlertService();
+		try {
+			al.addAlert("TestAlert mit ienem Langem Text um alles zu testen und so jaja..", Level.RED);
+			al.addAlert("TestAlert mit ienem Langem Text um alles zu testen und so jaja.. Das hier ist dann halt so der zweite...", Level.YELLOW);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 		try {
 			Server.startServer(null);

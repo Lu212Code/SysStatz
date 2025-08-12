@@ -29,6 +29,8 @@ public class PdfExportController {
 
 	@GetMapping("/pdf-export")
 	public String showExportPage(Model model, HttpSession session) {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
 	    File dataDir = new File("data");
 	    List<String> servers;
 
@@ -53,6 +55,9 @@ public class PdfExportController {
 	    model.addAttribute("theme", theme);
 
 	    return "pdf-export";
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
 	}
 
     @PostMapping("/generate-pdf")

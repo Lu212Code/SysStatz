@@ -1,0 +1,324 @@
+/* Grundlayout */
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121726;
+    color: #ddd;
+    margin: 0;
+    padding: 1rem 2rem 3rem 2rem;
+	/*Side-Bar*/
+	margin-left: 60px;
+	transition: margin-left 0.3s ease;
+}
+
+/*
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
+    margin-bottom: 1rem;
+}
+header h1 {
+    font-weight: 600;
+    font-size: 1.8rem;
+    margin: 0;
+    color: #4a90e2;
+} */
+
+a.button-link {
+    text-decoration: none;
+}
+button {
+    padding: 0.5rem 1.2rem;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+button:hover,
+button:focus {
+    background-color: #357bd8;
+    transform: translateY(-1px);
+    outline: none;
+}
+/* Formular */
+form {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    max-width: 400px;
+}
+input[type="text"] {
+    flex: 1;
+    padding: 0.5rem 0.8rem;
+    font-size: 1rem;
+    border: 2px solid #4a90e2;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+    color: #222;
+}
+input[type="text"]:focus {
+    border-color: #357bd8;
+    box-shadow: 0 0 6px rgba(53, 123, 216, 0.7);
+}
+/* Status-Text */
+.status-text {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+.status-text strong {
+    color: #4a90e2;
+}
+
+/* Diagramm-Container: nebeneinander und responsive */
+.charts-container {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 2rem;
+}
+.chart-wrapper {
+    flex: 1 1 280px;
+    max-width: 320px;
+    background-color: #1e2433;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+canvas {
+    max-width: 100%;
+    height: 180px !important;
+}
+
+/* Kleinere Schrift in Legende */
+.chart-wrapper .chartjs-render-monitor + div > ul {
+    font-size: 0.85rem !important;
+}
+
+.hardware-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    background-color: #1e2433;
+    border-radius: 8px;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+.hardware-table th,
+.hardware-table td {
+    padding: 0.75rem 1rem;
+    border: 1px solid #444;
+    text-align: left;
+    vertical-align: middle;
+    color: #ddd;
+}
+
+.hardware-table th {
+    background-color: #2a2f42;
+    color: #fff;
+    font-weight: bold;
+}
+
+.hardware-table tbody tr:nth-child(even) {
+    background-color: #252b3a;
+}
+
+.hardware-table tbody tr:hover {
+    background-color: #2f3648;
+}
+
+.hardware-table .no-data {
+    text-align: center;
+    padding: 1rem;
+    color: #aaa;
+}
+
+/* Icon-Stil für kleine, vertikal zentrierte Bilder */
+.hardware-table th .icon,
+.hardware-table td .icon {
+    height: 1em;
+    vertical-align: middle;
+    margin-right: 0.3em;
+}
+
+
+/* Grundstil für alle selects im Formular */
+#advancedQueryForm select {
+    appearance: none;         /* Native Pfeil ausblenden */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #1e2433;
+    color: #ddd;
+    border: 2px solid #4a90e2;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #4a90e2 50%),
+        linear-gradient(135deg, #4a90e2 50%, transparent 50%),
+        linear-gradient(to right, #1e2433, #1e2433);
+    background-position:
+        calc(100% - 20px) calc(1em + 2px),
+        calc(100% - 15px) calc(1em + 2px),
+        100% 0;
+    background-size: 5px 5px, 5px 5px, 2.5em 2.5em;
+    background-repeat: no-repeat;
+}
+
+/* Hover & Focus */
+#advancedQueryForm select:hover,
+#advancedQueryForm select:focus {
+    border-color: #357bd8;
+    box-shadow: 0 0 8px rgba(53, 123, 216, 0.7);
+    outline: none;
+}
+
+/* Optional: wenn das select disabled ist */
+#advancedQueryForm select:disabled {
+    background-color: #2a2f42;
+    color: #666;
+    cursor: not-allowed;
+}
+
+/* Für die Labels */
+#advancedQueryForm label {
+    color: #ddd;
+    font-weight: 600;
+}
+
+/* Button einheitlich gestalten */
+#advancedQueryForm button {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#advancedQueryForm button:hover,
+#advancedQueryForm button:focus {
+    background-color: #357bd8;
+    transform: translateY(-1px);
+    outline: none;
+}
+
+/* Stil für Eingabefelder im Formular */
+#advancedQueryForm input[type="number"],
+#advancedQueryForm input[type="text"] {
+    background-color: #1e2433;
+    color: #ddd;
+    border: 2px solid #4a90e2;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+    /* Verhindert zu große Breite bei flex */
+    max-width: 100%;
+}
+
+/* Fokus & Hover */
+#advancedQueryForm input[type="number"]:focus,
+#advancedQueryForm input[type="text"]:focus,
+#advancedQueryForm input[type="number"]:hover,
+#advancedQueryForm input[type="text"]:hover {
+    border-color: #357bd8;
+    box-shadow: 0 0 8px rgba(53, 123, 216, 0.7);
+}
+
+/* Disabled */
+#advancedQueryForm input[type="number"]:disabled,
+#advancedQueryForm input[type="text"]:disabled {
+    background-color: #2a2f42;
+    color: #666;
+    cursor: not-allowed;
+}
+
+/* Eingabefelder im Warnschwellen-Formular */
+#thresholdForm input[type="number"],
+#thresholdForm input[type="email"] {
+    background-color: #1e2433;
+    color: #ddd;
+    border: 2px solid #4a90e2;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.8rem;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+    width: calc(100% - 1rem); /* volle Breite minus Padding */
+}
+
+/* Fokus & Hover */
+#thresholdForm input[type="number"]:focus,
+#thresholdForm input[type="email"]:focus,
+#thresholdForm input[type="number"]:hover,
+#thresholdForm input[type="email"]:hover {
+    border-color: #357bd8;
+    box-shadow: 0 0 8px rgba(53, 123, 216, 0.7);
+}
+
+/* Button */
+#thresholdForm button {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Button Hover/Focus */
+#thresholdForm button:hover,
+#thresholdForm button:focus {
+    background-color: #357bd8;
+    transform: translateY(-1px);
+    outline: none;
+}
+
+/* Form Layout: damit die Inputs nebeneinander auf großen Bildschirmen sind */
+#thresholdForm {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-width: 600px;
+    margin-top: 1rem;
+}
+
+#cpuCoreTableBody td {
+    padding: 4px 8px;
+}
+
+#cpuCoreTableBody td:nth-child(3) {
+    width: 60px; /* feste Breite für Balken-Zelle */
+}
+
+.hardware-table th:nth-child(3),
+.hardware-table td:nth-child(3) {
+  width: 70px; /* oder je nach Platz */
+  padding: 4px 8px;
+  vertical-align: middle;
+}

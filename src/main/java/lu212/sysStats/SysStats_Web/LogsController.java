@@ -14,10 +14,15 @@ public class LogsController {
     // GET /logs: Seite mit geladenen Logs anzeigen
     @GetMapping("/logs")
     public String logsPage(Model model, HttpSession session) {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
    	 	String theme = SysStatsWebApplication.theme;
    	 	model.addAttribute("theme", theme);
    	 	model.addAttribute("activePage", "logs");
    	 	model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
         return "logs"; // Thymeleaf-Template settings.html
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
     }
 }

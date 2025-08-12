@@ -22,6 +22,8 @@ public class SettingsController {
     // GET /settings: Seite mit geladenen Einstellungen anzeigen
     @GetMapping("/settings")
     public String settingsPage(HttpSession session, Model model) {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
         Config config = loadConfig();
         model.addAttribute("config", config);
         
@@ -33,6 +35,9 @@ public class SettingsController {
    	 	model.addAttribute("theme", theme);
 
         return "settings"; // Thymeleaf-Template settings.html
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
     }
 
     // POST /settings/save: Einstellungen speichern und zurück zur Seite
