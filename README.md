@@ -13,11 +13,11 @@
 - 🖥️ **Plattformübergreifend** – Unterstützt Windows und Linux (Teilweise auch MacOS)
 - 🔔 **Benachrichtigungen** – Automatische Alerts per E-Mail und Weboberfläche bei definierter Auslastung
 - 💡 **Verschiedene Themes** – Mehrere wählbare Website Themes.
-- 🔐 **Client-Identifikation** – Jeder Client besitzt eindeutigen Namen zur Wiedererkennung.
+- 🔐 **Client-Identifikation** – Jeder Jeder Client besitzt einen eindeutigen Namen zur Wiedererkennung.
 - ⚙️ **Einfache Konfiguration** – In wenigen Sekunden einsatzbereit
 - 👨‍💻 **Daten Analyse** - Verschiedene Analyse Möglichkeiten wie Langzeitanalyse oder AI-Analyse
 - 🪪 **User Management** - Unbegrenzt viele Benutzer möglich.
-- 🔒 **Sicherheit** - Jeder Server hat einen eigenen Keystore und die Server - Client verbindung ist verschlüsselt. Clients benötigen außerdem einen Key um soch zu verbinden.
+- 🔒 **Sicherheit** - Jeder Server hat einen eigenen Keystore und die Server - Client verbindung ist verschlüsselt. Clients benötigen außerdem einen Key um sich zu verbinden.
 
 ---
 
