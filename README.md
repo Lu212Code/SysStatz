@@ -2,25 +2,28 @@
 
 **SysStatz** ist ein leichtgewichtiges plattformübergreifendes Monitoring-Tool zur Anzeige der Systemauslastung von Servern (CPU, RAM, Festplatte, Netzwerk etc.) – optimiert für einfache Integration, Echtzeit-Visualisierung und mobile Nutzung.
 
-Website: sysstatz.de
+**Website:** sysstatz.de
 
 ---
 
 ## 🔍 Features
 
 - 🌐 **Webinterface & API** – Übersichtliche Anzeige aller verbundenen Clients im Browser
-- 📈 **Echtzeit-Daten** – CPU, RAM, Festplattenauslastung, Netzwerktraffic und Bootzeit
-- 🖥️ **Plattformübergreifend** – Unterstützt Windows, Linux, macOS & Android
-- 🔔 **Benachrichtigungen** – Automatische Alerts per E-Mail bei definierter Auslastung
-- 💡 **Dark Mode** – Modernes UI-Design mit dunklem Theme
-- 🔐 **Client-Identifikation** – Jeder Client besitzt eindeutigen Namen zur Wiedererkennung
+- 📈 **Echtzeit-Daten** – CPU, RAM, Festplattenauslastung, Netzwerktraffic, Bootzeit, Uptime, Swap, Auslastung pro Kern und CPU-Temperatur
+- 🖥️ **Plattformübergreifend** – Unterstützt Windows und Linux (Teilweise auch MacOS)
+- 🔔 **Benachrichtigungen** – Automatische Alerts per E-Mail und Weboberfläche bei definierter Auslastung
+- 💡 **Verschiedene Themes** – Mehrere wählbare Website Themes.
+- 🔐 **Client-Identifikation** – Jeder Client besitzt eindeutigen Namen zur Wiedererkennung.
 - ⚙️ **Einfache Konfiguration** – In wenigen Sekunden einsatzbereit
+- 👨‍💻 **Daten Analyse** - Verschiedene Analyse Möglichkeiten wie Langzeitanalyse oder AI-Analyse
+- 🪪 **User Management** - Unbegrenzt viele Benutzer möglich.
+- 🔒 **Sicherheit** - Jeder Server hat einen eigenen Keystore und die Server - Client verbindung ist verschlüsselt. Clients benötigen außerdem einen Key um soch zu verbinden.
 
 ---
 
 ## 🚀 Schnellstart
 
-### 📥 Server starten (Java 17+ benötigt)
+### 📥 Server installieren (Java 17+ benötigt)
 
 ```bash
 bash <(curl -s http://sysstatz.de/install/install_sysstatz.sh)
@@ -28,7 +31,7 @@ bash <(curl -s http://sysstatz.de/install/install_sysstatz.sh)
 
 Webinterface aufrufen: [http://localhost:8080](http://localhost:8080)
 
-### 📦 Client starten (Java 17+ benötigt)
+### 📦 Client installieren (Java 17+ benötigt)
 
 ```bash
 bash <(curl -s http://sysstatz.de/install/install_sysstatz_client.sh)
@@ -38,32 +41,11 @@ Konfiguration erfolgt automatisch beim ersten Start (Clientname, Server-IP, Inte
 
 ---
 
-## 📲 Android-App
-
-Die Android-App zeigt die aktuellen Werte mobil an. Funktionen:
-
-- Anzeige der aktuellen Auslastung
-- Automatische Verbindung zur letzten bekannten Serveradresse
-
-📦 **Download APK**: [Releases](https://github.com/Lu212Code/sysstatz/releases)
-
----
-
 ## ⚙️ Konfiguration
 
 ### Server
 
-Auf der Weboberfläche unter Einstellungen.
-
-### Client
-
-In `config.properties` (wird automatisch erstellt):
-
-```properties
-server=192.168.1.100:12345
-clientName=Local
-interval=5
-```
+Auf der Weboberfläche unter Einstellung und im config.txt.
 
 ---
 
@@ -75,17 +57,7 @@ Meldungen können im Webinterface konfiguriert werden:
 - Grenzwert in %
 - Ziel-Email-Adresse
 
-Wenn der Grenzwert überschritten wird, wird eine Mail verschickt (SMTP-Konfiguration erforderlich).
-
----
-
-## 🧠 Architektur
-
-```text
-[Client(s)] → [Webserver (Spring Boot)] → [Webinterface / API]
-```
-
-Kommunikation erfolgt über ein leichtgewichtiges Protokoll via TCP.
+Wenn der Grenzwert überschritten wird, wird eine Mail verschickt und aif der Weboberfläche eine Meldung angezeigt.
 
 ---
 
