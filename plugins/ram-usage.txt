@@ -1,0 +1,5 @@
+name=ram-usage
+displayName=RAM Nutzung
+valueKey=usage
+unit=%
+downloadLink=https://example.com/ram-usage.jar

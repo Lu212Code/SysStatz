@@ -2,3 +2,5 @@ webPort=8080
 statsPort=12345
 theme=default
 ollamaserverip=default
+twoFactorRequired=false
+clientPassword=changeit
