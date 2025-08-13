@@ -1,5 +1,0 @@
-name=cpu-temp
-displayName=CPU Temperatur
-valueKey=temp
-unit=°C
-downloadLink=https://example.com/cpu-temp.jar
