@@ -9,10 +9,14 @@ import java.util.concurrent.*;
 
 import lu212.sysStats.General.KeystoreManager;
 import lu212.sysStats.General.Logger;
+import lu212.sysStats.General.Plugins;
 import lu212.sysStats.SysStats_Web.ServerStats;
 import lu212.sysStats.SysStats_Web.SysStatsWebApplication;
 
 import org.json.JSONObject;
+
+import com.google.gson.Gson;
+
 import org.json.JSONException;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -125,6 +129,10 @@ public class Server {
 			Logger.error("Stats-Client '" + name + "' verbunden.");
 			System.out.println("Stats-Client '" + name + "' verbunden.");
 
+			Map<String, String> downloadLinks = Plugins.getDownloadLinks();
+			String json = new Gson().toJson(downloadLinks);
+			out.println("PLUGINS " + json);
+			
 			handler.listen();
 
 		} catch (IOException e) {
@@ -231,6 +239,15 @@ public class Server {
 						} else if (line.startsWith("GEO:")) {
 							String geoJson = line.substring("GEO:".length()).trim();
 							handleGeoInfo(name, geoJson);
+						} else if (line.startsWith("PLUGIN:")) {
+							String payload = line.substring("PLUGIN:".length()).trim();
+							String[] parts = payload.split("\\s+", 2);
+							
+							if (parts.length == 2) {
+								String key = parts[0].toUpperCase();
+								String value = parts[1];
+								Plugins.handlePluginInfo(name, Plugins.getPluginName(key), key, value);
+							}
 						} else {
 							Logger.info("Unbekannte Nachricht von " + name + ": " + line);
 							send("Unbekannte Nachricht empfangen: " + line);
@@ -375,16 +392,6 @@ public class Server {
 			temp.temp = Auslastung;
 		}
 		
-		if (bauteil.equalsIgnoreCase("LOADAVG_1")) {
-		    temp.loadavg1 = Auslastung;
-		}
-		if (bauteil.equalsIgnoreCase("LOADAVG_5")) {
-		    temp.loadavg5 = Auslastung;
-		}
-		if (bauteil.equalsIgnoreCase("LOADAVG_15")) {
-		    temp.loadavg15 = Auslastung;
-		}
-		
 		if (bauteil.startsWith("CPU_CORE")) {
 		    try {
 		        int coreIndex = Integer.parseInt(bauteil.substring("CPU_CORE".length()));
@@ -395,24 +402,9 @@ public class Server {
 		    }
 		}
 		
-		if (bauteil.equalsIgnoreCase("CPUVOLTAGE")) {
-		    temp.cpuVoltage = Auslastung;
-		    Logger.info("CPU Voltage von " + Server + ": " + Auslastung);
-		}
-		
-		
 		if (temp.cpu != null && temp.ramUsed  != null && temp.ramTotal != null && temp.disk != null && temp.sent != null && temp.recv != null
 				&& temp.dsent != null && temp.drecv != null && temp.processes != null && temp.scmd != null && temp.temp != null && temp.swapTotal != null
 				&& temp.swapUsed != null && cpuCoreLoads != null) {
-			
-			if(false) {
-				System.out.println(temp.cpu);
-				System.out.println(temp.disk);
-				System.out.println(temp.temp);
-				System.out.println(temp.processes);
-				System.out.println(temp.swapTotal + "/" + temp.swapUsed);
-				System.out.println(temp.ramAvailable + "/" + temp.ramTotal + "/" + temp.ramUsed);
-			}
 			
 			try {
 		        double ramUsed = Double.parseDouble(temp.ramUsed);
@@ -463,11 +455,7 @@ public class Server {
 		String drecv = null;
 		String scmd = null;
 		String temp = null;
-		String loadavg1 = null;
-		String loadavg5 = null;
-		String loadavg15 = null;
 		Map<Integer, Double> cpuCoreLoads = new HashMap<>();
-		String cpuVoltage = null;
 		
 		public List<ServerProcessInfo> processes = new ArrayList<>();
 	}

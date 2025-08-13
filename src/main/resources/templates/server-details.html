@@ -125,6 +125,20 @@
 	  </tbody>
 	</table>
 
+	<h2>Plugins</h2>
+	<div id="pluginContainer">
+	    <p>Lade Plugin-Daten...</p>
+	</div>
+
+	<div th:each="pluginEntry : ${pluginData}">
+	    <h3 th:text="${pluginEntry.key}">Plugin Name</h3>
+	    <ul>
+	        <li th:each="valueEntry : ${pluginEntry.value}">
+	            <span th:text="${valueEntry.key}">Key</span>: 
+	            <span th:text="${valueEntry.value}">Wert</span>
+	        </li>
+	    </ul>
+	</div>
 		
 		<div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 2rem;">
 		
@@ -661,6 +675,45 @@
 	// alle 5 Sekunden aktualisieren
 	setInterval(updateCpuCores, 5000);
 	updateCpuCores(); // direkt einmal initial aufrufen
+	
+	async function fetchPluginData() {
+	    try {
+	        const response = await fetch(`/api/plugins/${serverName}`);
+	        if (!response.ok) throw new Error('Netzwerkfehler');
+	        const data = await response.json();
+
+	        const container = document.getElementById('pluginContainer');
+	        container.innerHTML = ''; // Alte Inhalte löschen
+
+	        if (!data || Object.keys(data).length === 0) {
+	            container.innerHTML = '<p>Keine Plugin-Informationen verfügbar.</p>';
+	            return;
+	        }
+
+	        for (const [pluginName, values] of Object.entries(data)) {
+	            const pluginHeader = document.createElement('h3');
+	            pluginHeader.textContent = pluginName;
+	            container.appendChild(pluginHeader);
+
+	            const ul = document.createElement('ul');
+	            for (const [key, value] of Object.entries(values)) {
+	                const li = document.createElement('li');
+	                li.textContent = `${key}: ${value}`;
+	                ul.appendChild(li);
+	            }
+	            container.appendChild(ul);
+	        }
+
+	    } catch (err) {
+	        console.error('Fehler beim Laden der Plugin-Daten:', err);
+	    }
+	}
+
+	// Erstmalig laden
+	fetchPluginData();
+
+	// Alle 5 Sekunden automatisch aktualisieren
+	setInterval(fetchPluginData, 5000);
 </script>
 <script src="/js/sidebar.js"></script>
 </body>

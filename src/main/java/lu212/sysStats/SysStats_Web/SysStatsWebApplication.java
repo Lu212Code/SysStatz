@@ -1,6 +1,9 @@
 package lu212.sysStats.SysStats_Web;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,6 +16,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.github.lalyos.jfiglet.FigletFont;
 
 import lu212.sysStats.General.Logger;
+import lu212.sysStats.General.PluginManager;
+import lu212.sysStats.General.Plugins;
 import lu212.sysStats.StatsServer.Server;
 import lu212.sysStats.SysStats_Web.AlertService.Alert.Level;
 
@@ -36,6 +41,9 @@ public class SysStatsWebApplication {
 		Logger.info("Lese Konfiguration aus...");
 		System.out.println("Lese Konfiguration aus...");
 		config();
+		Logger.info("Lade plugins...");
+		System.out.println("Lade plugins...");
+		Plugins.loadPlugins();
 		System.out.println("----------Config----------");
 		System.out.println("Webserver-Port: " + webserverport);
 		System.out.println("Statsserver-Port: " + statsserverport);
@@ -67,15 +75,9 @@ public class SysStatsWebApplication {
 		System.out.println(SysStatzLogo);
 		System.out.println("-----------------------ver.-0.1-------------------------");
 		
-		AlertService al = new AlertService();
 		try {
-			al.addAlert("TestAlert mit ienem Langem Text um alles zu testen und so jaja..", Level.RED);
-			al.addAlert("TestAlert mit ienem Langem Text um alles zu testen und so jaja.. Das hier ist dann halt so der zweite...", Level.YELLOW);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		try {
+			Logger.info("Starte StatsServer");
+			System.out.println("Starte StatsServer");
 			Server.startServer(null);
 		} catch (IOException e) {
 			Logger.error("StatsServer konnte nicht gestartet werden:");

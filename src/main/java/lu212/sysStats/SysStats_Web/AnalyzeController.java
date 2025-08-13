@@ -16,6 +16,8 @@ public class AnalyzeController {
 
     @GetMapping("/analyze")
     public String showAnalyzePage(@RequestParam(required = false) String server, Model model, HttpSession session) {
+		Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+		if (loggedIn != null && loggedIn) {
         List<String> servers = listAvailableServers();
         model.addAttribute("servers", servers);
         model.addAttribute("activePage", "analyze");
@@ -34,6 +36,9 @@ public class AnalyzeController {
    	 	model.addAttribute("theme", theme);
    	 	
         return "analyze";
+		} else {
+			return "redirect:/login?error=sessionExpired";
+		}
     }
 
     @PostMapping("/analyze/ai")

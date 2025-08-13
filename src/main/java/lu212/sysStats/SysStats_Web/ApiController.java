@@ -11,6 +11,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lu212.sysStats.General.Logger;
+import lu212.sysStats.General.PluginInfo;
+import lu212.sysStats.General.Plugins;
 import lu212.sysStats.General.SysStatzInfo;
 import lu212.sysStats.General.ThresholdConfig;
 import lu212.sysStats.StatsServer.Server;
@@ -26,8 +28,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,6 +98,33 @@ public class ApiController {
 
         return server;
     }
+    
+    @GetMapping("/api/plugins/{serverName}")
+    public Map<String, Map<String, String>> getPluginsByServer(@PathVariable String serverName) {
+        Map<String, Object> rawValues = Plugins.getPluginInfoByServerName(serverName);
+        Map<String, Map<String, String>> grouped = new LinkedHashMap<>();
+
+        if (rawValues == null || rawValues.isEmpty()) return Collections.emptyMap();
+
+        for (Map.Entry<String, Object> entry : rawValues.entrySet()) {
+            // regKey = "PluginName|ValueKey"
+            String[] parts = entry.getKey().split("\\|", 2);
+            if (parts.length != 2) continue;
+            String pluginName = parts[0];
+            String valueKey = parts[1];
+            Object value = entry.getValue();
+
+            PluginInfo info = Plugins.getPluginInfo(pluginName);
+            String unit = info != null && info.unit != null ? info.unit : "";
+
+            grouped.computeIfAbsent(pluginName, k -> new LinkedHashMap<>())
+                   .put(valueKey, value + (unit.isEmpty() ? "" : " " + unit));
+        }
+
+        return grouped;
+    }
+
+
     
     @GetMapping("/api/server/{name}/longterm")
     public ResponseEntity<?> getLongTermStats(@PathVariable String name) {
