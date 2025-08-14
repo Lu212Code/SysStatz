@@ -71,7 +71,7 @@
 		            transform: translateY(-1px);
 		        }
 	</style>
-	<link rel="stylesheet" href="/css/sidebar.css">
+	<link rel="stylesheet" th:href="@{'/css/' + ${theme} + '-sidebar.css'}">
 </head>
 
 <body>

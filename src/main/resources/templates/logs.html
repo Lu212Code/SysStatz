@@ -91,7 +91,7 @@
             color: #f76c6c; /* rot für stderr */
         }
     </style>
-	<link rel="stylesheet" href="/css/sidebar.css">
+	<link rel="stylesheet" th:href="@{'/css/' + ${theme} + '-sidebar.css'}">
 </head>
 <body>
 <header>

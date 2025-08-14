@@ -9,28 +9,6 @@
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
-        body {
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1e1e2f;
-            color: #ddd;
-            margin: 0;
-            padding: 0 20px 40px 20px;
-			margin-left: 60px;
-			transition: margin-left 0.3s ease;
-        }
-        header {
-            background-color: #282c34;
-            padding: 20px 0;
-            text-align: center;
-            border-bottom: 2px solid #4a90e2;
-        }
-        header h1 {
-            margin: 0;
-            font-weight: 700;
-            color: #4a90e2;
-            font-size: 2rem;
-            letter-spacing: 1px;
-        }
         select {
             padding: 8px;
             border-radius: 6px;
@@ -68,7 +46,7 @@
             color: #ccc;
         }
     </style>
-	<link rel="stylesheet" href="/css/sidebar.css">
+	<link rel="stylesheet" th:href="@{'/css/' + ${theme} + '-sidebar.css'}">
 </head>
 <body>
 
@@ -136,9 +114,9 @@
 	        const ramVals = data.map(d => d.ram);
 	        const diskVals = data.map(d => d.disk);
 
-	        updateChart(cpuChart, times, cpuVals);
-	        updateChart(ramChart, times, ramVals);
-	        updateChart(diskChart, times, diskVals);
+			const cpuSpikes = updateChartWithSpikes(cpuChart, times, cpuVals, 80);
+			const ramSpikes = updateChartWithSpikes(ramChart, times, ramVals, 80);
+			const diskSpikes = updateChartWithSpikes(diskChart, times, diskVals, 80);
 
 	        analysisContent.innerHTML = generateAnalysis(cpuVals, ramVals, diskVals);
 	      });
@@ -149,37 +127,57 @@
         chart.data.datasets[0].data = data;
         chart.update();
     }
+	
+	function updateChartWithSpikes(chart, labels, data, threshold=80) {
+	    const spikeIndexes = detectSpikes(data, threshold);
+	    const pointColors = data.map((val, i) => spikeIndexes.includes(i) ? 'red' : chart.data.datasets[0].borderColor);
 
-    function generateAnalysis(cpu, ram, disk) {
-        function avg(arr) { return (arr.reduce((a,b) => a+b, 0) / arr.length).toFixed(1); }
-        function max(arr) { return Math.max(...arr).toFixed(1); }
-        function min(arr) { return Math.min(...arr).toFixed(1); }
-        function risingTrend(arr) {
-            let streak = 0, maxStreak = 0;
-            for (let i = 1; i < arr.length; i++) {
-                if (arr[i] > arr[i-1]) streak++; else streak = 0;
-                maxStreak = Math.max(maxStreak, streak);
-            }
-            return maxStreak >= 5; // z.B. 5 aufeinanderfolgende Anstiege
-        }
-        function volatility(arr) {
-            let diffs = [];
-            for (let i = 1; i < arr.length; i++) diffs.push(Math.abs(arr[i] - arr[i-1]));
-            return (diffs.reduce((a,b) => a+b, 0) / diffs.length).toFixed(2);
-        }
+	    chart.data.labels = labels;
+	    chart.data.datasets[0].data = data;
+	    chart.data.datasets[0].pointBackgroundColor = pointColors;
+	    chart.update();
 
-        return `
-            <div class="analysis-item"><b>CPU:</b> ⌀ ${avg(cpu)}%, Max ${max(cpu)}%, Min ${min(cpu)}%, 
-                ${risingTrend(cpu) ? '📈 Längerer Anstieg erkannt' : '➡ keine Auffälligkeit'}, 
-                Volatilität: ${volatility(cpu)}%</div>
-            <div class="analysis-item"><b>RAM:</b> ⌀ ${avg(ram)}%, Max ${max(ram)}%, Min ${min(ram)}%, 
-                ${risingTrend(ram) ? '📈 Längerer Anstieg erkannt' : '➡ keine Auffälligkeit'}, 
-                Volatilität: ${volatility(ram)}%</div>
-            <div class="analysis-item"><b>Disk:</b> ⌀ ${avg(disk)}%, Max ${max(disk)}%, Min ${min(disk)}%, 
-                ${risingTrend(disk) ? '📈 Längerer Anstieg erkannt' : '➡ keine Auffälligkeit'}, 
-                Volatilität: ${volatility(disk)}%</div>
-        `;
-    }
+	    return spikeIndexes.length;
+	}
+
+
+	function generateAnalysis(cpu, ram, disk) {
+	    function avg(arr) { return (arr.reduce((a,b) => a+b, 0) / arr.length).toFixed(1); }
+	    function max(arr) { return Math.max(...arr).toFixed(1); }
+	    function min(arr) { return Math.min(...arr).toFixed(1); }
+	    function risingTrend(arr) { 
+	        let streak = 0, maxStreak = 0;
+	        for (let i = 1; i < arr.length; i++) { if (arr[i] > arr[i-1]) streak++; else streak=0; maxStreak = Math.max(maxStreak, streak);}
+	        return maxStreak >= 5;
+	    }
+	    function volatility(arr) {
+	        let diffs = []; for (let i=1;i<arr.length;i++) diffs.push(Math.abs(arr[i]-arr[i-1]));
+	        return (diffs.reduce((a,b)=>a+b,0)/diffs.length).toFixed(2);
+	    }
+	    function spikeCount(arr, threshold=80) { return detectSpikes(arr, threshold).length; }
+
+	    return `
+	        <div class="analysis-item"><b>CPU:</b> ⌀ ${avg(cpu)}%, Max ${max(cpu)}%, Min ${min(cpu)}%, 
+	            ${risingTrend(cpu)?'📈 Längerer Anstieg':'➡ keine Auffälligkeit'}, 
+	            Volatilität: ${volatility(cpu)}%, Spikes: ${spikeCount(cpu)}</div>
+	        <div class="analysis-item"><b>RAM:</b> ⌀ ${avg(ram)}%, Max ${max(ram)}%, Min ${min(ram)}%, 
+	            ${risingTrend(ram)?'📈 Längerer Anstieg':'➡ keine Auffälligkeit'}, 
+	            Volatilität: ${volatility(ram)}%, Spikes: ${spikeCount(ram)}</div>
+	        <div class="analysis-item"><b>Disk:</b> ⌀ ${avg(disk)}%, Max ${max(disk)}%, Min ${min(disk)}%, 
+	            ${risingTrend(disk)?'📈 Längerer Anstieg':'➡ keine Auffälligkeit'}, 
+	            Volatilität: ${volatility(disk)}%, Spikes: ${spikeCount(disk)}</div>
+	    `;
+	}
+	
+	function detectSpikes(data, threshold = 80) {
+	    // threshold = Schwelle, ab der ein Wert als Spike gilt
+	    const spikes = [];
+	    data.forEach((val, i) => {
+	        if (val >= threshold) spikes.push(i);
+	    });
+	    return spikes;
+	}
+
 </script>
 <script src="/js/sidebar.js"></script>
 </body>

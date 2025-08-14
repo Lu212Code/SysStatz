@@ -93,7 +93,7 @@
             background-color: #1f2230;
         }
     </style>
-	<link rel="stylesheet" href="/css/sidebar.css">
+	<link rel="stylesheet" th:href="@{'/css/' + ${theme} + '-sidebar.css'}">
 </head>
 <body>
 <header>

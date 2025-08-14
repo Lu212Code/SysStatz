@@ -125,7 +125,7 @@
             user-select: none;
         }
     </style>
-	<link rel="stylesheet" href="/css/sidebar.css">
+	<link rel="stylesheet" th:href="@{'/css/' + ${theme} + '-sidebar.css'}">
 </head>
 <body>
     <h1>Meldungen - Übersicht</h1>

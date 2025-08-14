@@ -200,7 +200,7 @@
 		    z-index: 1000;
 		}
     </style>
-	<link rel="stylesheet" href="/css/sidebar.css">
+	<link rel="stylesheet" th:href="@{'/css/' + ${theme} + '-sidebar.css'}">
 </head>
 
 <header>

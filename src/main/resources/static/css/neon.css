@@ -24,7 +24,7 @@ header h1 {
 /* Login-Button-Stil */
 .button-login {
     padding: 10px 20px;
-    background: linear-gradient(135deg, #00e0ff, #ff00d4);
+    background-color: #4a90e2;
     color: white;
     border: none;
     border-radius: 6px;
@@ -36,7 +36,7 @@ header h1 {
 
 .button-login:hover {
     transform: translateY(-1px);
-    background: linear-gradient(135deg, #00c0e0, #e000c0);
+    background-color: #357bd8;
 }
 
 .button-login:active {
