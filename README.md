@@ -70,3 +70,40 @@ MIT License – frei zur Nutzung, Modifikation und Verbreitung.
 ## 🤝 Mitwirken
 
 Pull Requests sind willkommen! Für größere Änderungen bitte zuerst ein Issue eröffnen.
+
+
+## Shutdown & Reboot erlauben
+
+Damit das Programm den Rechner herunterfahren oder neu starten darf, müssen die Befehle ohne Passwort über `sudo` ausführbar sein.
+
+### Linux
+1. Öffne die sudoers-Datei:
+   ```bash
+   sudo visudo
+Füge am Ende eine Zeile ein (ersetze <username> durch deinen Benutzernamen):
+
+text
+Code kopieren
+<username> ALL=(ALL) NOPASSWD: /usr/bin/systemctl poweroff, /usr/bin/systemctl reboot, /sbin/shutdown, /sbin/reboot
+macOS
+Öffne die sudoers-Datei:
+
+bash
+Code kopieren
+sudo visudo
+Ergänze folgende Zeile (wieder <username> anpassen):
+
+text
+Code kopieren
+<username> ALL=(ALL) NOPASSWD: /sbin/shutdown, /usr/sbin/shutdown, /sbin/reboot, /usr/sbin/reboot
+⚠️ Hinweis
+Änderungen an der sudoers-Datei sollten mit Vorsicht vorgenommen werden.
+
+Nur die exakt benötigten Befehle freigeben.
+
+Teste die Einrichtung z. B. mit:
+
+bash
+Code kopieren
+sudo -n shutdown -h now
+→ Wenn keine Passwortabfrage kommt, ist alles korrekt eingerichtet.
