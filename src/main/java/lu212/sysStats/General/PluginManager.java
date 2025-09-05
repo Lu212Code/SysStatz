@@ -77,7 +77,6 @@ public class PluginManager {
         if (info != null) {
             String pluginDisplayName = info.displayName != null ? info.displayName : pluginName;
             String unit = info.unit != null ? info.unit : "";
-            System.out.println("[PLUGIN] [CLIENT: " + clientName + "] " + pluginDisplayName + " " + valueKey + ": " + value + " " + unit);
         }
     }
 
