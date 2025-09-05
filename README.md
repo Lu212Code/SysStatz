@@ -140,7 +140,7 @@ lu212.sysstatz.client.api.SysStatsPlugin aus der SysStatzClientAPI.jar implement
 
 Beispiel:
 
-```
+```java
 package my.plugins;
 
 import lu212.sysstatz.client.api.PluginSender;
