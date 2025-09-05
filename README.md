@@ -123,7 +123,7 @@ name=cpu
 displayName=CPU-Auslastung
 valueKey=usage
 unit=%
-downloadLink=https://example.com/cpu-plugin.jar
+downloadLink=https://example.com/cpu-plugin.jar```
 name – interner Name (Identifikation)
 
 displayName – schöner Name für das Frontend
@@ -140,7 +140,7 @@ lu212.sysstatz.client.api.SysStatsPlugin aus der SysStatzClientAPI.jar implement
 
 Beispiel:
 
-```java
+```
 package my.plugins;
 
 import lu212.sysstatz.client.api.PluginSender;
