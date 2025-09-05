@@ -128,10 +128,6 @@ public class Server {
 			clients.put(name, handler);
 			Logger.error("Stats-Client '" + name + "' verbunden.");
 			System.out.println("Stats-Client '" + name + "' verbunden.");
-
-			Map<String, String> downloadLinks = Plugins.getDownloadLinks();
-			String json = new Gson().toJson(downloadLinks);
-			out.println("PLUGINS " + json);
 			
 			handler.listen();
 
@@ -392,19 +388,22 @@ public class Server {
 			temp.temp = Auslastung;
 		}
 		
-		if (bauteil.startsWith("CPU_CORE")) {
-		    try {
-		        int coreIndex = Integer.parseInt(bauteil.substring("CPU_CORE".length()));
-		        double load = Double.parseDouble(Auslastung.replace(",", "."));
-		        temp.cpuCoreLoads.put(coreIndex, load);
-		    } catch (NumberFormatException e) {
-		        Logger.warning("Ungültiger CPU_CORE Index oder Wert: " + bauteil + " " + Auslastung);
-		    }
+		if (bauteil.startsWith("CPU_CORE") && bauteil.endsWith("_LOAD")) {
+		    int coreIndex = Integer.parseInt(bauteil.substring("CPU_CORE".length(), bauteil.indexOf("_LOAD")));
+		    double load = Double.parseDouble(Auslastung.replace(",", "."));
+		    temp.cpuCoreLoads.put(coreIndex, load);
 		}
+		
+		if (bauteil.startsWith("CPU_CORE") && bauteil.endsWith("_FREQ")) {
+		    int coreIndex = Integer.parseInt(bauteil.substring("CPU_CORE".length(), bauteil.indexOf("_FREQ")));
+		    double freq = Double.parseDouble(Auslastung.replace(",", "."));
+		    temp.cpuCoreFreqs.put(coreIndex, freq);
+		}
+
 		
 		if (temp.cpu != null && temp.ramUsed  != null && temp.ramTotal != null && temp.disk != null && temp.sent != null && temp.recv != null
 				&& temp.dsent != null && temp.drecv != null && temp.processes != null && temp.scmd != null && temp.temp != null && temp.swapTotal != null
-				&& temp.swapUsed != null && cpuCoreLoads != null) {
+				&& temp.swapUsed != null && temp.cpuCoreLoads != null && temp.cpuCoreFreqs != null) {
 			
 			try {
 		        double ramUsed = Double.parseDouble(temp.ramUsed);
@@ -426,7 +425,7 @@ public class Server {
 
 				ServerStats.update(Server, temp.cpu, ramUsed, ramTotal, diskPercent, diskUsed, diskTotal, "Online",
 						formatiert, temp.sent, temp.recv, temp.dsent, temp.drecv, temp.processes, temp.scmd, temp.temp,
-						temp.cpuCoreLoads, temp.swapTotal, temp.swapUsed);
+						temp.cpuCoreLoads, temp.swapTotal, temp.swapUsed, temp.cpuCoreFreqs);
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -456,6 +455,7 @@ public class Server {
 		String scmd = null;
 		String temp = null;
 		Map<Integer, Double> cpuCoreLoads = new HashMap<>();
+		Map<Integer, Double> cpuCoreFreqs = new HashMap<>();
 		
 		public List<ServerProcessInfo> processes = new ArrayList<>();
 	}

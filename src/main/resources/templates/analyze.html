@@ -199,6 +199,21 @@
 		    transform: translate(-50%, -50%);
 		    z-index: 1000;
 		}
+		
+		/* Neue Nachricht unterhalb der Ladeanimation */
+		#loaderMessage {
+		    text-align: center;
+		    font-weight: 600;
+		    font-size: 1rem;
+		    color: #f39c12;
+		    margin-top: 10px;
+		    opacity: 0;
+		    transition: opacity 0.4s ease;
+		}
+
+		#loader.active #loaderMessage {
+		    opacity: 1;
+		}
     </style>
 	<link rel="stylesheet" th:href="@{'/css/' + ${theme} + '-sidebar.css'}">
 </head>
@@ -243,7 +258,7 @@
 	        </button>
 
 	        <button type="submit" name="mode" value="advanced" id="aiBtnAdvanced">
-	            Erweiterte KI-Auswertung<br><small style="font-weight: normal;">Wertet Daten von mehreren Tagen aus</small>
+	            Erweiterte KI-Auswertung<br><small style="font-weight: normal;">Wertet daten mehrerer Tage</small>
 	        </button>
 	    </form>
 	</div>
@@ -254,6 +269,8 @@
         <div class="circle"></div>
         <div id="loaderText">Bitte warten, die KI analysiert die Daten…</div>
     </div>
+	
+	<div id="loaderMessage">Bitte bleiben Sie auf der Seite, die Analyse kann bis zu 5 Minuten dauern.</div>
 
     <script>
 		const serverForm = document.getElementById('serverForm');
@@ -278,6 +295,33 @@
 		            e.preventDefault();
 		            loaderAI.style.display = 'block';
 		            loaderText.classList.add('active');
+		            aiBtns.forEach(b => b.disabled = true);
+
+		            // Mode als verstecktes Feld
+		            const hiddenMode = document.createElement("input");
+		            hiddenMode.type = "hidden";
+		            hiddenMode.name = "mode";
+		            hiddenMode.value = selectedMode;
+		            aiForm.appendChild(hiddenMode);
+
+		            setTimeout(() => aiForm.submit(), 500);
+		        });
+		    });
+		}
+		
+		const loaderMessage = document.getElementById('loaderMessage');
+
+		if (aiForm && loaderAI && loaderText) {
+		    const aiBtns = aiForm.querySelectorAll("button");
+
+		    aiBtns.forEach(btn => {
+		        btn.addEventListener("click", (e) => {
+		            const selectedMode = btn.value;
+
+		            e.preventDefault();
+		            loaderAI.style.display = 'block';
+		            loaderText.classList.add('active');
+		            loaderMessage.classList.add('active'); // Anzeige der neuen Nachricht
 		            aiBtns.forEach(b => b.disabled = true);
 
 		            // Mode als verstecktes Feld

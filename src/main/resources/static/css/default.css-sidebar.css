@@ -4,16 +4,18 @@
     top: 0;
     left: 0;
     height: 100%;
-    width: 60px;
-    background: linear-gradient(180deg, #2b2f36 0%, #1f2228 100%);
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
-    transition: width 0.3s ease;
+    width: 64px;
+    background: rgba(30, 34, 48, 0.85);
+    backdrop-filter: blur(12px);
+    box-shadow: 3px 0 18px rgba(0, 0, 0, 0.45);
+    transition: width 0.3s ease, background 0.3s ease;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 0.5rem;
+    padding-top: 0.8rem;
     z-index: 1000;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .sidebar.no-transition,
@@ -23,24 +25,25 @@ body.no-transition {
 
 /* Ausgeklappt */
 .sidebar.expanded {
-    width: 200px;
+    width: 220px;
     align-items: flex-start;
-    padding-left: 10px;
+    padding-left: 12px;
+    background: rgba(40, 44, 62, 0.92);
 }
 
 /* Menü-Button */
 .sidebar-toggle {
     background: transparent;
     border: none;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
     border-radius: 50%;
     cursor: pointer;
-    margin-bottom: 1rem;
-    transition: transform 0.2s ease;
+    margin-bottom: 1.2rem;
+    transition: transform 0.25s ease, background 0.25s ease;
 }
 
 .sidebar-toggle img {
@@ -49,104 +52,106 @@ body.no-transition {
 }
 
 .sidebar-toggle:hover {
-    background: #4a90e2;
-    transform: scale(1.1);
+    background: rgba(74,144,226,0.2);
+    transform: scale(1.12);
 }
 
-.sidebar:not(.expanded) .sidebar-toggle img {
-    margin: 0;
-}
-
-/* Links in Sidebar */
+/* Links */
 .sidebar a {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    padding: 10px;
-    margin-bottom: 8px;
-    color: white;
+    padding: 12px;
+    margin-bottom: 10px;
+    color: #e0e0e0;
     text-decoration: none;
-    border-radius: 8px;
+    border-radius: 10px;
     width: 100%;
-    transition: background-color 0.3s, color 0.3s;
+    transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+    font-size: 0.95rem;
+    font-weight: 500;
 }
 
 .sidebar a.active {
-    background: linear-gradient(90deg, #357bd8, #2f66d9);
-    box-shadow: 0 0 12px #357bd8aa;
-    font-weight: bold;
+    background: linear-gradient(90deg, #0072ff, #00c6ff);
+    box-shadow: 0 0 16px rgba(0,198,255,0.6);
+    font-weight: 600;
+    color: #fff;
 }
 
 .sidebar:not(.expanded) a {
     justify-content: center;
-    padding: 10px 0;
+    padding: 12px 0;
     position: relative;
 }
 
+/* Tooltip im collapsed Mode */
 .sidebar:not(.expanded) a:hover::after {
     content: attr(data-tooltip);
     position: absolute;
-    left: 60px;
+    left: 64px;
     top: 50%;
     transform: translateY(-50%);
-    background: #222831;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
+    background: #1e1e2f;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
     white-space: nowrap;
     font-size: 0.85rem;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
     pointer-events: none;
     z-index: 10;
 }
 
-/* Hover-Effekte */
+/* Hover */
 .sidebar a:hover {
-    background-color: #4a90e2;
-    color: white;
+    background-color: rgba(74,144,226,0.2);
+    color: #fff;
+    box-shadow: inset 0 0 8px rgba(74,144,226,0.5);
 }
 
+/* Icons */
 .sidebar img {
-    height: 28px;
+    height: 26px;
     margin-right: 0;
     filter: brightness(1.2);
     transition: filter 0.3s, transform 0.3s;
 }
 
 .sidebar a:hover img {
-    transform: scale(1.15);
+    transform: scale(1.18);
     filter: brightness(1.7) drop-shadow(0 0 4px #4a90e2);
 }
 
 .sidebar a.active img {
-    filter: brightness(1.5) drop-shadow(0 0 2px #4a90e2);
+    filter: brightness(1.6) drop-shadow(0 0 4px #00c6ff);
 }
 
-/* Text in Links */
+/* Link-Text */
 .sidebar .link-text {
     white-space: nowrap;
     overflow: hidden;
-    margin-left: 12px;
+    margin-left: 14px;
     max-width: 0;
     opacity: 0;
-    transition: opacity 0.3s ease, max-width 0.3s ease;
+    transition: opacity 0.35s ease, max-width 0.35s ease;
 }
 
 .sidebar.expanded .link-text {
-    max-width: 150px;
+    max-width: 160px;
     opacity: 1;
 }
 
-/* Standardbreite der Sidebar */
+/* Body-Shift */
 body {
-    margin-left: 60px;
+    margin-left: 64px;
     transition: margin-left 0.3s ease;
 }
 
 body.sidebar-expanded {
-    margin-left: 200px;
+    margin-left: 220px;
 }
 
 .sidebar.expanded a {
-    padding-left: 16px;
+    padding-left: 18px;
 }

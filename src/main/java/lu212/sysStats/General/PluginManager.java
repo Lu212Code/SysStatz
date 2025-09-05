@@ -116,4 +116,8 @@ public class PluginManager {
         }
         return null;
     }
+    
+    public Map<String, String> getAllDownloadLinks() {
+        return Collections.unmodifiableMap(pluginDownloadLinks);
+    }
 }

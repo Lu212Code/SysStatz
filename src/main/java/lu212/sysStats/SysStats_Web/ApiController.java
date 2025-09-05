@@ -78,7 +78,6 @@ public class ApiController {
             checkTrigger(server);
         }
         
-        System.out.println("Trigger-Check für Server: " + name);
         try {
             ObjectMapper mapper = new ObjectMapper();
             File file = new File("triggers.json");
@@ -138,7 +137,7 @@ public class ApiController {
             List<Map<String, Object>> result = new java.util.ArrayList<>();
 
             java.nio.file.Files.lines(file.toPath()).forEach(line -> {
-                String[] parts = line.split("\\|");
+                String[] parts = line.split(";");
                 if (parts.length == 4) {
                     try {
                         long timestamp = Long.parseLong(parts[0]);

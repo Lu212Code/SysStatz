@@ -18,10 +18,6 @@
 			    <img src="/img/lt-analys.png" alt="Lz. Analyse">
 			    <span class="link-text">Lz. Analyse</span>
 			</a>
-		    <a th:href="@{/settings}" th:classappend="${activePage == 'settings'} ? ' active' : ''" data-tooltip="Einstellungen">
-		        <img src="/img/settings.png" alt="Einstellungen">
-		        <span class="link-text">Einstellungen</span>
-		    </a>
 		    <a th:href="@{/logs}" th:classappend="${activePage == 'logs'} ? ' active' : ''" data-tooltip="Logs">
 		        <img src="/img/log.png" alt="Logs">
 		        <span class="link-text">Logs</span>
@@ -37,6 +33,10 @@
 			<a th:href="@{/pdf-export}" th:classappend="${activePage == 'pdf-export'} ? ' active' : ''" data-tooltip="PDF-Creator">
 			    <img src="/img/pdf.png" alt="PDF-Creator ">
 			    <span class="link-text">PDF-Creator</span>
+			</a>
+			<a th:if="${isAdmin}" th:href="@{/settings}" th:classappend="${activePage == 'settings'} ? ' active' : ''" data-tooltip="Einstellungen">
+			    <img src="/img/settings.png" alt="Einstellungen">
+			    <span class="link-text">Einstellungen</span>
 			</a>
 			<a th:if="${isAdmin}" th:href="@{/admin/manageUsers}" th:classappend="${activePage == 'manageUsers'} ? ' active' : ''" data-tooltip="Benutzer">
 			    <img src="/img/users.png" alt="Benutzer">

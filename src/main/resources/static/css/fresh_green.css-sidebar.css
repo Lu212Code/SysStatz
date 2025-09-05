@@ -6,14 +6,15 @@
     height: 100%;
     width: 60px;
     background: linear-gradient(180deg, #1d2b26 0%, #14201b 100%);
-    box-shadow: 2px 0 12px rgba(46, 204, 113, 0.3);
-    transition: width 0.3s ease;
+    box-shadow: 2px 0 14px rgba(46, 204, 113, 0.25);
+    transition: width 0.3s ease, box-shadow 0.3s ease;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 0.5rem;
+    padding-top: 0.75rem;
     z-index: 1000;
+    backdrop-filter: blur(6px);
 }
 
 .sidebar.no-transition,
@@ -25,22 +26,23 @@ body.no-transition {
 .sidebar.expanded {
     width: 200px;
     align-items: flex-start;
-    padding-left: 10px;
+    padding-left: 12px;
+    box-shadow: 4px 0 20px rgba(46, 204, 113, 0.35);
 }
 
 /* Menü-Button */
 .sidebar-toggle {
     background: transparent;
     border: none;
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     display: flex;
     justify-content: center;
     align-items: center;
     border-radius: 50%;
     cursor: pointer;
     margin-bottom: 1rem;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .sidebar-toggle img {
@@ -50,7 +52,8 @@ body.no-transition {
 
 .sidebar-toggle:hover {
     background: #2ecc71;
-    transform: scale(1.1);
+    transform: scale(1.12);
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
 }
 
 .sidebar:not(.expanded) .sidebar-toggle img {
@@ -64,16 +67,16 @@ body.no-transition {
     justify-content: flex-start;
     padding: 10px;
     margin-bottom: 8px;
-    color: #e2ffe9;
+    color: #d8f5dc;
     text-decoration: none;
-    border-radius: 8px;
+    border-radius: 10px;
     width: 100%;
-    transition: background-color 0.3s, color 0.3s;
+    transition: background-color 0.3s, color 0.3s, transform 0.2s;
 }
 
 .sidebar a.active {
     background: linear-gradient(90deg, #2ecc71, #27ae60);
-    box-shadow: 0 0 14px rgba(46, 204, 113, 0.6);
+    box-shadow: 0 0 14px rgba(46, 204, 113, 0.55);
     font-weight: bold;
 }
 
@@ -83,19 +86,20 @@ body.no-transition {
     position: relative;
 }
 
+/* Tooltip bei Hover */
 .sidebar:not(.expanded) a:hover::after {
     content: attr(data-tooltip);
     position: absolute;
-    left: 60px;
+    left: 65px;
     top: 50%;
     transform: translateY(-50%);
     background: #14201b;
     color: #e2ffe9;
-    padding: 5px 10px;
-    border-radius: 4px;
+    padding: 6px 12px;
+    border-radius: 6px;
     white-space: nowrap;
     font-size: 0.85rem;
-    box-shadow: 0 0 8px rgba(46, 204, 113, 0.4);
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.35);
     pointer-events: none;
     z-index: 10;
 }
@@ -103,7 +107,8 @@ body.no-transition {
 /* Hover-Effekte */
 .sidebar a:hover {
     background-color: #27ae60;
-    color: white;
+    color: #ffffff;
+    transform: translateX(3px);
 }
 
 .sidebar img {
@@ -115,18 +120,18 @@ body.no-transition {
 
 .sidebar a:hover img {
     transform: scale(1.15);
-    filter: brightness(1.5) drop-shadow(0 0 4px #2ecc71);
+    filter: brightness(1.5) drop-shadow(0 0 5px #2ecc71);
 }
 
 .sidebar a.active img {
-    filter: brightness(1.3) drop-shadow(0 0 2px #2ecc71);
+    filter: brightness(1.3) drop-shadow(0 0 3px #2ecc71);
 }
 
 /* Text in Links */
 .sidebar .link-text {
     white-space: nowrap;
     overflow: hidden;
-    margin-left: 12px;
+    margin-left: 14px;
     max-width: 0;
     opacity: 0;
     transition: opacity 0.3s ease, max-width 0.3s ease;
@@ -148,5 +153,5 @@ body.sidebar-expanded {
 }
 
 .sidebar.expanded a {
-    padding-left: 16px;
+    padding-left: 18px;
 }

@@ -6,122 +6,199 @@
     <title>SysStatz – Willkommen</title>
     <link rel="icon" href="/img/logo.png" type="image/png">
     <style>
-        * {
-            margin: 0; padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', sans-serif;
-        }
+		/* Reset & Base */
+		* {
+		    margin: 0;
+		    padding: 0;
+		    box-sizing: border-box;
+		    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+		}
 
-        body {
-            background: linear-gradient(120deg, #0f2027, #203a43, #2c5364);
-            background-size: 400% 400%;
-            animation: gradientFlow 15s ease infinite;
-            color: white;
-            text-align: center;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
+		body {
+		    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+		    background-size: 400% 400%;
+		    animation: gradientFlow 18s ease infinite;
+		    color: #eee;
+		    min-height: 100vh;
+		    display: flex;
+		    flex-direction: column;
+		    align-items: center;
+		    text-align: center;
+		}
 
-        @keyframes gradientFlow {
-            0% {background-position: 0% 50%;}
-            50% {background-position: 100% 50%;}
-            100% {background-position: 0% 50%;}
-        }
+		/* Background animation */
+		@keyframes gradientFlow {
+		    0% { background-position: 0% 50%; }
+		    50% { background-position: 100% 50%; }
+		    100% { background-position: 0% 50%; }
+		}
 
-        header {
-            padding: 2em 1em;
-            animation: fadeInTop 1.5s ease-out;
-        }
+		/* Header */
+		header {
+		    padding: 2.5em 1em 1.5em;
+		    background: rgba(20, 20, 35, 0.4);
+		    backdrop-filter: blur(8px);
+		    border-bottom: 2px solid rgba(74, 144, 226, 0.4);
+		    animation: fadeInTop 1.2s ease-out;
+		    width: 100%;
+		}
 
-        @keyframes fadeInTop {
-            0% {opacity: 0; transform: translateY(-30px);}
-            100% {opacity: 1; transform: translateY(0);}
-        }
+		header img {
+		    height: 80px;
+		    animation: floatLogo 3s ease-in-out infinite;
+		    margin-bottom: 0.6em;
+		}
 
-        header img {
-            height: 80px;
-            animation: floatLogo 3s ease-in-out infinite;
-        }
+		header h1 {
+		    font-size: 2rem;
+		    font-weight: 700;
+		    color: #4a90e2;
+		    letter-spacing: 1px;
+		}
 
-        @keyframes floatLogo {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-            100% { transform: translateY(0); }
-        }
+		@keyframes fadeInTop {
+		    0% { opacity: 0; transform: translateY(-30px); }
+		    100% { opacity: 1; transform: translateY(0); }
+		}
 
-        .login-section {
-            padding: 2em 1em;
-            animation: fadeIn 2s ease;
-        }
+		@keyframes floatLogo {
+		    0% { transform: translateY(0); }
+		    50% { transform: translateY(-8px); }
+		    100% { transform: translateY(0); }
+		}
 
-        @keyframes fadeIn {
-            from {opacity: 0;}
-            to {opacity: 1;}
-        }
+		/* Login Section */
+		.login-section {
+		    padding: 3em 1em;
+		    animation: fadeIn 1.6s ease;
+		}
 
-        .login-section h2 {
-            font-size: 2.5em;
-            margin-bottom: 0.2em;
-        }
+		.login-section h2 {
+		    font-size: 2.2em;
+		    margin-bottom: 0.3em;
+		}
 
-        .login-section p {
-            font-size: 1.2em;
-            margin-bottom: 1.5em;
-        }
+		.login-section p {
+		    font-size: 1.2em;
+		    margin-bottom: 1.5em;
+		    color: #ccc;
+		}
 
-        .button-login {
-            padding: 0.8em 2em;
-            background: #00c6ff;
-            background: linear-gradient(90deg, #0072ff, #00c6ff);
-            border: none;
-            border-radius: 50px;
-            font-size: 1.1em;
-            font-weight: bold;
-            color: white;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 15px rgba(0, 198, 255, 0.5);
-        }
+		@keyframes fadeIn {
+		    from { opacity: 0; }
+		    to { opacity: 1; }
+		}
 
-        .button-login:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(0, 198, 255, 0.9);
-        }
+		/* Login Button */
+		.button-login {
+		    padding: 0.9em 2.2em;
+		    background: linear-gradient(90deg, #0072ff, #00c6ff);
+		    border: none;
+		    border-radius: 50px;
+		    font-size: 1.1em;
+		    font-weight: bold;
+		    color: #fff;
+		    text-decoration: none;
+		    transition: all 0.3s ease;
+		    box-shadow: 0 0 15px rgba(0, 198, 255, 0.5);
+		    display: inline-block;
+		}
 
-        .video-preview {
-            display: flex;
-            justify-content: center;
-            gap: 1em;
-            padding: 3em 1em;
-            flex-wrap: wrap;
-        }
+		.button-login:hover {
+		    transform: translateY(-2px) scale(1.05);
+		    box-shadow: 0 0 25px rgba(0, 198, 255, 0.9);
+		}
 
-        .video-preview video {
-            width: 300px;
-            height: 180px;
-            border-radius: 12px;
-            object-fit: cover;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-        }
+		.button-login:active {
+		    transform: translateY(1px) scale(0.98);
+		    box-shadow: 0 0 10px rgba(0, 198, 255, 0.6);
+		}
 
-        footer {
-            padding: 1.5em;
-            background-color: rgba(255, 255, 255, 0.05);
-            font-size: 0.9em;
-        }
+		/* Video Preview */
+		.video-preview {
+		    display: flex;
+		    justify-content: center;
+		    gap: 1.5em;
+		    padding: 3em 1em;
+		    flex-wrap: wrap;
+		}
 
-        @media (max-width: 768px) {
-            .login-section h2 {
-                font-size: 2em;
-            }
+		.video-preview video {
+		    width: 300px;
+		    height: 180px;
+		    border-radius: 14px;
+		    object-fit: cover;
+		    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+		    transition: transform 0.4s ease, box-shadow 0.4s ease;
+		}
 
-            .video-preview video {
-                width: 90%;
-                height: auto;
-            }
-        }
+		.video-preview video:hover {
+		    transform: scale(1.05);
+		    box-shadow: 0 8px 25px rgba(0, 198, 255, 0.4);
+		}
+
+		/* Server Container */
+		#servers-container {
+		    margin-top: 30px;
+		    display: flex;
+		    flex-wrap: wrap;
+		    gap: 20px;
+		    justify-content: center;
+		}
+
+		#servers-container > div {
+		    background: rgba(44, 47, 72, 0.8);
+		    backdrop-filter: blur(6px);
+		    padding: 20px;
+		    border-radius: 12px;
+		    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+		    width: 280px;
+		    transition: transform 0.3s ease, background 0.3s ease;
+		}
+
+		#servers-container > div:hover {
+		    background: rgba(58, 62, 97, 0.9);
+		    transform: translateY(-5px);
+		    cursor: pointer;
+		}
+
+		#servers-container h2 {
+		    margin-top: 0;
+		    color: #7fbfff;
+		    font-size: 1.4rem;
+		    border-bottom: 1px solid #4a90e2;
+		    padding-bottom: 6px;
+		    margin-bottom: 12px;
+		}
+
+		#servers-container p {
+		    margin: 6px 0;
+		    font-size: 1rem;
+		    line-height: 1.4;
+		    color: #ccc;
+		}
+
+		/* Farb-Akzente für Werte */
+		#servers-container p:nth-child(2) { color: #f39c12; } /* CPU */
+		#servers-container p:nth-child(3) { color: #e67e22; } /* RAM */
+		#servers-container p:nth-child(4) { color: #27ae60; } /* Disk */
+		#servers-container p:nth-child(5) { color: #3498db; } /* Network */
+
+		/* Footer */
+		footer {
+		    padding: 1.5em;
+		    background: rgba(255, 255, 255, 0.05);
+		    font-size: 0.9em;
+		    width: 100%;
+		    text-align: center;
+		}
+
+		/* Mobile */
+		@media (max-width: 768px) {
+		    header h1 { font-size: 1.6rem; }
+		    .login-section h2 { font-size: 1.8em; }
+		    .video-preview video { width: 90%; height: auto; }
+		}
     </style>
 </head>
 <body>

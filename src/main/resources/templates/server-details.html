@@ -72,7 +72,8 @@
 	    <tr>
 	      <th>Kern</th>
 	      <th>Last (%)</th>
-	      <th>Auslastungsbalken</th> <!-- Neue Spalte für Balken -->
+	      <th>Frequenz (GHz)</th> <!-- Neue Spalte -->
+	      <th>Auslastungsbalken</th>
 	    </tr>
 	  </thead>
 	  <tbody id="cpuCoreTableBody"></tbody>
@@ -128,16 +129,6 @@
 	<h2>Plugins</h2>
 	<div id="pluginContainer">
 	    <p>Lade Plugin-Daten...</p>
-	</div>
-
-	<div th:each="pluginEntry : ${pluginData}">
-	    <h3 th:text="${pluginEntry.key}">Plugin Name</h3>
-	    <ul>
-	        <li th:each="valueEntry : ${pluginEntry.value}">
-	            <span th:text="${valueEntry.key}">Key</span>: 
-	            <span th:text="${valueEntry.value}">Wert</span>
-	        </li>
-	    </ul>
 	</div>
 		
 		<div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 2rem;">
@@ -612,23 +603,25 @@
 	        .then(server => {
 	            const cpuCoreTableBody = document.getElementById("cpuCoreTableBody");
 	            const cores = server.cpuCore || {};
+	            const freqs = server.cpuCoreFreqs || {}; // Frequenzen
 
 	            const existingRows = {};
 	            Array.from(cpuCoreTableBody.rows).forEach(row => {
-	                const coreName = row.cells[0].textContent; // z.B. "Kern 0"
+	                const coreName = row.cells[0].textContent;
 	                existingRows[coreName] = row;
 	            });
 
 	            Object.entries(cores).forEach(([core, load]) => {
 	                const coreName = `Kern ${core}`;
 	                const loadText = `${load.toFixed(2)} %`;
+	                const freqText = (freqs[core] !== undefined) ? `${freqs[core].toFixed(2)} GHz` : "-";
 
 	                if (existingRows[coreName]) {
-	                    // Wert aktualisieren
+	                    // Werte aktualisieren
 	                    existingRows[coreName].cells[1].textContent = loadText;
+	                    existingRows[coreName].cells[2].textContent = freqText;
 
-	                    // Balken aktualisieren
-	                    const bar = existingRows[coreName].cells[2].firstElementChild;
+	                    const bar = existingRows[coreName].cells[3].firstElementChild;
 	                    bar.style.width = `${load}%`;
 	                    delete existingRows[coreName];
 	                } else {
@@ -643,18 +636,21 @@
 	                    loadCell.textContent = loadText;
 	                    row.appendChild(loadCell);
 
-	                    // Balken-Zelle mit Div Balken
+	                    const freqCell = document.createElement("td");
+	                    freqCell.textContent = freqText;
+	                    row.appendChild(freqCell);
+
 	                    const barCell = document.createElement("td");
 	                    const bar = document.createElement("div");
 	                    bar.style.width = `${load}%`;
 	                    bar.style.height = "10px";
-						bar.style.backgroundColor = "rgba(255, 99, 132, 0.8)"; // CPU-Farbton, etwas transparent
+	                    bar.style.backgroundColor = "rgba(255, 99, 132, 0.8)";
 	                    bar.style.borderRadius = "3px";
 	                    bar.style.transition = "width 0.5s ease";
 	                    barCell.appendChild(bar);
 	                    row.appendChild(barCell);
 
-	                    row.style.verticalAlign = "middle"; // Optional
+	                    row.style.verticalAlign = "middle";
 
 	                    cpuCoreTableBody.appendChild(row);
 	                }
@@ -664,8 +660,6 @@
 	            for (const remainingRow of Object.values(existingRows)) {
 	                cpuCoreTableBody.removeChild(remainingRow);
 	            }
-
-	            console.log("Aktualisierte CPU-Kerne:", cores);
 	        })
 	        .catch(error => {
 	            console.error("Fehler beim Abrufen der CPU-Kerne:", error);

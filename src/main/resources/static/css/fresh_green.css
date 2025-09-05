@@ -1,16 +1,21 @@
+/* Basis */
 body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #121e14;
+    background: linear-gradient(135deg, #121e14, #162617);
     color: #d8f5dc;
     margin: 0;
     padding: 0 20px 40px 20px;
+    line-height: 1.6;
 }
 
+/* Header */
 header {
-    background-color: #1a2f1d;
-    padding: 20px 0;
+    background: rgba(26, 47, 29, 0.92);
+    padding: 22px 0;
     text-align: center;
     border-bottom: 2px solid #3bd16f;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
 }
 
 header h1 {
@@ -21,53 +26,59 @@ header h1 {
     letter-spacing: 1px;
 }
 
-/* Login-Button-Stil */
+/* Login-Button */
 .button-login {
-    padding: 10px 20px;
-    background-color: #3bd16f;
+    padding: 12px 24px;
+    background: linear-gradient(90deg, #3bd16f, #2bb757);
     color: #121e14;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 3px 8px rgba(0, 255, 100, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 255, 100, 0.25);
 }
 
 .button-login:hover {
-    background-color: #2bb757;
-    transform: translateY(-1px);
+    background: linear-gradient(90deg, #52e080, #34c765);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 16px rgba(0, 255, 120, 0.35);
 }
 
 .button-login:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
 }
 
+/* Server-Container */
 #servers-container {
-    margin-top: 30px;
+    margin-top: 40px;
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 24px;
     justify-content: center;
 }
 
-/* Einzelne Server-Box */
+/* Server-Box */
 #servers-container > div {
-    background-color: #1b2e20;
+    background: rgba(27, 46, 32, 0.9);
     padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 100, 50, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 100, 50, 0.3);
     width: 280px;
-    transition: background-color 0.3s ease;
+    transition: transform 0.25s ease, background 0.3s ease, box-shadow 0.3s ease;
+    backdrop-filter: blur(4px);
 }
 
 #servers-container > div:hover {
-    background-color: #224030;
+    background: rgba(34, 64, 48, 0.95);
+    transform: translateY(-5px);
+    box-shadow: 0 6px 18px rgba(0, 150, 80, 0.45);
     cursor: pointer;
 }
 
+/* Server-Titel */
 #servers-container h2 {
     margin-top: 0;
     color: #7fffa6;
@@ -75,20 +86,19 @@ header h1 {
     border-bottom: 1px solid #3bd16f;
     padding-bottom: 6px;
     margin-bottom: 12px;
+    font-weight: 600;
 }
 
+/* Server-Infos */
 #servers-container p {
     margin: 6px 0;
     font-size: 1rem;
-    line-height: 1.4;
+    line-height: 1.5;
     color: #d8f5dc;
 }
 
-/* Akzente für Werte */
-#servers-container p:nth-child(2) { /* CPU */
-    color: #f1c40f;
-}
-
-#servers-container p:nth-child(4) { /* DISK */
-    color: #3bd16f;
-}
+/* Farb-Akzente */
+#servers-container p:nth-child(2) { color: #f1c40f; } /* CPU */
+#servers-container p:nth-child(3) { color: #e67e22; } /* RAM */
+#servers-container p:nth-child(4) { color: #3bd16f; } /* Disk */
+#servers-container p:nth-child(5) { color: #3498db; } /* Network */

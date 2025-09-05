@@ -38,12 +38,12 @@ public class ServerInfo {
     private String loadavg1;
     private String loadavg5;
     private String loadavg15;
+    private Map<Integer, Double> cpuCoreFreqs;
 
     public ServerInfo(String name, int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal,
             String status, String boottime, String sent, String recv, String dsent, String drecv,
             List<ServerProcessInfo> processes, String scmd, String temp, Map<Integer, Double> cpuCoreLoads,
-            String swapTotal, String swapUsed, String cpuVoltage,
-            String loadavg1, String loadavg5, String loadavg15) {
+            String swapTotal, String swapUsed, Map<Integer, Double> cpuCoreFreqs) {
 this.name = name;
 this.cpuPercent = cpuPercent;
 this.ramUsed = ramUsed;
@@ -62,6 +62,7 @@ this.processes = processes != null ? processes : new ArrayList<>();
 this.scmd = scmd;
 this.temp = temp;
 this.cpuCoreLoads = cpuCoreLoads;
+this.cpuCoreFreqs = cpuCoreFreqs;
 
 // Sicheres Parsen von Swap-Werten
 try {
@@ -74,18 +75,13 @@ try {
 } catch (Exception e) {
   this.swapUsed = 0;
 }
-
-this.cpuVoltage = cpuVoltage;
-this.loadavg1 = loadavg1;
-this.loadavg5 = loadavg5;
-this.loadavg15 = loadavg15;
 }
 
     public void update(int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed,
             double storageTotal, String status, String boottime, String sent, String recv, String dsent, String drecv,
             List<ServerProcessInfo> processes, String scmd, String temp, Map<Integer, Double> cpuCoreLoads,
             String swapTotal, String swapUsed,
-            String cpuVoltage, String loadavg1, String loadavg5, String loadavg15) {
+            Map<Integer, Double> cpuCoreFreqs) {
         this.cpuPercent = cpuPercent;
         this.ramUsed = ramUsed;
         this.ramTotal = ramTotal;
@@ -102,20 +98,13 @@ this.loadavg15 = loadavg15;
         this.scmd = scmd;
         this.temp = temp;
         this.cpuCoreLoads = cpuCoreLoads;
+        this.cpuCoreFreqs = cpuCoreFreqs;
         try {
         this.swapTotal = Double.parseDouble(swapTotal);
         this.swapUsed = Double.parseDouble(swapUsed);
         } catch (Exception e) {
         	e.printStackTrace();
         }
-        this.cpuVoltage = cpuVoltage;
-        this.loadavg1 = loadavg1;
-        this.loadavg5 = loadavg5;
-        this.loadavg15 = loadavg15;
-        this.cpuVoltage = cpuVoltage;
-        this.loadavg1 = loadavg1;
-        this.loadavg5 = loadavg5;
-        this.loadavg15 = loadavg15;
 
         // boottime nur setzen, wenn noch nicht gesetzt (also null oder leer)
         if (this.boottime == null || this.boottime.isEmpty()) {
@@ -170,6 +159,7 @@ this.loadavg15 = loadavg15;
     public Map<Integer, Double> getCpuCore() { return cpuCoreLoads; }
 	public double getSwapUsed() { return swapUsed; }
 	public double getSwapTotal() { return swapTotal; }
+	public Map<Integer, Double> getCpuCoreFreqs() { return cpuCoreFreqs; }
 
     
     public static String berechneUptime(String boottimeStr) {

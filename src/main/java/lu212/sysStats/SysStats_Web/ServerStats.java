@@ -18,18 +18,18 @@ public class ServerStats {
     public static void update(String name, int cpuPercent, double ramUsed, double ramTotal, int diskPercent,
     						double storageUsed, double storageTotal, String status, String boottime, String sent, String recv,
     						String dsent, String drecv, List<ServerProcessInfo> processes, String scmd, String temp,
-    						Map<Integer, Double> cpuCoreLoads, String swapTotal, String swapUsed) {
+    						Map<Integer, Double> cpuCoreLoads, String swapTotal, String swapUsed, Map<Integer, Double> cpuCoreFreqs) {
     	
         ServerInfo info = serverMap.get(name);
         
         
         if (info == null) {
             info = new ServerInfo(name, cpuPercent, ramUsed, ramTotal, diskPercent, storageUsed, storageTotal, status, boottime, sent,
-            		recv, dsent, drecv, processes, scmd, temp, cpuCoreLoads, swapTotal, swapUsed, null, null, null, null);
+            		recv, dsent, drecv, processes, scmd, temp, cpuCoreLoads, swapTotal, swapUsed, cpuCoreFreqs);
             serverMap.put(name, info);
         } else {
             info.update(cpuPercent, ramUsed, ramTotal, diskPercent, storageUsed, storageTotal, status, boottime, sent,
-            		recv, dsent, drecv, processes, scmd, temp , cpuCoreLoads, swapTotal, swapUsed, null, null, null, null);
+            		recv, dsent, drecv, processes, scmd, temp , cpuCoreLoads, swapTotal, swapUsed, cpuCoreFreqs);
         }
     }
 
