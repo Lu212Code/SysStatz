@@ -136,6 +136,16 @@
                         <input type="hidden" name="username" th:value="${user.username}" />
                         <button type="submit">Rolle ändern</button>
                     </form>
+					<form method="post" th:action="@{/admin/reset2fa}" style="display:inline-block; margin-left:5px;">
+					    <input type="hidden" name="username" th:value="${user.username}" />
+					    <button type="submit" onclick="return confirm('2FA-Daten für diesen Benutzer wirklich zurücksetzen?')">2FA zurücksetzen</button>
+					</form>
+					<span style="margin: 0 10px; color:#888;">|</span>
+					<form method="post" th:action="@{/admin/changePass}" style="display:inline-block; margin-left:5px;">
+					    <input type="hidden" name="username" th:value="${user.username}" />
+					    <input type="password" name="password" required />
+					    <button type="submit">Passwort ändern</button>
+					</form>
                 </td>
             </tr>
             </tbody>

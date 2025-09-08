@@ -6,7 +6,6 @@
 	<link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
 	<link rel="icon" href="/img/logo.png" type="image/png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
         select {
@@ -114,9 +113,13 @@
 	        const ramVals = data.map(d => d.ram);
 	        const diskVals = data.map(d => d.disk);
 
-			const cpuSpikes = updateChartWithSpikes(cpuChart, times, cpuVals, 80);
-			const ramSpikes = updateChartWithSpikes(ramChart, times, ramVals, 80);
-			const diskSpikes = updateChartWithSpikes(diskChart, times, diskVals, 80);
+			const smoothedCpu = smooth(cpuVals, 2);
+			const smoothedRam = smooth(ramVals, 2);
+			const smoothedDisk = smooth(diskVals, 2);
+			
+			updateChartWithAllSpikes(cpuChart, times, smoothedCpu, 80, 80);
+			updateChartWithAllSpikes(ramChart, times, smoothedRam, 80, 80);
+			updateChartWithAllSpikes(diskChart, times, smoothedDisk, 80, 80);
 
 	        analysisContent.innerHTML = generateAnalysis(cpuVals, ramVals, diskVals);
 	      });
@@ -139,7 +142,41 @@
 
 	    return spikeIndexes.length;
 	}
+	
+	function updateChartWithWideSpikes(chart, labels, data, threshold=80) {
+	    const spikeIndexes = detectWidePeaks(data, threshold);
+	    const pointColors = data.map((val, i) => spikeIndexes.includes(i) ? 'red' : chart.data.datasets[0].borderColor);
 
+	    chart.data.labels = labels;
+	    chart.data.datasets[0].data = data;
+	    chart.data.datasets[0].pointBackgroundColor = pointColors;
+	    chart.update();
+
+	    return spikeIndexes.length;
+	}
+	
+	function updateChartWithAllSpikes(chart, labels, data, smallThreshold=80, wideThreshold=80) {
+	    const smallSpikes = detectSpikes(data, 5, smallThreshold/10);
+	    const wideSpikes  = detectWidePeaks(data, wideThreshold);
+
+	    const pointColors = data.map((_, i) => {
+	        if (wideSpikes.includes(i)) return 'red';
+	        if (smallSpikes.includes(i)) return 'yellow';
+	        return chart.data.datasets[0].borderColor;
+	    });
+
+	    const pointRadius = data.map((_, i) => {
+	        if (wideSpikes.includes(i)) return 6;    // rote breite Peaks
+	        if (smallSpikes.includes(i)) return 4;   // gelbe normale Peaks
+	        return 2;                                // normale Punkte sichtbar
+	    });
+
+	    chart.data.labels = labels;
+	    chart.data.datasets[0].data = data;
+	    chart.data.datasets[0].pointBackgroundColor = pointColors;
+	    chart.data.datasets[0].pointRadius = pointRadius; 
+	    chart.update();
+	}
 
 	function generateAnalysis(cpu, ram, disk) {
 	    function avg(arr) { return (arr.reduce((a,b) => a+b, 0) / arr.length).toFixed(1); }
@@ -169,15 +206,39 @@
 	    `;
 	}
 	
-	function detectSpikes(data, threshold = 80) {
-	    // threshold = Schwelle, ab der ein Wert als Spike gilt
+	function detectSpikes(data, window = 5, factor = 2) {
 	    const spikes = [];
-	    data.forEach((val, i) => {
-	        if (val >= threshold) spikes.push(i);
-	    });
+	    for (let i = 0; i < data.length; i++) {
+	        const start = Math.max(0, i - window);
+	        const end = Math.min(data.length - 1, i + window);
+	        const local = data.slice(start, end + 1);
+	        const avg = local.reduce((a,b) => a+b, 0) / local.length;
+	        const std = Math.sqrt(local.reduce((a,b) => a + (b - avg)**2, 0) / local.length);
+	        if (data[i] > avg + factor * std) spikes.push(i);
+	    }
 	    return spikes;
 	}
-
+	
+	function smooth(data, factor = 3) {
+	    const result = [];
+	    for (let i = 0; i < data.length; i++) {
+	        const start = Math.max(0, i - factor);
+	        const end = Math.min(data.length - 1, i + factor);
+	        const avg = data.slice(start, end + 1).reduce((a,b)=>a+b,0)/(end-start+1);
+	        result.push(avg);
+	    }
+	    return result;
+	}
+	
+	function detectWidePeaks(data, threshold = 80) {
+	    const spikes = [];
+	    for (let i = 1; i < data.length - 1; i++) {
+	        if (data[i] > threshold && data[i] > data[i-1] && data[i] > data[i+1]) {
+	            spikes.push(i);
+	        }
+	    }
+	    return spikes;
+	}
 </script>
 <script src="/js/sidebar.js"></script>
 </body>

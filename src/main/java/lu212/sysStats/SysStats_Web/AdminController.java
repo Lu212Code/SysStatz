@@ -80,4 +80,35 @@ public class AdminController {
         }
         return "redirect:/admin/manageUsers";
     }
+    
+    @PostMapping("/changePass")
+    public String changeUserPass(@RequestParam String username,
+                                 @RequestParam String password,
+                                 HttpSession session) {
+        if (!Boolean.TRUE.equals(session.getAttribute("isAdmin"))) {
+            return "redirect:/dashboard";
+        }
+
+        User user = UserStore.getUserByName(username);
+        if (user != null) {
+            user.setPassword(password);
+            UserStore.saveUsers();
+        }
+        return "redirect:/admin/manageUsers";
+    }
+    
+    @PostMapping("/reset2fa")
+    public String reset2FA(@RequestParam String username, HttpSession session) {
+        if (!Boolean.TRUE.equals(session.getAttribute("isAdmin"))) {
+            return "redirect:/dashboard";
+        }
+
+        User user = UserStore.getUserByName(username);
+        if (user != null) {
+            user.setTwoFactorSecret(null);
+            user.setTwoFactorEnabled(false);
+            UserStore.saveUsers();
+        }
+        return "redirect:/admin/manageUsers";
+    }
 }

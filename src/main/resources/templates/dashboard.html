@@ -132,12 +132,67 @@ async function refreshData() {
         container.innerHTML = ''; // vorher leeren
 
 		if (servers.length === 0) {
-		    const message = document.createElement('p');
-		    message.textContent = 'Keine Serverdaten verfügbar.';
-		    message.style.color = 'gray';
-		    message.style.fontSize = '1.2rem';
-		    message.style.textAlign = 'center';
-		    container.appendChild(message);
+			const messageContainer = document.createElement('div'); 
+			messageContainer.style.display = 'flex';
+			messageContainer.style.flexDirection = 'column';
+			messageContainer.style.alignItems = 'center';
+			messageContainer.style.justifyContent = 'center';
+			messageContainer.style.width = '100%';
+			messageContainer.style.marginTop = '2rem';
+			messageContainer.style.textAlign = 'center';
+			messageContainer.style.background = 'transparent'; // Hintergrund entfernen
+			messageContainer.style.boxShadow = 'none';        // evtl. Schatten entfernen
+			messageContainer.style.border = 'none';          // evtl. Rahmen entfernen
+			messageContainer.style.padding = '0';            // kein Padding
+
+			const message = document.createElement('p');
+			message.textContent = 'Keine Serverdaten verfügbar.';
+			message.style.color = 'gray';
+			message.style.fontSize = '1.2rem';
+			message.style.margin = '0.2rem 0';
+			message.style.background = 'transparent';
+			message.style.boxShadow = 'none';
+			message.style.border = 'none';
+			message.style.padding = '0';
+			messageContainer.appendChild(message);
+
+			const tip = document.createElement('p');
+			tip.textContent = 'Verbinden Sie Server, um ihre Statistiken zu sehen.';
+			tip.style.color = 'gray';
+			tip.style.fontSize = '1rem';
+			tip.style.margin = '0.2rem 0';
+			tip.style.textAlign = 'center';
+			tip.style.background = 'transparent';
+			tip.style.boxShadow = 'none';
+			tip.style.border = 'none';
+			tip.style.padding = '0';
+			messageContainer.appendChild(tip);
+
+			container.appendChild(messageContainer);
+
+			// Neuen Button hinzufügen
+			const helpButton = document.createElement('button');
+			helpButton.textContent = 'Hilfe und Dokumentation';
+			helpButton.style.marginTop = '1rem';
+			helpButton.style.padding = '10px 20px';
+			helpButton.style.backgroundColor = '#4a90e2';
+			helpButton.style.color = 'white';
+			helpButton.style.border = 'none';
+			helpButton.style.borderRadius = '6px';
+			helpButton.style.cursor = 'pointer';
+			helpButton.style.fontSize = '1rem';
+			helpButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+
+			// Hover-Effekt
+			helpButton.addEventListener('mouseenter', () => helpButton.style.backgroundColor = '#357bd8');
+			helpButton.addEventListener('mouseleave', () => helpButton.style.backgroundColor = '#4a90e2');
+
+			// Klick-Event, das zur URL navigiert
+			helpButton.addEventListener('click', () => {
+			    window.location.href = '/help#connect';
+			});
+
+			messageContainer.appendChild(helpButton);
 		} else {
 			servers.forEach(server => {
 			    const div = document.createElement('div');

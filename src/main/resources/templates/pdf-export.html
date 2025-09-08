@@ -102,6 +102,10 @@
 
         <button type="submit" class="button-login">PDF erstellen</button>
     </form>
+	<div th:if="${successFile}">
+	    <p>PDF erstellt!</p>
+	    <a th:href="@{/download-pdf(fileName=${successFile})}" class="button-link">PDF herunterladen</a>
+	</div>
 </div>
 <script src="/js/sidebar.js"></script>
 </body>

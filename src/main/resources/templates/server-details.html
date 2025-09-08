@@ -37,27 +37,22 @@
             <canvas id="ramLineChart" aria-label="RAM Verwendung Diagramm" role="img"></canvas>
         </div>
 		<div class="chart-wrapper">
+		    <canvas id="tempLineChart" aria-label="CPU Temperatur Diagramm" role="img"></canvas>
+		</div>
+		<div class="chart-wrapper">
 		    <canvas id="swapChart" aria-label="Swap Speicher" role="img"></canvas>
 		</div>
         <div class="chart-wrapper">
             <canvas id="storageDoughnutChart" aria-label="Storage Diagramm" role="img"></canvas>
         </div>
-		<div class="chart-wrapper">
-			<h2>Serverstandort</h2>
-
-			<div th:if="${geoInfo != null}">
-			    <p>
-			        Stadt: <span th:text="${geoInfo.city}">unbekannt</span><br/>
-			        Land: <span th:text="${geoInfo.country}">unbekannt</span><br/>
-			        Koordinaten: 
-			        <span th:text="${geoInfo.lat}">0.0</span>, 
-			        <span th:text="${geoInfo.lon}">0.0</span>
-			    </p>
-			</div>
-			<div th:if="${geoInfo == null}">
-			    <p>Keine Geo-Informationen für diesen Server verfügbar.</p>
-			</div>
-	</div>
+		<div class="charts-container">
+		  <div class="chart-wrapper">
+		      <canvas id="netLineChart" aria-label="Netzwerk Verlauf" role="img"></canvas>
+		  </div>
+		  <div class="chart-wrapper">
+		      <canvas id="netTotalChart" aria-label="Gesamter Traffic" role="img"></canvas>
+		  </div>
+		</div>
     </div>
 	
 	<div class="charts-container" style="flex-direction: column;">
@@ -185,6 +180,22 @@
 		<p id="saveStatus" style="color: lightgreen;"></p>
 		</div>
 		
+			<div class="chart-wrapper">
+				<h2>Serverstandort</h2>
+
+				<div th:if="${geoInfo != null}">
+				    <p>
+				        Stadt: <span th:text="${geoInfo.city}">unbekannt</span><br/>
+				        Land: <span th:text="${geoInfo.country}">unbekannt</span><br/>
+				        Koordinaten: 
+				        <span th:text="${geoInfo.lat}">0.0</span>, 
+				        <span th:text="${geoInfo.lon}">0.0</span>
+				    </p>
+				</div>
+				<div th:if="${geoInfo == null}">
+				    <p>Keine Geo-Informationen für diesen Server verfügbar.</p>
+				</div>
+		</div>
 	</div>
 </section>
 
@@ -194,13 +205,19 @@
 
     const cpuData = [];
     const ramData = [];
+	const tempData = [];
     const labels = [];
+	let netSentData = [];
+	let netRecvData = [];
 
     const maxPoints = 30;
 
     const cpuCtx = document.getElementById('cpuLineChart').getContext('2d');
     const ramCtx = document.getElementById('ramLineChart').getContext('2d');
+	const tempCtx = document.getElementById('tempLineChart').getContext('2d');
     const storageCtx = document.getElementById('storageDoughnutChart').getContext('2d');
+	const netLineCtx = document.getElementById("netLineChart").getContext("2d");
+	const netTotalCtx = document.getElementById("netTotalChart").getContext("2d");
 
 	const centerTextPlugin = {
 	    id: 'centerText',
@@ -290,6 +307,34 @@
         }
     });
 	
+	const tempChart = new Chart(tempCtx, {
+	    type: 'line',
+	    data: {
+	        labels: labels,
+	        datasets: [{
+	            label: 'CPU-Temperatur (°C)',
+	            data: tempData,
+	            borderColor: 'rgba(54, 162, 235, 1)',
+	            backgroundColor: 'rgba(54, 162, 235, 0.25)',
+	            fill: true,
+	            tension: 0.3,
+	            pointRadius: 2,
+	            borderWidth: 2
+	        }]
+	    },
+	    options: {
+	        responsive: true,
+	        maintainAspectRatio: false,
+	        scales: {
+	            y: {
+	                beginAtZero: true
+	            }
+	        },
+	        plugins: {
+	            legend: { labels: { font: { size: 14 } } }
+	        }
+	    }
+	});
 	
 	const swapCtx = document.getElementById('swapChart').getContext('2d');
 	let swapChart = new Chart(swapCtx, {
@@ -322,6 +367,71 @@
 	        }
 	    }
 	});
+	
+	let netLineChart = new Chart(netLineCtx, {
+	    type: "line",
+	    data: {
+	        labels: [],
+	        datasets: [
+	            {
+	                label: "Gesendet (kB/s)",
+	                data: netSentData,
+	                borderColor: "rgba(255, 99, 132, 1)",
+	                backgroundColor: "rgba(255, 99, 132, 0.2)",
+	                fill: true,
+	                tension: 0.3,
+	                pointRadius: 2
+	            },
+	            {
+	                label: "Empfangen (kB/s)",
+	                data: netRecvData,
+	                borderColor: "rgba(54, 162, 235, 1)",
+	                backgroundColor: "rgba(54, 162, 235, 0.2)",
+	                fill: true,
+	                tension: 0.3,
+	                pointRadius: 2
+	            }
+	        ]
+	    },
+	    options: {
+	        responsive: true,
+	        maintainAspectRatio: false,
+	        scales: {
+	            y: {
+	                beginAtZero: true,
+	                title: { display: true, text: "kB/s" }
+	            }
+	        }
+	    }
+	});
+
+	let netTotalChart = new Chart(netTotalCtx, {
+	    type: "doughnut",
+	    data: {
+	        labels: ["Gesendet", "Empfangen"],
+	        datasets: [{
+	            data: [0, 0],
+	            backgroundColor: ["rgba(255, 99, 132, 0.8)", "rgba(54, 162, 235, 0.8)"],
+	            borderWidth: 0
+	        }]
+	    },
+	    options: {
+	        responsive: true,
+	        maintainAspectRatio: false,
+	        cutout: "70%",
+	        plugins: {
+	            legend: {
+	                position: "bottom",
+	                labels: { font: { size: 14 } }
+	            },
+	            centerText: {
+	                text: "Traffic",
+	                fontSize: 18,
+	                color: "#fff"
+	            }
+	        }
+	    }
+	});
 
     let storageChart;
 	let combinedChart;
@@ -346,14 +456,39 @@
                 labels.shift();
                 cpuData.shift();
                 ramData.shift();
+				tempData.shift();
             }
-            labels.push(now);
             cpuData.push(server.cpuPercent);
             ramData.push(server.ramUsed);
+			tempData.push(server.temp)
 
             cpuChart.update();
             ramChart.update();
+			tempChart.update();
 
+			// Netzwerkdaten aktualisieren
+			if (labels.length >= maxPoints) {
+			    netLineChart.data.labels.shift();
+			    netSentData.shift();
+			    netRecvData.shift();
+			}
+
+			labels.push(now);
+
+			// Verlauf (Differenzwerte in kB/s umrechnen)
+			netSentData.push((server.dsent / 1024).toFixed(2));
+			netRecvData.push((server.drecv / 1024).toFixed(2));
+
+			netLineChart.data.labels = labels;
+			netLineChart.update();
+
+			// Gesamtdaten (MB umrechnen)
+			const sentMB = server.sent / (1024 * 1024);
+			const recvMB = server.recv / (1024 * 1024);
+
+			netTotalChart.data.datasets[0].data = [sentMB, recvMB];
+			netTotalChart.update();
+			
             if (!storageChart) {
                 storageChart = new Chart(storageCtx, {
                     type: 'doughnut',

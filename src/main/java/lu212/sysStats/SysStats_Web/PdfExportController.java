@@ -22,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.lowagie.text.Image;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -60,29 +61,46 @@ public class PdfExportController {
 		}
 	}
 
-    @PostMapping("/generate-pdf")
-    public String generatePdf(@RequestParam List<String> servers,
-                              @RequestParam(required = false) List<String> metrics,
-                              RedirectAttributes redirectAttributes) throws Exception {
+	@PostMapping("/generate-pdf")
+	public String generatePdf(@RequestParam List<String> servers,
+	                          @RequestParam(required = false) List<String> metrics,
+	                          RedirectAttributes redirectAttributes) throws Exception {
 
-        if (metrics == null || metrics.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Bitte mindestens eine Metrik auswählen.");
-            return "redirect:/pdf-export";
-        }
+	    if (metrics == null || metrics.isEmpty()) {
+	        redirectAttributes.addFlashAttribute("error", "Bitte mindestens eine Metrik auswählen.");
+	        return "redirect:/pdf-export";
+	    }
 
-        File outputDir = new File("documents");
-        if (!outputDir.exists()) outputDir.mkdirs();
+	    File outputDir = new File("documents");
+	    if (!outputDir.exists()) outputDir.mkdirs();
 
-        String fileName = "SysStatz_Report_" + System.currentTimeMillis() + ".pdf";
-        File outputFile = new File(outputDir, fileName);
+	    String fileName = "SysStatz_Report_" + System.currentTimeMillis() + ".pdf";
+	    File outputFile = new File(outputDir, fileName);
 
-        try (OutputStream os = new FileOutputStream(outputFile)) {
-            createPdf(os, servers, metrics);
-        }
+	    try (OutputStream os = new FileOutputStream(outputFile)) {
+	        createPdf(os, servers, metrics);
+	    }
 
-        redirectAttributes.addFlashAttribute("success", "PDF gespeichert unter /documents/" + fileName);
-        return "redirect:/pdf-export";
-    }
+	    // Datei speichern UND Dateiname an Template weitergeben
+	    redirectAttributes.addFlashAttribute("successFile", fileName);
+	    redirectAttributes.addFlashAttribute("successMessage", "PDF erstellt!");
+	    return "redirect:/pdf-export";
+	}
+	
+	@GetMapping("/download-pdf")
+	public void downloadPdf(@RequestParam String fileName, HttpServletResponse response) throws IOException {
+	    File file = new File("documents", fileName);
+	    if (!file.exists()) {
+	        response.sendError(HttpServletResponse.SC_NOT_FOUND, "Datei nicht gefunden");
+	        return;
+	    }
+
+	    response.setContentType("application/pdf");
+	    response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+
+	    Files.copy(file.toPath(), response.getOutputStream());
+	    response.flushBuffer();
+	}
 
     private void createPdf(OutputStream os, List<String> servers, List<String> metrics) throws Exception {
         com.lowagie.text.Document doc = new com.lowagie.text.Document();

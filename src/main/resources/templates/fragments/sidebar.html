@@ -46,6 +46,10 @@
 			    <img src="/img/folder.png" alt="Ordner">
 			    <span class="link-text">Dateimanager</span>
 			</a>
+			<a th:href="@{/logout}" th:classappend="${activePage == 'logout'} ? ' active' : ''" data-tooltip="Logout">
+			    <img src="/img/logout.png" alt="Logout Icon">
+			    <span class="link-text">Logout</span>
+			</a>
 		</div>
     </div>
   </body>

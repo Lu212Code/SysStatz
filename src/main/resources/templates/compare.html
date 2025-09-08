@@ -159,42 +159,25 @@
 	const charts = {};
 	const serverASelect = document.getElementById('serverASelect');
 	const serverBSelect = document.getElementById('serverBSelect');
-	
+
 	async function fetchServers() {
 	    const response = await fetch('/api/servers');
 	    const data = await response.json();
-	    console.log("Serverliste geladen:", data);
 	    return data;
 	}
 
 	async function fetchHistory(serverName) {
 	    const response = await fetch(`/api/server/${serverName}/history`);
-	    const data = await response.json();
-	    console.log(`History für ${serverName} geladen:`, data);
-	    return data;
+	    return response.json();
 	}
 
-	async function loadServerData(selectId, chartPrefix, tablePrefix) {
-	    console.log("loadServerData gestartet");
-	    const serverName = document.getElementById(selectId).value;
-	    const history = await fetchHistory(serverName);
+	function avg(arr) {
+	    if (!arr.length) return 0;
+	    return arr.reduce((a, b) => a + b, 0) / arr.length;
+	}
 
-	    const labels = history.map(d => new Date(d.timestamp).toLocaleTimeString());
-	    const cpuData = history.map(d => d.cpuPercent);
-	    const ramData = history.map(d => d.ramUsed);
-	    const diskData = history.map(d => d.diskPercent);
-
-	    console.log("CPU:", cpuData);
-	    console.log("RAM:", ramData);
-	    console.log("Disk:", diskData);
-
-	    drawChart(`cpuChart${chartPrefix}`, labels, cpuData, 'CPU (%)');
-	    drawChart(`ramChart${chartPrefix}`, labels, ramData, 'RAM (%)');
-	    drawChart(`diskChart${chartPrefix}`, labels, diskData, 'Disk (%)');
-
-	    document.getElementById(`cpuAvg${tablePrefix}`).textContent = avg(cpuData).toFixed(1);
-	    document.getElementById(`ramAvg${tablePrefix}`).textContent = avg(ramData).toFixed(1);
-	    document.getElementById(`diskAvg${tablePrefix}`).textContent = avg(diskData).toFixed(1);
+	function getGlobalMax(arr1, arr2) {
+	    return Math.max(...arr1, ...arr2) * 1.1; // +10% für etwas Abstand
 	}
 
 	const colors = {
@@ -202,80 +185,91 @@
 	    'RAM (%)': {border: 'rgba(54, 162, 235, 1)', background: 'rgba(54, 162, 235, 0.25)'},
 	    'Disk (%)': {border: 'rgba(255, 206, 86, 1)', background: 'rgba(255, 206, 86, 0.2)'}
 	};
-	
-	function drawChart(id, labels, data, label) {
+
+	function drawChart(id, labels, data, label, maxY) {
 	    const ctx = document.getElementById(id).getContext('2d');
 	    const color = colors[label] || {border: '#4a90e2', background: '#4a90e2'};
 	    if (charts[id]) charts[id].destroy();
 	    charts[id] = new Chart(ctx, {
 	        type: 'line',
-	        data: {
-	            labels,
-	            datasets: [{
-	                label,
-	                data,
-	                fill: true,
-	                borderColor: color.border,
-	                backgroundColor: color.background,
-	                tension: 0.3,
-	                pointRadius: 2,
-	                borderWidth: 2,
-	            }]
-	        },
+	        data: { labels, datasets: [{ label, data, fill: true, borderColor: color.border, backgroundColor: color.background, tension: 0.3, pointRadius: 2, borderWidth: 2 }] },
 	        options: {
 	            responsive: true,
 	            maintainAspectRatio: false,
 	            plugins: {
-	                legend: {
-	                    display: true,
-	                    labels: { color: '#ddd', font: { size: 14 } }
-	                },
-	                datalabels: {
-	                    color: '#ddd',
-	                    font: { weight: 'bold' },
-	                    display: false,
-	                    align: 'top',
-	                    formatter: value => value.toFixed(1)
-	                }
+	                legend: { display: true, labels: { color: '#ddd', font: { size: 14 } } },
+	                datalabels: { color: '#ddd', font: { weight: 'bold' }, display: false, align: 'top', formatter: value => value.toFixed(1) }
 	            },
 	            scales: {
 	                x: { ticks: { color: '#ccc' }, grid: { color: '#333' } },
-	                y: { ticks: { color: '#ccc' }, grid: { color: '#333' }, beginAtZero: true }
+	                y: { ticks: { color: '#ccc' }, grid: { color: '#333' }, beginAtZero: true, max: maxY }
 	            }
 	        },
 	        plugins: [ChartDataLabels],
 	    });
 	}
 
+	async function loadBothServers() {
+	    const serverAName = serverASelect.value;
+	    const serverBName = serverBSelect.value;
 
+	    const [historyA, historyB] = await Promise.all([
+	        fetchHistory(serverAName),
+	        fetchHistory(serverBName)
+	    ]);
 
-	function avg(arr) {
-	    if (!arr.length) return 0;
-	    return arr.reduce((a, b) => a + b, 0) / arr.length;
+	    const cpuA = historyA.map(d => d.cpuPercent);
+	    const cpuB = historyB.map(d => d.cpuPercent);
+	    const ramA = historyA.map(d => d.ramUsed);
+	    const ramB = historyB.map(d => d.ramUsed);
+	    const diskA = historyA.map(d => d.diskPercent);
+	    const diskB = historyB.map(d => d.diskPercent);
+
+	    const cpuMax = getGlobalMax(cpuA, cpuB);
+	    const ramMax = getGlobalMax(ramA, ramB);
+	    const diskMax = getGlobalMax(diskA, diskB);
+
+	    const labelsA = historyA.map(d => new Date(d.timestamp).toLocaleTimeString());
+	    const labelsB = historyB.map(d => new Date(d.timestamp).toLocaleTimeString());
+
+	    drawChart('cpuChartA', labelsA, cpuA, 'CPU (%)', cpuMax);
+	    drawChart('cpuChartB', labelsB, cpuB, 'CPU (%)', cpuMax);
+
+	    drawChart('ramChartA', labelsA, ramA, 'RAM (%)', ramMax);
+	    drawChart('ramChartB', labelsB, ramB, 'RAM (%)', ramMax);
+
+	    drawChart('diskChartA', labelsA, diskA, 'Disk (%)', diskMax);
+	    drawChart('diskChartB', labelsB, diskB, 'Disk (%)', diskMax);
+
+	    document.getElementById('cpuAvgA').textContent = avg(cpuA).toFixed(1);
+	    document.getElementById('cpuAvgB').textContent = avg(cpuB).toFixed(1);
+	    document.getElementById('ramAvgA').textContent = avg(ramA).toFixed(1);
+	    document.getElementById('ramAvgB').textContent = avg(ramB).toFixed(1);
+	    document.getElementById('diskAvgA').textContent = avg(diskA).toFixed(1);
+	    document.getElementById('diskAvgB').textContent = avg(diskB).toFixed(1);
 	}
 
-    async function init() {
-        const servers = await fetchServers();
+	async function init() {
+	    const servers = await fetchServers();
 
-        servers.forEach(server => {
-            const opt1 = new Option(server.name, server.name);
-            const opt2 = new Option(server.name, server.name);
-            serverASelect.appendChild(opt1);
-            serverBSelect.appendChild(opt2);
-        });
+	    servers.forEach(server => {
+	        const optA = new Option(server.name, server.name);
+	        const optB = new Option(server.name, server.name);
+	        serverASelect.appendChild(optA);
+	        serverBSelect.appendChild(optB);
+	    });
 
-		serverASelect.addEventListener('change', () => loadServerData('serverASelect', 'A', 'A'));
-		serverBSelect.addEventListener('change', () => loadServerData('serverBSelect', 'B', 'B'));
+	    serverASelect.addEventListener('change', loadBothServers);
+	    serverBSelect.addEventListener('change', loadBothServers);
 
-		if (servers.length >= 2) {
-		    serverASelect.value = servers[0].name;
-		    serverBSelect.value = servers[1].name;
-		    loadServerData('serverASelect', 'A', 'A');
-		    loadServerData('serverBSelect', 'B', 'B');
-		}
-    }
+	    if (servers.length >= 2) {
+	        serverASelect.value = servers[0].name;
+	        serverBSelect.value = servers[1].name;
+	        loadBothServers();
+	    }
+	}
 
-    init();
+	init();
 </script>
 <script src="/js/sidebar.js"></script>
 </body>

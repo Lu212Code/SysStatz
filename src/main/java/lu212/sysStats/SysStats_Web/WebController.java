@@ -110,4 +110,19 @@ public class WebController {
 			return "redirect:/login?error=sessionExpired";
 		}
 	}
+	
+	@GetMapping("/help")
+    public String showHelpPage(Model model, HttpSession session) {
+        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+        if (loggedIn == null || !loggedIn) {
+            return "redirect:/login?error=sessionExpired";
+        }
+
+        // Theme
+        String theme = SysStatsWebApplication.theme;
+        model.addAttribute("theme", theme);
+        model.addAttribute("activePage", "help");
+
+        return "help";
+    }
 }
