@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SysStatz - Hilfe & Dokumentation</title>
+    <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
+
+    <style>
+        /* Body */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        /* Sidebar Inhaltsverzeichnis */
+		/* Sidebar an Theme anpassen */
+		.toc {
+		    position: fixed;
+		    top: 0;
+		    left: 0;
+		    width: 250px;
+		    height: 100vh;
+		    overflow-y: auto;
+		    background-color: #2c2f48;  /* Theme-Hintergrund wie bei Sidebar / Navigation */
+		    border-right: 1px solid #4a90e2;  /* leichte Linie passend zum Theme */
+		    padding: 2rem 1rem;
+		    box-sizing: border-box;
+		    color: #ccc;  /* helle Schrift für dunklen Hintergrund */
+		}
+
+		.toc h2 {
+		    font-size: 1.2rem;
+		    margin-bottom: 1rem;
+		    color: #4a90e2;  /* Akzentfarbe */
+		}
+
+		.toc ul {
+		    list-style: none;
+		    padding-left: 0;
+		}
+
+		.toc li {
+		    margin-bottom: 0.5rem;
+		}
+
+		.toc a {
+		    text-decoration: none;
+		    color: #ddd;  /* hellgrau für Links */
+		}
+
+		.toc a:hover {
+		    color: #fff;  /* weiß beim Hover */
+		    text-decoration: underline;
+		}
+
+		/* Hauptinhalt margin anpassen, damit Sidebar nicht überlappt */
+		.content {
+		    margin-left: 270px;  /* Breite Sidebar + Abstand */
+		    padding: 2rem;
+		    max-width: 900px;
+		}
+
+        h1, h2, h3 {
+            color: #4a90e2;
+        }
+
+        h1 { margin-bottom: 1rem; }
+        h2 { margin-top: 2rem; }
+
+        .section { margin-bottom: 2rem; }
+
+		/* Codeblöcke passend zum dunklen Theme */
+		pre {
+		    background-color: #1f2233;  /* dunkler Hintergrund, wie Theme */
+		    color: #f0f0f0;             /* helle Schrift für gute Lesbarkeit */
+		    padding: 1rem;
+		    border-radius: 6px;
+		    overflow-x: auto;
+		    font-family: 'Courier New', monospace;
+		    line-height: 1.4;
+		    margin: 1rem 0;
+		    border: 1px solid #4a90e2;  /* dezente Umrandung passend zum Theme */
+		    box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+		}
+
+		/* Inline-Code */
+		code {
+		    background-color: #2c2f48;  /* dunkler Hintergrund passend zur Sidebar */
+		    color: #f8f8f2;             /* helle Schrift */
+		    padding: 2px 4px;
+		    border-radius: 4px;
+		    font-family: 'Courier New', monospace;
+		    font-size: 0.95rem;
+		}
+
+        ul {
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: #007bff;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+		
+		/* Haupttext auf dunklem Hintergrund */
+		body, .content {
+		    background-color: #1f2233;  /* dunkler Hintergrund passend zum Theme */
+		    color: #f0f0f0;             /* helle Schrift für gute Lesbarkeit */
+		}
+
+		/* Absätze */
+		p, li {
+		    color: #e0e0e0;  /* etwas helleres Grau für Fließtext */
+		}
+
+		/* Links */
+		a {
+		    color: #4da6ff;  /* kräftige, gut sichtbare Farbe */
+		}
+		a:hover {
+		    color: #80c1ff;  /* helleres Blau beim Hover */
+		}
+
+		/* Sidebar Text */
+		.toc {
+		    background-color: #2c2f48;
+		    color: #f0f0f0;  /* heller Text */
+		}
+
+		.toc a {
+		    color: #c0c0ff;  /* sichtbar auf dunklem Hintergrund */
+		}
+		.toc a:hover {
+		    color: #ffffff;
+		}
+    </style>
+</head>
+<body>
+
+<!-- Inhaltsverzeichnis -->
+<nav class="toc">
+    <h2>Inhaltsverzeichnis</h2>
+	<!-- Zurück-Button -->
+	<div style="margin-bottom: 1.5rem;">
+	    <a th:href="@{/settings}">
+	        <button style="
+	            background-color: #4a90e2;
+	            color: white;
+	            border: none;
+	            border-radius: 6px;
+	            padding: 10px 20px;
+	            font-size: 1rem;
+	            cursor: pointer;
+	            transition: background-color 0.3s ease;
+	        " onmouseover="this.style.backgroundColor='#357bd8';" 
+	           onmouseout="this.style.backgroundColor='#4a90e2';">
+	           ← Zurück zu den Einstellungen
+	        </button>
+	    </a>
+	</div>
+    <ul>
+        <li><a href="#overview">Übersicht</a></li>
+        <li><a href="#server-overview">Server Übersicht</a></li>
+        <li><a href="#pdf">PDF-Auswertung</a></li>
+        <li><a href="#compare">Server vergleichen</a></li>
+        <li><a href="#search">Suchfunktion</a></li>
+        <li><a href="#problems">Häufige Probleme</a></li>
+        <li><a href="#support">Support & Kontakt</a></li>
+		<li><a href="#connect">Server verbinden</a></li>
+		<li><a href="#longterm">Langzeitanalyse</a></li>
+		<li><a href="#ai">KI-Analyse</a></li>
+    </ul>
+</nav>
+
+<!-- Hauptinhalt -->
+<div class="content">
+    <header>
+        <h1>SysStatz - Hilfe & Dokumentation</h1>
+    </header>
+
+    <div class="section" id="overview">
+        <h2>Übersicht</h2>
+        <p>Willkommen in der SysStatz-Hilfe. Hier finden Sie Anleitungen, Tipps und Erklärungen zu allen Funktionen der Software.</p>
+    </div>
+
+    <div class="section" id="server-overview">
+        <h2>Server Übersicht</h2>
+        <p>In der Serverübersicht können Sie:</p>
+        <ul>
+            <li>Serverstatus sehen</li>
+            <li>CPU, RAM, Netzwerk und Speicher überwachen</li>
+            <li>Server stoppen oder neu starten (wenn aktiviert)</li>
+            <li>Serverdetails und Vergleiche aufrufen</li>
+        </ul>
+    </div>
+
+    <div class="section" id="pdf">
+        <h2>PDF-Auswertung</h2>
+        <p>Mit der PDF-Auswertung können Sie:</p>
+        <ul>
+            <li>Ausgewählte Server und Metriken auswählen</li>
+            <li>PDF-Berichte erstellen</li>
+            <li>Berichte auf dem Server speichern oder herunterladen</li>
+        </ul>
+    </div>
+
+    <div class="section" id="compare">
+        <h2>Server vergleichen</h2>
+        <p>Mit dem Vergleichs-Tool können Sie mehrere Server nebeneinander darstellen und deren Statistiken analysieren.</p>
+    </div>
+
+    <div class="section" id="search">
+        <h2>Suchfunktion</h2>
+        <p>Die Suchleiste oben erlaubt es, Server schnell nach Name zu filtern.</p>
+    </div>
+
+    <div class="section" id="problems">
+        <h2>Häufige Probleme</h2>
+        <ul>
+            <li><strong>Keine Serverdaten verfügbar:</strong> Stellen Sie sicher, dass die Server verbunden sind.</li>
+            <li><strong>PDF wird nicht heruntergeladen:</strong> Prüfen Sie, ob die Datei auf dem Server vorhanden ist.</li>
+        </ul>
+    </div>
+
+    <div class="section" id="support">
+        <h2>Support & Kontakt</h2>
+        <p>Bei fragen schreiben sie gerne eine E-Mail an support@sysstatz.de.</p>
+    </div>
+	
+	<div class="section" id="connect">
+	    <h2>Server mit dem Dashboard verbinden</h2>
+	    <ol>
+			<li>Installieren sie das SysStatz Client auf dem Zielserver.</li>
+			<li>Geben sie bei der Installation die IP dieses Servers an.</li>
+			<li>Geben sie bei der Installation den Port des Statsservers an. Diesen können sie in den Einstellungen sehen oder ändern.</li>
+			<li>Sobald die Einrichtung abgeschlossen ist, und das SysStatz Client läuft, erscheint der Server auf dem Dashboard.</li>
+		</ol>
+		<p><strong>Wenn der Server nicht erscheint:</strong><p>
+		<ul>
+			<li>Prüfen sie die Logs des Servers.
+				<div style="margin-bottom: 1.5rem;">
+				    <a th:href="@{/logs}">
+				        <button style="
+				            background-color: #4a90e2;
+				            color: white;
+				            border: none;
+				            border-radius: 6px;
+				            padding: 10px 20px;
+				            font-size: 1rem;
+				            cursor: pointer;
+				            transition: background-color 0.3s ease;
+				        " onmouseover="this.style.backgroundColor='#357bd8';" 
+				           onmouseout="this.style.backgroundColor='#4a90e2';">
+				           Server Logs
+				        </button>
+				    </a>
+				</div> </li>
+			<li>Prüfen sie die Logs des Clients</li>
+			<li>Falls sie das Problem nicht beheben können, können sie und kontaktieren.</li>
+		</ul>	
+	</div>
+	
+	<div class="section" id="longterm">
+	    <h2>Langzeitanalyse</h2>
+	    <p>Mit der Langzeitanalyse können sie:</p>
+		<ul>
+			<li>Die Auslastung von CPU, RAM und Festplatte über den ganzen Zeitraum sehen, seitdem der Server verbunden ist.</li>
+			<li>Spikes erkennen</li>
+			<li>Duchgehendes Ansteigen der Auslastung erkennen</li>
+		</ul>
+	</div>
+	
+	<div class="section" id="ai">
+	    <h2>KI-Analyse</h2>
+	    <p>Mit der KI-Analyse können sie:</p>
+		<ul>
+			<li>Serverdaten von KI auswerten lassen</li>
+			<li>Verbesserungsvorschläge bekommen.</li>
+		</ul>
+	</div>
+</div>
+</body>
+</html>

@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="de">
 <head>
     <meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="'Details für ' + ${server.name}">Serverdetails</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
@@ -62,6 +63,7 @@
 	</div>
 	
 	<h2>CPU Kernauslastung</h2>
+	<div class="table-responsive">
 	<table class="hardware-table">
 	  <thead>
 	    <tr>
@@ -73,11 +75,12 @@
 	  </thead>
 	  <tbody id="cpuCoreTableBody"></tbody>
 	</table>
-
+	</div>
 
 
 
 	<h2>Hardwareinformationen</h2>
+	<div class="table-responsive">
 	<table class="hardware-table">
 	    <thead>
 	        <tr>
@@ -92,9 +95,11 @@
 	        </tr>
 	    </tbody>
 	</table>
+	</div>
 
 	
 	<h2>Top Prozesse</h2>
+	<div class="table-responsive">
 	<table class="hardware-table">
 	  <thead>
 	    <tr>
@@ -120,6 +125,7 @@
 	    </tr>
 	  </tbody>
 	</table>
+	</div>
 
 	<h2>Plugins</h2>
 	<div id="pluginContainer">
@@ -262,6 +268,7 @@
         },
         options: {
             responsive: true,
+			animation: true,
             maintainAspectRatio: false,
             scales: {
                 y: {
@@ -295,6 +302,7 @@
         },
         options: {
             responsive: true,
+			animation: true,
             maintainAspectRatio: false,
             scales: {
                 y: {
@@ -324,6 +332,7 @@
 	    },
 	    options: {
 	        responsive: true,
+			animation: true,
 	        maintainAspectRatio: false,
 	        scales: {
 	            y: {
@@ -349,6 +358,7 @@
 	    },
 	    options: {
 	        responsive: true,
+			animation: false,
 	        maintainAspectRatio: false,
 	        cutout: '70%',
 	        plugins: {
@@ -395,6 +405,7 @@
 	    },
 	    options: {
 	        responsive: true,
+			animation: false,
 	        maintainAspectRatio: false,
 	        scales: {
 	            y: {
@@ -417,6 +428,7 @@
 	    },
 	    options: {
 	        responsive: true,
+			animation: false,
 	        maintainAspectRatio: false,
 	        cutout: "70%",
 	        plugins: {
@@ -435,6 +447,38 @@
 
     let storageChart;
 	let combinedChart;
+	
+	document.getElementById("cpuLineChart").addEventListener("click", () => {
+	    openChartModal("CPU-Auslastung", cpuChart);
+	});
+
+	document.getElementById("ramLineChart").addEventListener("click", () => {
+	    openChartModal("RAM-Verwendung", ramChart);
+	});
+
+	document.getElementById("tempLineChart").addEventListener("click", () => {
+	    openChartModal("CPU-Temperatur", tempChart);
+	});
+
+	document.getElementById("swapChart").addEventListener("click", () => {
+	    openChartModal("Swap Speicher", swapChart);
+	});
+
+	document.getElementById("storageDoughnutChart").addEventListener("click", () => {
+	    openChartModal("Storage", storageChart);
+	});
+
+	document.getElementById("netLineChart").addEventListener("click", () => {
+	    openChartModal("Netzwerk Verlauf", netLineChart);
+	});
+
+	document.getElementById("netTotalChart").addEventListener("click", () => {
+	    openChartModal("Gesamter Traffic", netTotalChart);
+	});
+
+	document.getElementById("combinedLineChart").addEventListener("click", () => {
+	    openChartModal("Kombiniertes Diagramm", combinedChart);
+	});
 
     async function updateData() {
 		let server;
@@ -452,35 +496,28 @@
 
 
             const now = new Date().toLocaleTimeString();
-            if (labels.length >= maxPoints) {
-                labels.shift();
-                cpuData.shift();
-                ramData.shift();
-				tempData.shift();
-            }
+			if (labels.length >= maxPoints) {
+			    labels.shift();
+			    cpuData.shift();
+			    ramData.shift();
+			    tempData.shift();
+			    netSentData.shift(); // ← hinzufügen
+			    netRecvData.shift(); // ← hinzufügen
+			}
+			labels.push(now);
+			netSentData.push(server.dsent / 1024);
+			netRecvData.push(server.drecv / 1024);
+
+			netLineChart.data.labels = [...labels]; // Kopie, um sicher zu gehen
+			netLineChart.update();
+			
             cpuData.push(server.cpuPercent);
             ramData.push(server.ramUsed);
 			tempData.push(server.temp)
 
-            cpuChart.update();
-            ramChart.update();
-			tempChart.update();
-
-			// Netzwerkdaten aktualisieren
-			if (labels.length >= maxPoints) {
-			    netLineChart.data.labels.shift();
-			    netSentData.shift();
-			    netRecvData.shift();
-			}
-
-			labels.push(now);
-
-			// Verlauf (Differenzwerte in kB/s umrechnen)
-			netSentData.push((server.dsent / 1024).toFixed(2));
-			netRecvData.push((server.drecv / 1024).toFixed(2));
-
-			netLineChart.data.labels = labels;
-			netLineChart.update();
+			safeUpdate(cpuChart, false);
+			safeUpdate(ramChart, false);
+			safeUpdate(tempChart, false);
 
 			// Gesamtdaten (MB umrechnen)
 			const sentMB = server.sent / (1024 * 1024);
@@ -502,6 +539,7 @@
                     },
                     options: {
                         responsive: true,
+						animation: false,
                         maintainAspectRatio: false,
                         cutout: '70%',
                         plugins: {
@@ -580,6 +618,7 @@
 		            },
 		            options: {
 		                responsive: true,
+						animation: false,
 		                maintainAspectRatio: false,
 						scales: {
 						        yCPU: {
@@ -786,6 +825,11 @@
 	                    row.appendChild(barCell);
 
 	                    row.style.verticalAlign = "middle";
+						
+						row.addEventListener("click", () => {
+						    openCoreModal(coreName);
+						});
+						row.style.cursor = "pointer";
 
 	                    cpuCoreTableBody.appendChild(row);
 	                }
@@ -843,7 +887,193 @@
 
 	// Alle 5 Sekunden automatisch aktualisieren
 	setInterval(fetchPluginData, 5000);
+	
+	function safeUpdate(chart, animate = false) {
+	    if (!chart) return;
+
+	    if (animate) {
+	        chart.update(); // mit Animation
+	    } else {
+	        chart.update('none'); // ohne Animation
+	    }
+	}
+	
+	let coreChart;
+	let coreChartLabels = [];
+	let coreChartData = [];
+	let coreInterval = null;
+
+	// Modal öffnen
+	async function openCoreModal(coreName) {
+	    document.getElementById("coreModal").style.display = "flex";
+	    document.getElementById("coreTitle").textContent = coreName;
+
+	    const ctx = document.getElementById("coreChart").getContext("2d");
+	    coreChartLabels = [];
+	    coreChartData = [];
+
+	    // Hole die letzten 3 Werte direkt aus dem Verlauf
+	    try {
+	        const res = await fetch(`/api/server/${encodeURIComponent(serverName)}/history`);
+	        const history = await res.json();
+	        const coreIndex = coreName.replace("Kern ", "");
+
+	        const last3 = history.slice(-7); // letzte 3 Einträge
+	        last3.forEach(entry => {
+	            coreChartLabels.push(new Date(entry.timestamp).toLocaleTimeString());
+	            coreChartData.push(entry.cpuCoreLoad[coreIndex] ?? 0);
+	        });
+	    } catch (err) {
+	        console.error("Fehler beim Laden der Verlaufsdaten für das Core-Diagramm:", err);
+	    }
+
+	    if (coreChart) coreChart.destroy();
+	    coreChart = new Chart(ctx, {
+	        type: 'line',
+	        data: {
+	            labels: coreChartLabels,
+	            datasets: [{
+	                label: coreName,
+	                data: coreChartData,
+	                borderColor: 'rgba(255,99,132,1)',
+	                fill: false
+	            }]
+	        },
+	        options: { responsive: true, maintainAspectRatio: false }
+	    });
+
+	    startCoreUpdate(coreName); // weiterhin live updaten
+	}
+
+
+	// Modal schließen
+	function closeCoreModal() {
+	    document.getElementById("coreModal").style.display = "none";
+
+	    if (coreInterval) {
+	        clearInterval(coreInterval);
+	        coreInterval = null;
+	    }
+	}
+
+	document.addEventListener("DOMContentLoaded", () => {
+	    const modal = document.getElementById("coreModal");
+	    const closeBtn = document.getElementById("closeCoreModal");
+
+	    if (modal) {
+	        modal.addEventListener("click", (e) => {
+	            if (e.target === modal) {
+	                closeCoreModal();
+	            }
+	        });
+	    }
+
+	    if (closeBtn) {
+	        closeBtn.addEventListener("click", closeCoreModal);
+	    }
+	});
+
+	// Update-Loop für den Kern
+	function startCoreUpdate(coreName) {
+	    if (coreInterval) clearInterval(coreInterval); // Sicherheitscheck
+
+	    coreInterval = setInterval(async () => {
+	        try {
+	            const res = await fetch(`/api/server/${serverName}`);
+	            const server = await res.json();
+
+	            const coreIndex = coreName.replace("Kern ", "");
+	            const load = server.cpuCore?.[coreIndex] || 0;
+
+	            const now = new Date().toLocaleTimeString();
+	            if (coreChartLabels.length > 30) {
+	                coreChartLabels.shift();
+	                coreChartData.shift();
+	            }
+	            coreChartLabels.push(now);
+	            coreChartData.push(load);
+
+	            coreChart.update('none');
+	        } catch (err) {
+	            console.error("Fehler beim Kern-Update:", err);
+	        }
+	    }, 3000);
+	}
+	
+	let modalChart; // für das große Chart
+
+	function openChartModal(title, chart) {
+	    const modal = document.getElementById("chartModal");
+	    const modalTitle = document.getElementById("chartModalTitle");
+	    const modalCanvas = document.getElementById("chartModalCanvas");
+
+	    modalTitle.textContent = title;
+
+	    // Wenn schon ein Chart existiert, zerstören
+	    if (modalChart) modalChart.destroy();
+
+	    // Neues Chart erstellen (kopiere Daten & Optionen vom existierenden Chart)
+	    modalChart = new Chart(modalCanvas.getContext("2d"), {
+	        type: chart.config.type,
+	        data: JSON.parse(JSON.stringify(chart.data)),
+	        options: JSON.parse(JSON.stringify(chart.options))
+	    });
+
+	    modal.style.display = "flex";
+	}
+
+	
+	document.addEventListener("DOMContentLoaded", () => {
+	    const chartModal = document.getElementById("chartModal");
+	    const closeChartModalBtn = document.getElementById("closeChartModal");
+
+	    if (closeChartModalBtn) {
+	        closeChartModalBtn.addEventListener("click", () => {
+	            chartModal.style.display = "none";
+	            if (modalChart) modalChart.destroy();
+	        });
+	    }
+
+	    if (chartModal) {
+	        chartModal.addEventListener("click", (e) => {
+	            if (e.target === chartModal) {
+	                chartModal.style.display = "none";
+	                if (modalChart) modalChart.destroy();
+	            }
+	        });
+	    }
+	});
 </script>
 <script src="/js/sidebar.js"></script>
+<!-- Modal -->
+<div id="coreModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+     background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:1000;">
+    <div style="background:#1e1e2f; color:#eee; padding:20px; border-radius:12px; width:80%; max-width:600px; position:relative;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.6);">
+        <button id="closeCoreModal" style="position:absolute; top:10px; right:10px; 
+                background:#2c2c3c; color:#eee; border:none; border-radius:6px; width:32px; height:32px;
+                font-size:20px; cursor:pointer; transition:0.2s;">
+            &times;
+        </button>
+        <h2 id="coreTitle" style="margin-bottom:15px; font-family:Arial, sans-serif;"></h2>
+        <canvas id="coreChart" height="100"></canvas>
+	</div>
+</div>
+
+
+<!-- Universal Chart Modal -->
+<div id="chartModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+     background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:1000;">
+    <div style="background:#1e1e2f; color:#eee; padding:20px; border-radius:12px; width:90%; max-width:800px; position:relative;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.6);">
+        <button id="closeChartModal" style="position:absolute; top:10px; right:10px; 
+                background:#2c2c3c; color:#eee; border:none; border-radius:6px; width:32px; height:32px;
+                font-size:20px; cursor:pointer; transition:0.2s;">
+            &times;
+        </button>
+        <h2 id="chartModalTitle" style="margin-bottom:15px; font-family:Arial, sans-serif;"></h2>
+        <canvas id="chartModalCanvas" height="300"></canvas>
+    </div>
+</div>
 </body>
 </html>

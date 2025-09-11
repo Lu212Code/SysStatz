@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Langzeit-Analyse</title>
 	<link rel="stylesheet" th:href="@{'/css/' + ${theme}}">
 	<link rel="icon" href="/img/logo.png" type="image/png">
@@ -117,9 +118,13 @@
 			const smoothedRam = smooth(ramVals, 2);
 			const smoothedDisk = smooth(diskVals, 2);
 			
-			updateChartWithAllSpikes(cpuChart, times, smoothedCpu, 80, 80);
-			updateChartWithAllSpikes(ramChart, times, smoothedRam, 80, 80);
-			updateChartWithAllSpikes(diskChart, times, smoothedDisk, 80, 80);
+			let [cpuTimes, cpuValsSampled] = downsample(times, smoothedCpu, 200);
+			let [ramTimes, ramValsSampled] = downsample(times, smoothedRam, 200);
+			let [diskTimes, diskValsSampled] = downsample(times, smoothedDisk, 200);
+
+			updateChartWithAllSpikes(cpuChart, cpuTimes, cpuValsSampled, 80, 80);
+			updateChartWithAllSpikes(ramChart, ramTimes, ramValsSampled, 80, 80);
+			updateChartWithAllSpikes(diskChart, diskTimes, diskValsSampled, 80, 80);
 
 	        analysisContent.innerHTML = generateAnalysis(cpuVals, ramVals, diskVals);
 	      });
@@ -238,6 +243,17 @@
 	        }
 	    }
 	    return spikes;
+	}
+	
+	function downsample(times, values, maxPoints = 300) {
+	    const step = Math.ceil(values.length / maxPoints);
+	    const sampledTimes = [];
+	    const sampledValues = [];
+	    for (let i = 0; i < values.length; i += step) {
+	        sampledTimes.push(times[i]);
+	        sampledValues.push(values[i]);
+	    }
+	    return [sampledTimes, sampledValues];
 	}
 </script>
 <script src="/js/sidebar.js"></script>

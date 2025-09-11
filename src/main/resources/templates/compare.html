@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="de">
 <head>
     <meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Server vergleichen</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -137,7 +138,7 @@
         <canvas id="ramChartA"></canvas>
         <canvas id="diskChartA"></canvas>
         <table>
-            <tr><th>CPU (%)</th><th>RAM (%)</th><th>Disk (%)</th></tr>
+            <tr><th>CPU (%)</th><th>RAM (MB)</th><th>Disk (%)</th></tr>
             <tr><td id="cpuAvgA">-</td><td id="ramAvgA">-</td><td id="diskAvgA">-</td></tr>
         </table>
     </div>
@@ -149,7 +150,7 @@
         <canvas id="ramChartB"></canvas>
         <canvas id="diskChartB"></canvas>
         <table>
-            <tr><th>CPU (%)</th><th>RAM (%)</th><th>Disk (%)</th></tr>
+            <tr><th>CPU (%)</th><th>RAM (MB)</th><th>Disk (%)</th></tr>
             <tr><td id="cpuAvgB">-</td><td id="ramAvgB">-</td><td id="diskAvgB">-</td></tr>
         </table>
     </div>
@@ -232,14 +233,23 @@
 	    const labelsA = historyA.map(d => new Date(d.timestamp).toLocaleTimeString());
 	    const labelsB = historyB.map(d => new Date(d.timestamp).toLocaleTimeString());
 
-	    drawChart('cpuChartA', labelsA, cpuA, 'CPU (%)', cpuMax);
-	    drawChart('cpuChartB', labelsB, cpuB, 'CPU (%)', cpuMax);
+		let [labelsASampled, cpuASampled] = downsample(labelsA, cpuA, 200);
+		let [labelsBSampled, cpuBSampled] = downsample(labelsB, cpuB, 200);
 
-	    drawChart('ramChartA', labelsA, ramA, 'RAM (%)', ramMax);
-	    drawChart('ramChartB', labelsB, ramB, 'RAM (%)', ramMax);
+		let [labelsASampled2, ramASampled] = downsample(labelsA, ramA, 200);
+		let [labelsBSampled2, ramBSampled] = downsample(labelsB, ramB, 200);
 
-	    drawChart('diskChartA', labelsA, diskA, 'Disk (%)', diskMax);
-	    drawChart('diskChartB', labelsB, diskB, 'Disk (%)', diskMax);
+		let [labelsASampled3, diskASampled] = downsample(labelsA, diskA, 200);
+		let [labelsBSampled3, diskBSampled] = downsample(labelsB, diskB, 200);
+		
+		drawChart('cpuChartA', labelsASampled, cpuASampled, 'CPU (%)', cpuMax);
+		drawChart('cpuChartB', labelsBSampled, cpuBSampled, 'CPU (%)', cpuMax);
+
+		drawChart('ramChartA', labelsASampled, ramASampled, 'RAM (%)', ramMax);
+		drawChart('ramChartB', labelsBSampled, ramBSampled, 'RAM (%)', ramMax);
+
+		drawChart('diskChartA', labelsASampled, diskASampled, 'Disk (%)', diskMax);
+		drawChart('diskChartB', labelsBSampled, diskBSampled, 'Disk (%)', diskMax);
 
 	    document.getElementById('cpuAvgA').textContent = avg(cpuA).toFixed(1);
 	    document.getElementById('cpuAvgB').textContent = avg(cpuB).toFixed(1);
@@ -270,6 +280,17 @@
 	}
 
 	init();
+	
+	function downsample(times, values, maxPoints = 300) {
+	    const step = Math.ceil(values.length / maxPoints);
+	    const sampledTimes = [];
+	    const sampledValues = [];
+	    for (let i = 0; i < values.length; i += step) {
+	        sampledTimes.push(times[i]);
+	        sampledValues.push(values[i]);
+	    }
+	    return [sampledTimes, sampledValues];
+	}
 </script>
 <script src="/js/sidebar.js"></script>
 </body>
