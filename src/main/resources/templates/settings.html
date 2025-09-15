@@ -116,6 +116,7 @@
             <p>Statsserver Port: <input type="text" name="statsPort" th:value="${config.statsPort}"></p>
 			<p>Ollama Server IP: <input type="text" name="ollamaserverip" th:value="${config.ollamaserverip}"></p>
 			<p>Client Passwort: <input type="text" name="clientPassword" th:value="${config.clientPassword}"></p>
+			<p>API-Key: <input type="text" name="apiKey" th:value="${config.apiKey}"></p>
 			<p>
 			  <label>
 				<input type="checkbox" name="twoFactorRequired" value="true" th:checked="${config.twoFactorRequired}" />
@@ -129,13 +130,46 @@
                     <option th:selected="${config.theme == 'default'}" value="default">Default</option>
                     <option th:selected="${config.theme == 'copper'}" value="copper">Copper</option>
                     <option th:selected="${config.theme == 'fresh_green'}" value="fresh_green">Fresh Green</option>
-                    <option th:selected="${config.theme == 'neon'}" value="neon">Neon</option>
                 </select>
             </p>
             <button type="submit">Speichern</button>
         </form>
     </div>
 </section>
+
+
+<!-- Abschnitt: Serververwaltung -->
+<section th:if="${isAdmin}">
+    <button class="collapsible">Serververwaltung</button>
+    <div class="content">
+        <h3>Serverliste</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>IP</th>
+                    <th>Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="server : ${servers}">
+                    <td th:text="${server}"></td>
+                    <td>
+                        <button type="button" class="remove-btn" th:data-ip="${server}">Löschen</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Neuen Server hinzufügen</h3>
+        <form id="addServerForm">
+            <input type="text" id="serverIp" name="ip" placeholder="Server-IP">
+            <button type="submit">Hinzufügen</button>
+            <p id="ipError" style="color: red; display: none;">❌ Ungültige IP-Adresse</p>
+            <p id="serverMsg" style="color: green; display: none;"></p>
+        </form>
+    </div>
+</section>
+
 
 <!-- Abschnitt: Benutzerverwaltung (Admin only) -->
 <section th:if="${isAdmin}">
@@ -164,6 +198,98 @@
             }
         });
     });
+	
+	const form = document.getElementById('addServerForm');
+	form.addEventListener('submit', async function(event) {
+	    event.preventDefault(); // Form nicht normal abschicken
+
+	    const ipInput = document.getElementById('serverIp');
+	    const ipError = document.getElementById('ipError');
+	    const serverMsg = document.getElementById('serverMsg');
+
+	    const ip = ipInput.value.trim();
+
+	    // IPv4 Regex
+	    const ipv4Pattern = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
+	    // IPv6 Regex
+	    const ipv6Pattern = /^(([0-9a-fA-F]{1,4}:){7}([0-9a-fA-F]{1,4}|:))$|^(([0-9a-fA-F]{1,4}:){1,7}:)$|^:((:[0-9a-fA-F]{1,4}){1,7})$/;
+
+	    if (!ipv4Pattern.test(ip) && !ipv6Pattern.test(ip)) {
+	        ipError.style.display = 'block';
+	        serverMsg.style.display = 'none';
+	        return;
+	    }
+
+	    ipError.style.display = 'none';
+
+	    try {
+	        const response = await fetch('/servers/add', {
+	            method: 'POST',
+	            headers: { 'Content-Type': 'application/json' },
+	            body: JSON.stringify({ ip })
+	        });
+	        const data = await response.json();
+
+			if (response.ok) {
+			    serverMsg.style.color = 'green';
+			    serverMsg.textContent = `✅ ${data.status}: ${data.ip}`;
+			    serverMsg.style.display = 'block';
+			    
+			    // Neue Zeile in die Tabelle einfügen
+			    const tbody = document.querySelector('table tbody');
+			    const tr = document.createElement('tr');
+			    tr.innerHTML = `
+			        <td>${data.ip}</td>
+			        <td>
+			            <button type="button" onclick="removeServer('${data.ip}')">Löschen</button>
+			        </td>
+			    `;
+			    tbody.appendChild(tr);
+
+			    ipInput.value = '';
+			} else {
+	            serverMsg.style.color = 'red';
+	            serverMsg.textContent = `❌ ${data.error}`;
+	            serverMsg.style.display = 'block';
+	        }
+	    } catch (err) {
+	        serverMsg.style.color = 'red';
+	        serverMsg.textContent = `❌ Fehler beim Hinzufügen`;
+	        serverMsg.style.display = 'block';
+	    }
+	});
+	
+	document.addEventListener("click", (e) => {
+	        if (e.target.classList.contains("remove-btn")) {
+	            const ip = e.target.dataset.ip; // echte IP aus data-Attribut
+	            removeServer(ip, e.target);
+	        }
+	    });
+	
+	async function removeServer(ip, button) {
+	    console.log("👉 Sende removeServer:", ip);
+
+	    try {
+	        const response = await fetch('/servers/remove', {
+	            method: 'POST',
+	            headers: { 'Content-Type': 'application/json' },
+	            body: JSON.stringify({ ip: ip.trim() })
+	        });
+
+	        console.log("📥 Remove Response raw:", response);
+	        const data = await response.json();
+	        console.log("📥 Remove Response JSON:", data);
+
+	        if (response.ok) {
+	            console.log("✅ Entfernt:", data);
+	            button.closest('tr').remove();
+	        } else {
+	            console.warn("⚠️ Fehler beim Entfernen:", data);
+	        }
+	    } catch (err) {
+	        console.error("❌ Netzwerk/JS Fehler:", err);
+	    }
+	}
 </script>
 <script src="/js/sidebar.js"></script>
 </body>

@@ -101,7 +101,7 @@ public class PluginManager {
         return null;
     }
     
- // Alle Werte für einen Server
+    // Alle Werte für einen Server
     public Map<String, Object> getLatestPluginValuesForClient(String clientName) {
         return latestPluginValues.getOrDefault(clientName, Collections.emptyMap());
     }

@@ -7,6 +7,7 @@ public class Config {
     private String ollamaserverip;
     private String twoFactorRequired;
     private String clientPassword;
+    private String apiKey;
 
     // Getter und Setter
     public String getWebPort() { return webPort; }
@@ -26,4 +27,7 @@ public class Config {
     
     public String getClientPassword() { return clientPassword; }
     public void setClientPassword(String clientPassword) { this.clientPassword = clientPassword; }
-}
+    
+    public String getApiKey() { return apiKey; }
+    public void setApiKey(String apiKey) { this.apiKey = apiKey; }	
+    }

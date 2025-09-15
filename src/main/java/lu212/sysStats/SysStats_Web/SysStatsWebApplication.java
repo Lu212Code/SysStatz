@@ -15,11 +15,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.github.lalyos.jfiglet.FigletFont;
 
+import lu212.sysStats.General.AnomalyMonitor;
 import lu212.sysStats.General.Logger;
-import lu212.sysStats.General.PluginManager;
 import lu212.sysStats.General.Plugins;
 import lu212.sysStats.StatsServer.Server;
-import lu212.sysStats.SysStats_Web.AlertService.Alert.Level;
 
 @SpringBootApplication
 @EnableScheduling
@@ -31,10 +30,15 @@ public class SysStatsWebApplication {
 	public static String ollamaIP;
 	public static String twoFactorRequired;
 	public static String clientPassword;
+	public static String apiKey;
 	
 	private static ConfigurableApplicationContext context;
 	
 	public static void main(String[] args) {
+	    if (args.length > 0 && args[0].equalsIgnoreCase("--cli")) {
+	        lu212.sysStats.General.commandLine.startCli();
+	        return;
+	    }
 		Logger.start();
 		Logger.info("Starte SysStatz...");
 		System.out.println("Starte SysStats...");
@@ -62,6 +66,7 @@ public class SysStatsWebApplication {
 			shutdown();
 			System.exit(0);
 		}
+		AnomalyMonitor.start();
 		Logger.info("Starte StatsServer...");
 		System.out.println("Starte StatsServer...");
 		
@@ -73,7 +78,7 @@ public class SysStatsWebApplication {
 		}
 		System.out.println("--------------------------------------------------------");
 		System.out.println(SysStatzLogo);
-		System.out.println("-----------------------ver.-0.1-------------------------");
+		System.out.println("-----------------------ver.-1.0-------------------------");
 		
 		try {
 			Logger.info("Starte StatsServer");
@@ -88,6 +93,7 @@ public class SysStatsWebApplication {
 		}
 	}
 	
+	
 	private static void config() {
 		ConfigManager config = new ConfigManager();
 		
@@ -97,6 +103,7 @@ public class SysStatsWebApplication {
 		ollamaIP = config.getOllamaServerIP();
 		twoFactorRequired = config.getTwoFactor();
 		clientPassword = config.getClientPassword();
+		apiKey = config.getApiKey();
 	}
 
 	@Bean

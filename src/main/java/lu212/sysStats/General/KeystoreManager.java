@@ -39,6 +39,22 @@ public class KeystoreManager {
                 ks.load(fis, password.toCharArray());
             }
             System.out.println("[OK] Keystore geladen.");
+
+            // ----- Hier Zertifikat prüfen und ggf. verlängern -----
+            String alias = ks.aliases().nextElement();
+            X509Certificate cert = (X509Certificate) ks.getCertificate(alias);
+
+            if (cert.getNotAfter().before(new Date())) {
+                System.out.println("[WARN] Zertifikat abgelaufen. Erstelle neues Zertifikat...");
+                createKeystore(password);  // überschreibt alten Keystore
+                // Keystore neu laden
+                try (FileInputStream fis = new FileInputStream(ksFile)) {
+                    ks.load(fis, password.toCharArray());
+                }
+                System.out.println("[OK] Neuer Keystore geladen.");
+            }
+            // ------------------------------------------------------
+
             return ks;
         } else {
             String password = generateRandomPassword();

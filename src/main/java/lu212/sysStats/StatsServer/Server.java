@@ -47,6 +47,12 @@ public class Server {
 	private static final int MAX_MESSAGE_LENGTH = 4096;
 	
 	private static final int MAX_CLIENTS = 50;
+	
+	private static final String SERVER_FILE = "servers.txt";
+	private static final Set<String> allowedIPs = ConcurrentHashMap.newKeySet();
+	
+	private volatile long lastMessageTime;
+	private static final int CLIENT_TIMEOUT_MS = 20_000;
 
 	public static void startServer(String[] args) throws IOException {
 		new Server().start();
@@ -75,11 +81,27 @@ public class Server {
 
 	        // SSLServerSocket erstellen
 	        SSLServerSocket serverSocket = (SSLServerSocket) ssf.createServerSocket(PORT);
+	        
+	        loadServerIPs();
+	        markRegisteredServersOffline();
+	        watchServerFile();
+	        startClientTimeoutChecker();
 
-	        System.out.println("SSL Server läuft auf Port " + PORT);
+	        System.out.println("Stats-Server laeuft auf Port " + PORT);
 
 	        while (true) {
 	            SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
+	            String clientIP = clientSocket.getInetAddress().getHostAddress();
+	            if (!isIPAllowed(clientIP)) {
+	                System.out.println("Verbindung von nicht erlaubter IP " + clientIP + " abgelehnt.");
+	                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+	                out.println("SERVER: IP NICHT ERLAUBT");
+	                clientSocket.close();
+	                continue;
+	            }
+
+	            clientSocket.startHandshake();
+	            new Thread(() -> handleNewClient(clientSocket)).start();
                 synchronized (clients) {
                     if (clients.size() >= MAX_CLIENTS) {
                         System.out.println("Maximale Anzahl Clients erreicht. Verbindung wird abgelehnt.");
@@ -123,6 +145,12 @@ public class Server {
 			}
 
 			out.println("PASSWORT_OK");
+			
+	        // IP des Clients
+	        String clientIP = socket.getInetAddress().getHostAddress();
+
+	        // Speichern in server_names.txt
+	        saveServerNameAndIP(clientIP, name);
 
 			ClientHandler handler = new ClientHandler(name, socket, in, out);
 			clients.put(name, handler);
@@ -152,19 +180,26 @@ public class Server {
 		private final Socket socket;
 		private final BufferedReader in;
 		private final PrintWriter out;
+		
+	    private volatile long lastMessageTime;
+	    private volatile boolean offlineSent = false;
 
-		public ClientHandler(String name, Socket socket, BufferedReader in, PrintWriter out) {
-			this.name = name;
-			this.socket = socket;
-			this.in = in;
-			this.out = out;
-		}
+	    public ClientHandler(String name, Socket socket, BufferedReader in, PrintWriter out) {
+	        this.name = name;
+	        this.socket = socket;
+	        this.in = in;
+	        this.out = out;
+	        this.lastMessageTime = System.currentTimeMillis();
+	    }
 
 		public void listen() {
 			if (debugMode) {
 				try {
 					String line;
 					while ((line = readLineWithLimit(in, MAX_MESSAGE_LENGTH)) != null) {
+						
+						lastMessageTime = System.currentTimeMillis(); // update bei jeder Nachricht
+		                offlineSent = false;
 						
 			            if (!line.matches("[\\p{Print}\\s]*")) {
 			                send("FEHLER: Ungültige Zeichen in Nachricht");
@@ -174,6 +209,8 @@ public class Server {
 						
 						Logger.info("Raw-Nachricht von " + name + ": " + line);
 						System.out.println("Raw-Nachricht von " + name + ": " + line);
+						
+						lastMessageTime = System.currentTimeMillis();
 
 						if (line.startsWith("SERVER:")) {
 							String payload = line.substring("SERVER:".length()).trim();
@@ -570,5 +607,201 @@ public class Server {
 	    }
 	    if (sb.length() == 0 && ch == -1) return null; // Stream Ende
 	    return sb.toString();
+	}
+	
+	private static void loadServerIPs() {
+	    File file = new File(SERVER_FILE);
+	    try {
+	        if (!file.exists()) {
+	            System.out.println("servers.txt existiert nicht, wird erstellt.");
+	            file.createNewFile();
+	        }
+	        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+	            String line;
+	            while ((line = reader.readLine()) != null) {
+	                line = line.trim();
+	                if (!line.isEmpty() && isValidIP(line)) {
+	                    allowedIPs.add(line);
+	                }
+	            }
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	private static boolean isValidIP(String ip) {
+	    try {
+	        InetAddress address = InetAddress.getByName(ip);
+	        return address instanceof Inet4Address || address instanceof Inet6Address;
+	    } catch (UnknownHostException e) {
+	        return false;
+	    }
+	}
+	
+	private static boolean isIPAllowed(String ip) {
+	    return allowedIPs.contains(ip);
+	}
+	
+	public static synchronized void addAllowedIP(String ip) {
+	    if (!isValidIP(ip)) return;
+
+	    if (allowedIPs.add(ip)) {
+	        try (BufferedWriter writer = new BufferedWriter(new FileWriter(SERVER_FILE, true))) {
+	            writer.write(ip);
+	            writer.newLine();
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	        System.out.println("Neue IP hinzugefügt: " + ip);
+	    }
+	}
+	
+	private static void watchServerFile() {
+	    Thread watcher = new Thread(() -> {
+	        File file = new File(SERVER_FILE);
+	        long lastModified = file.exists() ? file.lastModified() : 0;
+
+	        while (true) {
+	            try {
+	                Thread.sleep(5000); // alle 5 Sekunden prüfen
+
+	                if (!file.exists()) {
+	                    file.createNewFile();
+	                    continue;
+	                }
+
+	                long modified = file.lastModified();
+	                if (modified != lastModified) {
+	                    lastModified = modified;
+	                    updateAllowedIPs(file);
+	                }
+
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
+	        }
+	    });
+	    watcher.setDaemon(true);
+	    watcher.start();
+	}
+
+	private static void updateAllowedIPs(File file) {
+	    Set<String> newIPs = new HashSet<>();
+	    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+	        String line;
+	        while ((line = reader.readLine()) != null) {
+	            line = line.trim();
+	            if (!line.isEmpty() && isValidIP(line)) {
+	                newIPs.add(line);
+	            }
+	        }
+	        allowedIPs.clear();
+	        allowedIPs.addAll(newIPs);
+	        System.out.println("Allowed IPs aktualisiert: " + allowedIPs);
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	private static void startClientTimeoutChecker() {
+	    Thread t = new Thread(() -> {
+	        while (true) {
+	            try {
+	                Thread.sleep(1000);
+	                long now = System.currentTimeMillis();
+	                for (ClientHandler client : clients.values()) {
+	                    if (now - client.lastMessageTime > CLIENT_TIMEOUT_MS) {
+	                        if (!client.offlineSent) {
+	                            client.offlineSent = true;
+	                            sendOfflineStatus(client.name);
+	                        }
+	                    }
+	                }
+	            } catch (InterruptedException e) {
+	                e.printStackTrace();
+	            }
+	        }
+	    });
+	    t.setDaemon(true);
+	    t.start();
+	}
+
+	private static void sendOfflineStatus(String clientName) {
+	    ServerTempInfo temp = tempServerData.computeIfAbsent(clientName, k -> new ServerTempInfo());
+	    // Alle Werte auf null setzen, nur Status auf Offline
+	    ServerStats.update(clientName, temp.cpu != null ? temp.cpu : 0,
+	                       temp.ramUsed != null ? Double.parseDouble(temp.ramUsed) : 0,
+	                       temp.ramTotal != null ? Double.parseDouble(temp.ramTotal) : 0,
+	                       0, 0, 0,
+	                       "Offline", // <-- Status
+	                       LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")),
+	                       temp.sent, temp.recv, temp.dsent, temp.drecv, temp.processes, temp.scmd, temp.temp,
+	                       temp.cpuCoreLoads, temp.swapTotal, temp.swapUsed, temp.cpuCoreFreqs);
+	}
+	
+	private static synchronized void saveServerNameAndIP(String ip, String name) {
+	    File file = new File("server_names.txt");
+	    try {
+	        if (!file.exists()) {
+	            file.createNewFile();
+	        }
+
+	        // Prüfen, ob IP oder Name schon existiert
+	        boolean exists = false;
+	        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+	            String line;
+	            while ((line = reader.readLine()) != null) {
+	                String[] parts = line.split(";", 2); // Format: IP;Name
+	                if (parts.length == 2) {
+	                    if (parts[0].equals(ip) || parts[1].equalsIgnoreCase(name)) {
+	                        exists = true;
+	                        break;
+	                    }
+	                }
+	            }
+	        }
+
+	        // Falls noch nicht vorhanden, hinzufügen
+	        if (!exists) {
+	            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
+	                writer.write(ip + ";" + name);
+	                writer.newLine();
+	                System.out.println("Neuer Server in server_names.txt hinzugefügt: " + ip + " → " + name);
+	            }
+	        }
+
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	private void markRegisteredServersOffline() {
+	    File file = new File("server_names.txt");
+	    Map<String, String> ipToName = new HashMap<>();
+
+	    // Map von IP → Name laden
+	    if (file.exists()) {
+	        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+	            String line;
+	            while ((line = reader.readLine()) != null) {
+	                String[] parts = line.split(";", 2);
+	                if (parts.length == 2) {
+	                    ipToName.put(parts[0].trim(), parts[1].trim());
+	                }
+	            }
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    }
+
+	    // Für jede registrierte IP den Status offline senden, wenn ein Name existiert
+	    for (String ip : allowedIPs) {
+	        String name = ipToName.get(ip);
+	        if (name != null && !name.isBlank()) {
+	            sendOfflineStatus(name);
+	            System.out.println("Server " + name + " (" + ip + ") auf Offline gesetzt.");
+	        }
+	    }
 	}
 }

@@ -15,6 +15,7 @@ public class ConfigManager {
     private String ollamaserverip;
     private String twoFactorRequired;
     private String clientPassword;
+    private String apiKey;
 
     public ConfigManager() {
         try {
@@ -34,7 +35,8 @@ public class ConfigManager {
             "theme=default",
             "ollamaserverip=default",
             "twoFactorRequired=false",
-            "clientPassword=changeit"
+            "clientPassword=changeit",
+            "apiKey=pv983qa4EHNZt"
         );
         Files.write(CONFIG_PATH, defaultLines);
     }
@@ -51,6 +53,7 @@ public class ConfigManager {
                     case "ollamaserverip" -> ollamaserverip = parts[1];
                     case "twoFactorRequired" -> twoFactorRequired = parts[1];
                     case "clientPassword" -> clientPassword = parts[1];
+                    case "apiKey" -> apiKey = parts[1];
                 }
             }
         }
@@ -81,4 +84,9 @@ public class ConfigManager {
     public String getClientPassword() {
     	return clientPassword;
     }
+    
+    public String getApiKey() {
+    	return apiKey;
+    }
+    
 }

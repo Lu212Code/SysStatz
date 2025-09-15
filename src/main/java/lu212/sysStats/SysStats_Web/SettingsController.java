@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpSession;
 import lu212.sysStats.General.Logger;
+import lu212.sysStats.General.ServerUtil;
 import lu212.sysStats.General.ThresholdConfig;
 import lu212.sysStats.General.UserStore;
 
@@ -30,6 +31,7 @@ public class SettingsController {
         model.addAttribute("users", UserStore.getAll());
         model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
         model.addAttribute("activePage", "settings");
+        model.addAttribute("servers", ServerUtil.getAllServers());
         
    	 	String theme = SysStatsWebApplication.theme;
    	 	model.addAttribute("theme", theme);
@@ -65,6 +67,7 @@ public class SettingsController {
                             case "ollamaserverip" -> config.setOllamaserverip(parts[1]);
                             case "twoFactorRequired" -> config.setTwoFactorRequired(parts[1]);
                             case "clientPassword" -> config.setClientPassword(parts[1]);
+                            case "apiKey" -> config.setApiKey(parts[1]);
                         }
                     }
                 }
@@ -109,6 +112,10 @@ public class SettingsController {
             }
             if (newConfig.getClientPassword() !=null) {
             	configMap.put("clientPassword", newConfig.getClientPassword());
+            }
+            
+            if (newConfig.getApiKey() !=null) {
+            	configMap.put("apiKey", newConfig.getApiKey());
             }
 
             // Zurückschreiben

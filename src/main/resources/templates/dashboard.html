@@ -82,6 +82,84 @@
 		.server-search {
 		    margin-top: 5px; /* Abstand nach oben */
 		}
+		
+		#add-server-dialog > div {
+		    background-color: #1e1e2f; /* SysStatz-Dashboard-Farbe */
+		    color: white;
+		    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+		    border-radius: 12px;
+		    padding: 25px;
+		    width: 350px;
+		    text-align: center;
+		    font-family: 'Segoe UI', sans-serif;
+		    position: relative;
+		}
+		
+		#add-server-dialog button {
+		    background-color: #4a90e2;
+		    color: white;
+		    border: none;
+		    border-radius: 8px;
+		    padding: 10px 20px;
+		    font-size: 1rem;
+		    cursor: pointer;
+		    margin: 5px 2px;
+		    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+		    transition: background-color 0.2s ease, transform 0.1s ease;
+		}
+
+		#add-server-dialog button:hover {
+		    background-color: #357bd8;
+		    transform: translateY(-1px);
+		}
+		
+		#add-server-dialog input[type="text"] {
+		    width: 90%;              /* etwas kleiner als der Dialog */
+		    max-width: 300px;        /* verhindert, dass es zu groß wird */
+		    padding: 10px;
+		    border-radius: 6px;
+		    border: 1px solid #555;
+		    background-color: #2c2c3e;
+		    color: white;
+		    font-size: 1rem;
+		    margin: 10px auto;       /* automatisch zentrieren */
+		    display: block;
+		    box-sizing: border-box;
+		}
+		#add-server-dialog input[type="text"]::placeholder {
+		    color: #aaa;
+		}
+
+		#dialog-close {
+		    position: absolute;
+		    top: 10px;
+		    right: 15px;
+		    font-size: 1.5rem;
+		    cursor: pointer;
+		    color: #ccc;
+		    transition: color 0.2s ease;
+		}
+
+		#dialog-close:hover {
+		    color: #fff;
+		}
+
+		#add-server-dialog {
+		    display: none;
+		    position: fixed;
+		    top:0; left:0;
+		    width:100%; height:100%;
+		    background: rgba(0,0,0,0.6);
+		    justify-content: center;
+		    align-items: center;
+		    z-index: 1000;
+		    animation: fadeIn 0.3s ease;
+		}
+
+		@keyframes fadeIn {
+		    from { opacity: 0; }
+		    to { opacity: 1; }
+		}
 	</style>
 	<link rel="stylesheet" th:href="@{'/css/' + ${theme} + '-sidebar.css'}">
 </head>
@@ -96,20 +174,35 @@
 <div th:replace="fragments/sidebar :: sidebar"></div>
 
 <nav style="display: flex; justify-content: space-between; align-items: center; padding-right: 1rem;">
-	<div>
-	</div>
-	<div>
-		<input type="text" class="server-search" id="server-search" placeholder="Server suchen..." style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 1rem;">
-	</div>
+    <div style="display: flex; gap: 5px; align-items: center;">
+        <button id="add-server-btn">Server hinzufügen</button>
+    </div>
+    <div>
+        <input type="text" class="server-search" id="server-search" placeholder="Server suchen..." style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 1rem;">
+    </div>
 </nav>
+
+<!-- Dialog zum Server hinzufügen -->
+<!-- Dialog zum Server hinzufügen -->
+<div id="add-server-dialog">
+    <div>
+        <h3>Server hinzufügen</h3>
+        <input type="text" id="dialog-server-ip" placeholder="Server-IP">
+        <div id="dialog-message"></div>
+        <button id="dialog-add-btn">Hinzufügen</button>
+        <button id="dialog-cancel-btn">Abbrechen</button>
+        <span id="dialog-close">&times;</span>
+    </div>
+</div>
 
 <div id="servers-container">
     <!-- Server-Infos werden hier dynamisch eingefügt -->
 </div>
 
-<script>
-	
-	const API_KEY = 'pv983qa4EHNZt';
+<script th:inline="javascript">
+	/*<![CDATA[*/
+	const API_KEY = /*[[${apiKey}]]*/ 'default_key';
+	/*]]>*/
 	
 	function format3(val) {
 	    const n = Number(val);
@@ -264,6 +357,22 @@ async function refreshData() {
 			                   onclick="sendServerCommand('${server.name}', 'reboot')">
 			                    <img src="/img/reboot.png" alt="Reboot Icon" style="height: 24px;">
 			                </button>
+							<div style="position: relative; display: inline-block;">
+							    <button class="menu-btn" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer;">⋮</button>
+							    <div class="menu-content" style="
+							        display: none;
+							        position: absolute;
+							        right: 0;
+							        background-color: #f9f9f9;
+							        min-width: 120px;
+							        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+							        z-index: 1;
+							        border-radius: 6px;
+							        overflow: hidden;
+							    ">
+							        <a href="#" class="delete-server" style="display: block; padding: 10px; text-decoration: none; color: black;">Löschen</a>
+							    </div>
+							</div>
 			            </div>
 			            ` : ''}
 			        </div>
@@ -276,6 +385,32 @@ async function refreshData() {
 			    `;
 
 			    container.appendChild(div);
+				const menuBtn = div.querySelector('.menu-btn');
+				const menuContent = div.querySelector('.menu-content');
+				if (menuBtn && menuContent) {
+				    menuBtn.addEventListener('click', () => {
+				        menuContent.style.display = menuContent.style.display === 'block' ? 'none' : 'block';
+				    });
+				}
+
+				const deleteLink = div.querySelector('.delete-server');
+				if (deleteLink) {
+				    deleteLink.addEventListener('click', async (e) => {
+				        e.preventDefault();
+				        try {
+				            const response = await fetch(`/servers/remove`, {
+				                method: 'POST',
+				                headers: { 'Content-Type': 'application/json' },
+				                body: JSON.stringify({ name: server.name })
+				            });
+				            if (response.ok) div.remove();
+				            else alert('Server konnte nicht gelöscht werden.');
+				        } catch (err) {
+				            console.error(err);
+				            alert('Fehler beim Löschen des Servers.');
+				        }
+				    });
+				}
 			    div.setAttribute("data-server-name", server.name.toLowerCase());
 			});
 		}
@@ -326,6 +461,79 @@ async function sendServerCommand(name, action) {
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('expanded');
 }
+
+const addServerBtn = document.getElementById('add-server-btn');
+const dialog = document.getElementById('add-server-dialog');
+const dialogAddBtn = document.getElementById('dialog-add-btn');
+const dialogCancelBtn = document.getElementById('dialog-cancel-btn');
+const dialogClose = document.getElementById('dialog-close');
+const dialogInput = document.getElementById('dialog-server-ip');
+const dialogMessage = document.getElementById('dialog-message');
+
+// Dialog öffnen
+addServerBtn.addEventListener('click', () => {
+    dialog.style.display = 'flex';
+    dialogInput.value = '';
+    dialogMessage.textContent = '';
+    dialogInput.focus();
+});
+
+// Dialog schließen
+dialogCancelBtn.addEventListener('click', () => dialog.style.display = 'none');
+dialogClose.addEventListener('click', () => dialog.style.display = 'none');
+
+// Server hinzufügen
+// Hilfsfunktion: prüft, ob es eine IPv4-Adresse ist
+function isIPv4(ip) {
+    const ipv4Regex = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+    return ipv4Regex.test(ip);
+}
+
+// Hilfsfunktion: prüft, ob es eine IPv6-Adresse ist
+function isIPv6(ip) {
+    const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7}([0-9a-fA-F]{1,4}|:)|(([0-9a-fA-F]{1,4}:){1,7}:)|(::([0-9a-fA-F]{1,4}:){0,5}([0-9a-fA-F]{1,4}))|(::))$/;
+    return ipv6Regex.test(ip);
+}
+
+// Dialog Server hinzufügen
+dialogAddBtn.addEventListener('click', async () => {
+    const ip = dialogInput.value.trim();
+    if (!ip) {
+        dialogMessage.textContent = 'Bitte eine Server-IP eingeben.';
+        return;
+    }
+
+    // Prüfen, ob die IP gültig ist
+    if (!isIPv4(ip) && !isIPv6(ip)) {
+        dialogMessage.style.color = 'red';
+        dialogMessage.textContent = 'Ungültige IP-Adresse. Bitte IPv4 oder IPv6 eingeben.';
+        return;
+    }
+
+    try {
+        const response = await fetch('/servers/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ip })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            dialogMessage.style.color = 'green';
+            dialogMessage.textContent = 'Server erfolgreich hinzugefügt!';
+            refreshData(); // Liste aktualisieren
+            setTimeout(() => dialog.style.display = 'none', 1000);
+        } else {
+            dialogMessage.style.color = 'red';
+            dialogMessage.textContent = result.error || 'Fehler beim Hinzufügen des Servers.';
+        }
+    } catch (err) {
+        console.error(err);
+        dialogMessage.style.color = 'red';
+        dialogMessage.textContent = 'Netzwerkfehler oder Server nicht erreichbar.';
+    }
+});
 </script>
 <script src="/js/sidebar.js"></script>
 </body>
