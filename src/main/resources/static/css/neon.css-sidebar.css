@@ -150,3 +150,23 @@ body.sidebar-expanded {
 .sidebar.expanded a {
     padding-left: 16px;
 }
+
+.sidebar a {
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+
+.sidebar .link-text {
+    margin-left: 8px;
+}
+
+.sidebar-toggle {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 0.8rem;
+}
+.sidebar-toggle img {
+    height: 18px;
+}
