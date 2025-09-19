@@ -7,6 +7,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 
+import lu212.sysStats.General.AlertUtil;
+import lu212.sysStats.General.AlertUtil.Level;
 import lu212.sysStats.General.KeystoreManager;
 import lu212.sysStats.General.Logger;
 import lu212.sysStats.General.Plugins;
@@ -15,7 +17,6 @@ import lu212.sysStats.SysStats_Web.SysStatsWebApplication;
 
 import org.json.JSONObject;
 
-import com.google.gson.Gson;
 
 import org.json.JSONException;
 
@@ -25,34 +26,27 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 
-import java.io.FileInputStream;
 import java.security.KeyStore;
 
 public class Server {
 
 	private static int PORT = 12345;
-
 	private final static Map<String, ClientHandler> clients = new ConcurrentHashMap<>();
 
-	private static boolean debugMode = false;
-
 	private static final Map<String, ServerTempInfo> tempServerData = new ConcurrentHashMap<>();
-	
 	public static final Map<String, GeoInfo> geoLocations = new ConcurrentHashMap<>();
 	
-	private static Map<Integer, Double> cpuCoreLoads = new HashMap<>();
-	
 	private static String SERVER_PASSWORD;
-	
-	private static final int MAX_MESSAGE_LENGTH = 4096;
-	
 	private static final int MAX_CLIENTS = 50;
+	private static final int CLIENT_TIMEOUT_MS = 20_000;
 	
 	private static final String SERVER_FILE = "servers.txt";
 	private static final Set<String> allowedIPs = ConcurrentHashMap.newKeySet();
 	
-	private volatile long lastMessageTime;
-	private static final int CLIENT_TIMEOUT_MS = 20_000;
+	private static final Set<String> blockedIPs = ConcurrentHashMap.newKeySet();
+	
+    private final Map<String, Integer> attempts = new HashMap<>();
+    private final int THRESHOLD = 10;
 
 	public static void startServer(String[] args) throws IOException {
 		new Server().start();
@@ -97,6 +91,8 @@ public class Server {
 	                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 	                out.println("SERVER: IP NICHT ERLAUBT");
 	                clientSocket.close();
+	                blockedIPs.add(clientIP);
+	                AlertUtil.addAlert("Server mit unerlaubter IP verbunden: " + clientIP, Level.RED);
 	                continue;
 	            }
 
@@ -108,13 +104,11 @@ public class Server {
                         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
                         out.println("SERVER: Maximal erlaubte Client-Anzahl erreicht, bitte später erneut verbinden.");
                         clientSocket.close();
+                        AlertUtil.addAlert("Maximale Client Anzahl erreicht!", Level.RED);
                         continue; // Verbindung nicht akzeptieren, Schleife weiter
                     }
                 }
-	            clientSocket.startHandshake();
-	            new Thread(() -> handleNewClient(clientSocket)).start();
 	        }
-
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	    }
@@ -131,6 +125,7 @@ public class Server {
 			if (name == null || name.isBlank() || clients.containsKey(name)) {
 				out.println("NAME_UNGUELTIG");
 				socket.close();
+				AlertUtil.addAlert("Server mit ungültigem oder doppeltem Namen verbunden: " + name, Level.RED);
 				return;
 			}
 			out.println("NAME_ANGEKOMMEN");
@@ -141,6 +136,7 @@ public class Server {
 			if (!SERVER_PASSWORD.equals(password)) {
 			    out.println("PASSWORT_FALSCH");
 			    socket.close();
+			    AlertUtil.addAlert("Server mit falschem Passwort verbunden: " + name, Level.RED);
 			    return;
 			}
 
@@ -193,54 +189,6 @@ public class Server {
 	    }
 
 		public void listen() {
-			if (debugMode) {
-				try {
-					String line;
-					while ((line = readLineWithLimit(in, MAX_MESSAGE_LENGTH)) != null) {
-						
-						lastMessageTime = System.currentTimeMillis(); // update bei jeder Nachricht
-		                offlineSent = false;
-						
-			            if (!line.matches("[\\p{Print}\\s]*")) {
-			                send("FEHLER: Ungültige Zeichen in Nachricht");
-			                socket.close();
-			                return;
-			            }
-						
-						Logger.info("Raw-Nachricht von " + name + ": " + line);
-						System.out.println("Raw-Nachricht von " + name + ": " + line);
-						
-						lastMessageTime = System.currentTimeMillis();
-
-						if (line.startsWith("SERVER:")) {
-							String payload = line.substring("SERVER:".length()).trim();
-							String[] parts = payload.split("\\s+", 2);
-
-							if (parts.length == 2) {
-								String key = parts[0].toUpperCase();
-								String value = parts[1];
-								// Ausgabe im Format NAME:TYP:WERT
-
-								String wert = name + ":" + key + ":" + value;
-
-								buildLongs(wert);
-
-							} else {
-								Logger.warning("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
-								send("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
-							}
-						} else {
-							Logger.info("SERVER: Nachricht empfangen: " + line);
-							send("SERVER: Nachricht empfangen: " + line);
-						}
-					}
-				} catch (IOException e) {
-					Logger.warning("Verbindung zu " + name + " verloren.");
-					System.out.println("Verbindung zu " + name + " verloren.");
-				} finally {
-					disconnect();
-				}
-			} else if (debugMode == false) {
 				try {
 					String line;
 					while ((line = in.readLine()) != null) {
@@ -255,6 +203,8 @@ public class Server {
 								handleHardwareInfo(name, key, value);
 							} else {
 								Logger.warning("Ungültige HW-Nachricht: " + line);
+								AlertUtil.addAlert("Fehlerhaftes HW-Format von Server " + name + ", ist der Server auf der neuesten Version?", Level.YELLOW);
+								recordFailedAttempt(name);
 							}
 						} else if (line.startsWith("SERVER:")) {
 							String payload = line.substring("SERVER:".length()).trim();
@@ -268,6 +218,8 @@ public class Server {
 							} else {
 								Logger.warning("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
 								send("SERVER: Fehlerhaftes Format, Beispiel: SERVER:CPU 75");
+								AlertUtil.addAlert("Fehlerhaftes Format von Server " + name + ", ist der Server auf der neuesten Version?", Level.YELLOW);
+								recordFailedAttempt(name);
 							}
 						} else if (line.startsWith("GEO:")) {
 							String geoJson = line.substring("GEO:".length()).trim();
@@ -284,6 +236,8 @@ public class Server {
 						} else {
 							Logger.info("Unbekannte Nachricht von " + name + ": " + line);
 							send("Unbekannte Nachricht empfangen: " + line);
+							AlertUtil.addAlert("Unbekannte Nachricht von Server " + name + ", ist der Server auf der neuesten Version?", Level.YELLOW);
+							recordFailedAttempt(name);
 						}
 					}
 				} catch (IOException e) {
@@ -293,7 +247,6 @@ public class Server {
 					disconnect();
 				}
 			}
-		}
 
 		public void send(String message) {
 			out.println(message);
@@ -388,7 +341,6 @@ public class Server {
 		    temp.ramUsed = Auslastung;
 		}
 		if (bauteil.equalsIgnoreCase("RAM_AVAILABLE_MB")) {
-		    temp.ramAvailable = Auslastung;
 		}
 		if (bauteil.equalsIgnoreCase("RAM_TOTAL_MB")) {
 		    temp.ramTotal = Auslastung;
@@ -443,8 +395,8 @@ public class Server {
 				&& temp.swapUsed != null && temp.cpuCoreLoads != null && temp.cpuCoreFreqs != null) {
 			
 			try {
-		        double ramUsed = Double.parseDouble(temp.ramUsed);
-		        double ramTotal = Double.parseDouble(temp.ramTotal);
+				double ramUsed = parseDoubleSafe(temp.ramUsed);
+				double ramTotal = parseDoubleSafe(temp.ramTotal);
 
 				String[] teileDisk = temp.disk.split("/");
 				double diskUsed = Double.parseDouble(teileDisk[0]);
@@ -480,7 +432,6 @@ public class Server {
 	private static class ServerTempInfo {
 		Integer cpu = null;
 		String ramUsed;
-		String ramAvailable;
 		String ramTotal;
 		String swapUsed;
 		String swapTotal;
@@ -544,30 +495,6 @@ public class Server {
 		sendToClient(serverName, "CMD:" + command);
 	}
 
-	private static void handleProcessLine(String werte) {
-		// Beispiel: "PROC 1234 java 12.3 1.25"
-		String[] parts = werte.split(" ");
-		if (parts.length != 5) {
-			Logger.warning("Ungültige PROC-Zeile: " + werte);
-			System.out.println("Ungültige PROC-Zeile: " + werte);
-			return;
-		}
-
-		try {
-			String pid = parts[1];
-			String name = parts[2];
-			double cpu = Double.parseDouble(parts[3].replace(",", "."));
-			double ram = Double.parseDouble(parts[4].replace(",", ".")); // in GB
-
-			// Ausgabe (optional später ins Web senden)
-			System.out.printf("PROC PID: %s, NAME: %s, CPU: %.2f%%, RAM: %.2f GB%n", pid, name, cpu, ram);
-
-		} catch (Exception e) {
-			Logger.warning("Fehler beim Parsen von PROC-Zeile: " + werte);
-			System.err.println("Fehler beim Parsen von PROC-Zeile: " + werte);
-		}
-	}
-
 	private void handleGeoInfo(String serverName, String geoJson) {
 	    try {
 	        JSONObject geo = new JSONObject(geoJson);
@@ -594,21 +521,6 @@ public class Server {
 	    return geoLocations;
 	}
 	
-	private String readLineWithLimit(BufferedReader in, int maxLength) throws IOException {
-	    StringBuilder sb = new StringBuilder();
-	    int ch;
-	    while ((ch = in.read()) != -1) {
-	        if (ch == '\n') break;          // Zeilenende
-	        if (ch == '\r') continue;       // Wagenrücklauf ignorieren
-	        sb.append((char) ch);
-	        if (sb.length() > maxLength) {
-	            throw new IOException("Nachricht zu lang");
-	        }
-	    }
-	    if (sb.length() == 0 && ch == -1) return null; // Stream Ende
-	    return sb.toString();
-	}
-	
 	private static void loadServerIPs() {
 	    File file = new File(SERVER_FILE);
 	    try {
@@ -619,7 +531,7 @@ public class Server {
 	        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
 	            String line;
 	            while ((line = reader.readLine()) != null) {
-	                line = line.trim();
+	                line = line.trim();  // <- hier trimmen!
 	                if (!line.isEmpty() && isValidIP(line)) {
 	                    allowedIPs.add(line);
 	                }
@@ -804,4 +716,73 @@ public class Server {
 	        }
 	    }
 	}
+	
+    public void recordFailedAttempt(String serverName) {
+        int newCount = attempts.getOrDefault(serverName, 0) + 1;
+        attempts.put(serverName, newCount);
+
+        if (newCount >= THRESHOLD) {
+            onThresholdReached(serverName, newCount);
+        }
+    }
+
+    public void resetAttempts(String serverName) {
+        attempts.remove(serverName);
+    }
+
+    private void onThresholdReached(String serverName, int count) {
+        System.out.println("Threshold erreicht für " + serverName + " (" + count + " fehlgeschlagene Versuche)");
+        try {
+			AlertUtil.addAlert("Der Server " + serverName + " hat sehr viele fehlerhafte Nachrichten gesendet. "
+					+ "Bitte prüfe ob er Auf der neuesten Version ist, oder ob es garnicht ihr Server ist, sondern ein Fake-Client. "
+					+ "Entfernen sie gegebenenfalls den Server von der IP Liste in den einstellungen: "
+					+ getIPForServerName(serverName), Level.RED);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        resetAttempts(serverName);
+    }
+    
+    public static String getIPForServerName(String serverName) {
+        File file = new File("server_names.txt");
+        if (!file.exists()) {
+            return null;
+        }
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(";", 2); // Format: IP;Name
+                if (parts.length == 2) {
+                    String ip = parts[0].trim();
+                    String name = parts[1].trim();
+                    if (name.equalsIgnoreCase(serverName)) {
+                        return ip;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+    
+    public static Set<String> getBlockedIPs() {
+        return new HashSet<>(blockedIPs);
+    }
+
+    public static void acceptBlockedIP(String ip) {
+        addAllowedIP(ip);       // IP in servers.txt übernehmen
+        blockedIPs.remove(ip);  // aus der Liste der blockierten entfernen
+    }
+    
+    public static void rejectBlockedIP(String ip) {
+        blockedIPs.remove(ip);  // einfach nur aus Liste entfernen
+    }
+    
+    private static double parseDoubleSafe(String s) {
+        if (s == null || s.isBlank()) return 0;
+        return Double.parseDouble(s.replace(",", "."));
+    }
 }

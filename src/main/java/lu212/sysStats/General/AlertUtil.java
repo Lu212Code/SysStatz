@@ -4,23 +4,48 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 
+import lu212.sysStats.SysStats_Web.AlertService;
+import lu212.sysStats.SysStats_Web.SysStatsWebApplication;
+
 public class AlertUtil {
 
     private static final Path ALERTS_FILE = Paths.get("alerts.txt");
+    private static final Set<String> existingAlerts = new HashSet<>();
+
+    static {
+        // Lade bestehende Alerts beim Start in das Set
+        if (Files.exists(ALERTS_FILE)) {
+            try {
+                existingAlerts.addAll(Files.readAllLines(ALERTS_FILE));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public enum Level { RED, YELLOW }
 
     /**
-     * Fügt einen neuen Alert zur Datei alerts.txt hinzu.
-     * @param text Der Text des Alerts (Zeilenumbrüche und Semikolons werden bereinigt)
-     * @param level Die Wichtigkeit (RED oder YELLOW)
-     * @throws IOException bei Schreibfehlern
+     * Fügt einen neuen Alert hinzu, falls er noch nicht existiert.
      */
     public static void addAlert(String text, Level level) throws IOException {
-        // Bereinige Text (keine Zeilenumbrüche, keine Semikolons, die wir als Trenner nutzen)
         String safeText = text.replace("\n", " ").replace(";", ",");
-        String line = level.name() + ";" + safeText;
-        // Schreibe als neue Zeile an die Datei an (erstellt sie bei Bedarf)
-        Files.write(ALERTS_FILE, Collections.singleton(line), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        String newLine = level.name() + ";" + safeText;
+
+        // Prüfe im Speicher-Set
+        if (existingAlerts.contains(newLine)) {
+            return; // Schon vorhanden → ignorieren
+        }
+
+        // Neuen Alert schreiben
+        Files.write(ALERTS_FILE, Collections.singleton(newLine), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+
+        // Alert auch ins Set einfügen
+        existingAlerts.add(newLine);
+
+        // Optional E-Mail versenden
+        if (SysStatsWebApplication.alertMails) {
+            AlertService.triggerEmailPHP(level, text);
+        }
     }
 }

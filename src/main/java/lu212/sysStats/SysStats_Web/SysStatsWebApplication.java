@@ -1,9 +1,8 @@
-package lu212.sysStats.SysStats_Web;
+ package lu212.sysStats.SysStats_Web;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -31,6 +30,8 @@ public class SysStatsWebApplication {
 	public static String twoFactorRequired;
 	public static String clientPassword;
 	public static String apiKey;
+    public static boolean alertMails = false;
+    public static Map<String, String> mails = new HashMap<>();
 	
 	private static ConfigurableApplicationContext context;
 	
@@ -52,6 +53,10 @@ public class SysStatsWebApplication {
 		System.out.println("Webserver-Port: " + webserverport);
 		System.out.println("Statsserver-Port: " + statsserverport);
 		System.out.println("Website-Theme: " + theme);
+		System.out.println("Ollama-IP: " + ollamaIP);
+		System.out.println("TwoFactor: " + twoFactorRequired);
+		System.out.println("Alert-Mails: " + alertMails);
+		System.out.println("Registrierte Adressen: " + mails);
 		System.out.println("----------Config----------");
 		Logger.info("Starte SysStats Webserver...");
 		System.out.println("Starte SysStats Webserver...");
@@ -94,17 +99,19 @@ public class SysStatsWebApplication {
 	}
 	
 	
-	private static void config() {
-		ConfigManager config = new ConfigManager();
-		
-		webserverport = config.getWebServerPort();
-		statsserverport = config.getStatsServerPort();
-		theme = config.getTheme();
-		ollamaIP = config.getOllamaServerIP();
-		twoFactorRequired = config.getTwoFactor();
-		clientPassword = config.getClientPassword();
-		apiKey = config.getApiKey();
-	}
+    private static void config() {
+        ConfigManager config = new ConfigManager();
+
+        webserverport = config.getWebServerPort();
+        statsserverport = config.getStatsServerPort();
+        theme = config.getTheme();
+        ollamaIP = config.getOllamaServerIP();
+        twoFactorRequired = config.getTwoFactor();
+        clientPassword = config.getClientPassword();
+        apiKey = config.getApiKey();
+        alertMails = Boolean.parseBoolean(config.getEnableAlertMail());
+        mails = config.getMails();
+    }
 
 	@Bean
 	public WebServerFactoryCustomizer<ConfigurableWebServerFactory> webServerFactoryCustomizer() {

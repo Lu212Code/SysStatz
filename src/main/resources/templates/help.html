@@ -240,27 +240,14 @@
 	    <h2>Server mit dem Dashboard verbinden</h2>
 	    <ol>
 	        <li>Installieren Sie den <strong>SysStatz Client</strong> auf dem Zielserver.</li>
-	        <li>Geben Sie während der Installation die IP des <strong>Statsservers</strong> ein. Dies ist die öffentliche IP des Servers, auf dem der Statsserver läuft.</li>
+	        <li>Geben Sie während der Installation die IP des <strong>Statsservers</strong> ein. Dies ist die öffentliche IP des Servers, auf dem der Statsserver läuft. Der Statsserver ist in dem Server, auf dem die SysStatz Weboberfläche läuft integriert.</li>
 	        <li>Geben Sie den Port des Statsservers an. Diesen finden Sie in den Einstellungen des Dashboards oder können ihn bei Bedarf ändern.</li>
-	        <li>Ermitteln Sie die IP-Adresse des Zielservers (Client), die vom Statsserver gesehen wird:
-	            <ul>
-	                <li><strong>Windows (lokales Netzwerk):</strong> Öffnen Sie die Konsole (CMD) und geben Sie <code>ipconfig</code> ein. Merken Sie sich die IPv4-Adresse.</li>
-	                <li><strong>Linux (lokales Netzwerk):</strong> Öffnen Sie das Terminal und geben Sie <code>ifconfig</code> oder <code>ip a</code> ein (unter Umständen muss das Tool installiert werden). Merken Sie sich die IPv4-Adresse.</li>
-	                <li><strong>Windows/Linux (Internet / öffentliche IP):</strong> Öffnen Sie einen Browser oder das Terminal und prüfen Sie die öffentliche IP:
-	                    <ul>
-	                        <li>Web: <a href="https://whatismyipaddress.com" target="_blank">whatismyipaddress.com</a></li>
-	                        <li>Linux Terminal: <code>curl ifconfig.me</code> oder <code>curl icanhazip.com</code></li>
-	                        <li>Windows Terminal (nur PowerShell): <code>(Invoke-WebRequest ifconfig.me/ip).Content.Trim()</code></li>
-	                    </ul>
-	                </li>
-	            </ul>
-	        </li>
-	        <li>Tragen Sie die ermittelte IP im Dashboard unter „Server hinzufügen“ ein.</li>
+	        <li>Starten sie das Client, und akzeptieren sie es, indem sie auf dem Dashboard unter Server hinzufügen in der Liste bei der IP ihres Clients auf akzeptieren klicken.</li>
 	    </ol>
 
 	    <p><strong>Tipps, falls der Server nicht erscheint:</strong></p>
 	    <ul>
-	        <li>Prüfen Sie die Logs des Statsservers:
+	        <li>Prüfen Sie die Logs des Clients und des Statsservers:
 	            <div style="margin-bottom: 1.5rem;">
 	                <a th:href="@{/logs}">
 	                    <button style="
@@ -274,12 +261,13 @@
 	                        transition: background-color 0.3s ease;
 	                    " onmouseover="this.style.backgroundColor='#357bd8';" 
 	                       onmouseout="this.style.backgroundColor='#4a90e2';">
-	                       Server Logs
+	                       StatsServer Logs
 	                    </button>
 	                </a>
 	            </div>
 	        </li>
-	        <li>Prüfen Sie die Logs des Clients.</li>
+			<li>Starten sie den Server und das Client neu</li>
+			<li>Prüfen sie die Konfigurationen von Server und Client</li>
 	        <li>Wenn das Problem weiterhin besteht, kontaktieren Sie bitte den Support oder den Administrator.</li>
 	    </ul>
 

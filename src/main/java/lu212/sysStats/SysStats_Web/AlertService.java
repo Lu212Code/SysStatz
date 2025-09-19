@@ -1,7 +1,13 @@
 package lu212.sysStats.SysStats_Web;
 
 import org.springframework.stereotype.Service;
+
+import lu212.sysStats.General.AlertUtil;
+
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,8 +28,15 @@ public class AlertService {
 
     public synchronized void addAlert(String text, Alert.Level level) throws IOException {
         String line = level.name() + ";" + text.replace("\n", " ").replace(";", ",");
-        Files.write(alertsFile, Collections.singleton(line), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        List<Alert> existingAlerts = getAllAlerts();
+        boolean exists = existingAlerts.stream()
+            .anyMatch(alert -> alert.level == level && alert.text.equals(text));
+        if (!exists) {
+            Files.write(alertsFile, Collections.singleton(line),
+                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        }
     }
+
 
     public synchronized void deleteAlert(Alert alertToDelete) throws IOException {
         if (!Files.exists(alertsFile)) return;
@@ -71,6 +84,34 @@ public class AlertService {
         @Override
         public int hashCode() {
             return Objects.hash(level, text);
+        }
+    }
+    
+    public static void triggerEmailPHP(AlertUtil.Level level, String text) {
+    	System.out.println("Sende E-Mail.");
+        try {
+            // Alle Empfänger aus der Map sammeln (nur die Keys oder Values je nachdem)
+            String recipients = String.join(",", SysStatsWebApplication.mails.values());
+
+            String urlStr = "http://lukas3dprinting.czeh.de/sendAlert.php"
+                            + "?level=" + URLEncoder.encode(level.name(), "UTF-8")
+                            + "&text=" + URLEncoder.encode(text, "UTF-8")
+                            + "&recipients=" + URLEncoder.encode(recipients, "UTF-8");
+
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode != 200) {
+                System.err.println("Fehler beim Aufruf von sendAlert.php: " + responseCode);
+            }
+
+            conn.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

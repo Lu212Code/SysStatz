@@ -125,11 +125,36 @@
             text-align: center;
             user-select: none;
         }
+		
+		button {
+			padding: 10px 20px;
+			background-color: #4a90e2;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			font-size: 1rem;
+			cursor: pointer;
+			transition: background-color 0.3s ease, transform 0.2s ease;
+			box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+			margin: 0.5rem 0;
+		}
+				
+		button:hover {
+			background-color: #357bd8;
+			transform: translateY(-1px);
+		}
     </style>
 	<link rel="stylesheet" th:href="@{'/css/' + ${theme} + '-sidebar.css'}">
 </head>
 <body>
     <h1>Meldungen - Übersicht</h1>
+	
+	<div style="margin-bottom: 15px;">
+	    <button onclick="filterAlerts('ALL')">Alle</button>
+	    <button onclick="filterAlerts('YELLOW')">Mittel</button>
+	    <button onclick="filterAlerts('RED')">Schwer</button>
+	    <button onclick="deleteAllAlerts()">Alle löschen</button>
+	</div>
 	
 	<div th:replace="fragments/sidebar :: sidebar"></div>
 	
@@ -177,35 +202,76 @@
         }
     });
 
-    async function deleteAlert(button) {
-        const text = button.getAttribute('data-text');
-        const level = button.getAttribute('data-level');
+	async function deleteAlert(button) {
+	    const text = button.getAttribute('data-text');
+	    const level = button.getAttribute('data-level');
 
-        if(!confirm(`Alert löschen?\n"${text}"`)) return;
+	    try {
+	        const response = await fetch('/alerts/delete', {
+	            method: 'POST',
+	            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+	            body: new URLSearchParams({ text, level })
+	        });
+	        const result = await response.text();
+	        if(result === 'OK') {
+	            // Entferne Alert aus DOM
+	            button.parentElement.remove();
 
-        try {
-            const response = await fetch('/alerts/delete', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: new URLSearchParams({ text, level })
-            });
-            const result = await response.text();
-            if(result === 'OK') {
-                // Entferne Alert aus DOM
-                button.parentElement.remove();
+	            // Falls keine Alerts mehr, zeige Hinweis
+	            if(alertsList.children.length === 0) {
+	                noAlerts.style.display = 'block';
+	                noAlerts.textContent = 'Keine Alerts vorhanden.';
+	            }
+	        } else {
+	            alert('Fehler beim Löschen: ' + result);
+	        }
+	    } catch (e) {
+	        alert('Netzwerkfehler beim Löschen.');
+	    }
+	}
+	
+	function filterAlerts(level) {
+	    const alertItems = alertsList ? alertsList.querySelectorAll('.alert-item') : [];
+	    let visibleCount = 0;
 
-                // Falls keine Alerts mehr, zeige Hinweis
-                if(alertsList.children.length === 0) {
-                    noAlerts.style.display = 'block';
-                    noAlerts.textContent = 'Keine Alerts vorhanden.';
-                }
-            } else {
-                alert('Fehler beim Löschen: ' + result);
-            }
-        } catch (e) {
-            alert('Netzwerkfehler beim Löschen.');
-        }
-    }
+	    alertItems.forEach(item => {
+	        const itemLevel = item.classList.contains('red') ? 'RED' : 'YELLOW';
+	        if(level === 'ALL' || itemLevel === level) {
+	            item.style.display = 'flex';
+	            visibleCount++;
+	        } else {
+	            item.style.display = 'none';
+	        }
+	    });
+
+	    if (visibleCount === 0) {
+	        noAlerts.style.display = 'block';
+	        noAlerts.textContent = 'Keine Alerts gefunden.';
+	    } else {
+	        noAlerts.style.display = 'none';
+	    }
+	}
+
+	async function deleteAllAlerts() {
+	    const alertItems = alertsList.querySelectorAll('.alert-item');
+	    for (const item of alertItems) {
+	        const text = item.querySelector('.alert-text').textContent;
+	        const level = item.classList.contains('red') ? 'RED' : 'YELLOW';
+	        try {
+	            await fetch('/alerts/delete', {
+	                method: 'POST',
+	                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+	                body: new URLSearchParams({ text, level })
+	            });
+	            item.remove();
+	        } catch (e) {
+	            console.error('Fehler beim Löschen von Alert:', text);
+	        }
+	    }
+
+	    noAlerts.style.display = 'block';
+	    noAlerts.textContent = 'Keine Alerts vorhanden.';
+	}
 </script>
 <script src="/js/sidebar.js"></script>
 </body>

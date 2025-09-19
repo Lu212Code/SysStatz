@@ -16,6 +16,8 @@ public class ConfigManager {
     private String twoFactorRequired;
     private String clientPassword;
     private String apiKey;
+    private Map<String, String> mails = new HashMap<>();
+    private String enableAlertMail;
 
     public ConfigManager() {
         try {
@@ -36,7 +38,8 @@ public class ConfigManager {
             "ollamaserverip=default",
             "twoFactorRequired=false",
             "clientPassword=changeit",
-            "apiKey=pv983qa4EHNZt"
+            "apiKey=pv983qa4EHNZt",
+            "enableAlertMail=false"
         );
         Files.write(CONFIG_PATH, defaultLines);
     }
@@ -46,14 +49,24 @@ public class ConfigManager {
         for (String line : lines) {
             String[] parts = line.split("=", 2);
             if (parts.length == 2) {
-                switch (parts[0]) {
-                    case "webPort" -> webServerPort = parts[1];
-                    case "statsPort" -> statsServerPort = parts[1];
-                    case "theme" -> theme = parts[1];
-                    case "ollamaserverip" -> ollamaserverip = parts[1];
-                    case "twoFactorRequired" -> twoFactorRequired = parts[1];
-                    case "clientPassword" -> clientPassword = parts[1];
-                    case "apiKey" -> apiKey = parts[1];
+                String key = parts[0];
+                String value = parts[1];
+                switch (key) {
+                    case "webPort" -> webServerPort = value;
+                    case "statsPort" -> statsServerPort = value;
+                    case "theme" -> theme = value;
+                    case "ollamaserverip" -> ollamaserverip = value;
+                    case "twoFactorRequired" -> twoFactorRequired = value;
+                    case "clientPassword" -> clientPassword = value;
+                    case "apiKey" -> apiKey = value;
+                    default -> {
+                        if (key.startsWith("mail.")) {
+                            String username = key.substring(5);
+                            mails.put(username, value);
+                        } else if (key.equals("enableAlertMail")) {
+                            enableAlertMail = value;
+                        }
+                    }
                 }
             }
         }
@@ -89,4 +102,11 @@ public class ConfigManager {
     	return apiKey;
     }
     
+    public Map<String, String> getMails() {
+        return mails;
+    }
+    
+    public String getEnableAlertMail() {
+        return enableAlertMail;
+    }
 }

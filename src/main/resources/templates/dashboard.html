@@ -192,6 +192,10 @@
         <button id="dialog-add-btn">Hinzufügen</button>
         <button id="dialog-cancel-btn">Abbrechen</button>
         <span id="dialog-close">&times;</span>
+		<h4>Abgelehnte Verbindungen</h4>
+		<ul id="dialog-blocked-list" style="list-style: none; padding: 0; margin-top: 10px; max-height: 150px; overflow-y: auto;">
+		    <!-- Wird per JS geladen -->
+		</ul>
     </div>
 </div>
 
@@ -357,22 +361,6 @@ async function refreshData() {
 			                   onclick="sendServerCommand('${server.name}', 'reboot')">
 			                    <img src="/img/reboot.png" alt="Reboot Icon" style="height: 24px;">
 			                </button>
-							<div style="position: relative; display: inline-block;">
-							    <button class="menu-btn" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer;">⋮</button>
-							    <div class="menu-content" style="
-							        display: none;
-							        position: absolute;
-							        right: 0;
-							        background-color: #f9f9f9;
-							        min-width: 120px;
-							        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-							        z-index: 1;
-							        border-radius: 6px;
-							        overflow: hidden;
-							    ">
-							        <a href="#" class="delete-server" style="display: block; padding: 10px; text-decoration: none; color: black;">Löschen</a>
-							    </div>
-							</div>
 			            </div>
 			            ` : ''}
 			        </div>
@@ -476,6 +464,7 @@ addServerBtn.addEventListener('click', () => {
     dialogInput.value = '';
     dialogMessage.textContent = '';
     dialogInput.focus();
+	loadDialogBlockedIPs();
 });
 
 // Dialog schließen
@@ -534,6 +523,62 @@ dialogAddBtn.addEventListener('click', async () => {
         dialogMessage.textContent = 'Netzwerkfehler oder Server nicht erreichbar.';
     }
 });
+
+async function loadDialogBlockedIPs() {
+    try {
+        const response = await fetch('/blocked');
+        const blocked = await response.json();
+
+        const list = document.getElementById('dialog-blocked-list');
+        list.innerHTML = '';
+
+        if (blocked.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'Keine blockierten IPs vorhanden.';
+            li.style.color = 'gray';
+            list.appendChild(li);
+            return;
+        }
+
+        blocked.forEach(ip => {
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.justifyContent = 'space-between';
+            li.style.alignItems = 'center';
+            li.style.marginBottom = '5px';
+
+            li.innerHTML = `
+                <span>${ip}</span>
+                <div>
+                    <button style="background:#4CAF50; padding:5px 10px; font-size:0.8rem;" onclick="acceptBlockedFromDialog('${ip}')">Übernehmen</button>
+                    <button style="background:#c84c4c; padding:5px 10px; font-size:0.8rem;" onclick="rejectBlockedFromDialog('${ip}')">Löschen</button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    } catch (err) {
+        console.error("❌ Fehler beim Laden der Blockliste im Dialog", err);
+    }
+}
+
+async function acceptBlockedFromDialog(ip) {
+    await fetch('/blocked/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip })
+    });
+    loadDialogBlockedIPs();
+    refreshData(); // damit neue Server sofort sichtbar werden
+}
+
+async function rejectBlockedFromDialog(ip) {
+    await fetch('/blocked/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip })
+    });
+    loadDialogBlockedIPs();
+}
 </script>
 <script src="/js/sidebar.js"></script>
 </body>

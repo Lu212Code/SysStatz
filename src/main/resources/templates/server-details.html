@@ -62,7 +62,12 @@
 	    </div>
 	</div>
 	
+	
 	<h2>CPU Kernauslastung</h2>
+	<button id="toggleCoreView" style="margin-bottom:1rem; padding:0.5rem 1rem; cursor:pointer;">
+	    Ansicht wechseln
+	</button>
+	<div id="cpuCoreGrid" style="display:none; gap:0.5rem; margin-bottom:1rem;"></div>
 	<div class="table-responsive">
 	<table class="hardware-table">
 	  <thead>
@@ -171,19 +176,6 @@
 		</form>
 
 		<div id="queryResult" style="margin-top: 1.5rem; font-size: 1.2rem; color: #4a90e2; min-height: 2rem;"></div>
-		</div>
-		
-
-		<div style="flex: 1; min-width: 300px; max-width: 600px;">
-		<h2>Warnschwellen festlegen</h2>
-		<form id="thresholdForm">
-		    <input type="number" name="cpu" placeholder="CPU max (%)" min="1" max="100" required>
-		    <input type="number" name="ram" placeholder="RAM max (%)" min="1" max="100" required>
-		    <input type="number" name="disk" placeholder="Disk max (%)" min="1" max="100" required>
-		    <input type="email" name="email" placeholder="E-Mail für Alarm" required>
-		    <button type="submit">Trigger speichern</button>
-		</form>
-		<p id="saveStatus" style="color: lightgreen;"></p>
 		</div>
 		
 			<div class="chart-wrapper">
@@ -669,36 +661,6 @@
 		swapChart.update();
     }
 	
-	document.getElementById("thresholdForm").addEventListener("submit", async function(event) {
-	    event.preventDefault();
-
-	    const form = event.target;
-		const data = {
-		    cpu: parseFloat(form.cpu.value),
-		    ram: parseFloat(form.ram.value),
-		    disk: parseFloat(form.disk.value),
-		    email: form.email.value
-		};
-
-	    try {
-			const res = await fetch(`/api/trigger/${encodeURIComponent(serverName)}`, {
-	            method: "POST",
-	            headers: { "Content-Type": "application/json" },
-	            body: JSON.stringify(data)
-	        });
-
-	        if (res.ok) {
-	            document.getElementById("saveStatus").textContent = "Trigger erfolgreich gespeichert.";
-	        } else {
-	            document.getElementById("saveStatus").textContent = "Fehler beim Speichern.";
-	        }
-	    } catch (err) {
-	        console.error("Trigger speichern fehlgeschlagen:", err);
-	        document.getElementById("saveStatus").textContent = "Netzwerkfehler.";
-	    }
-	});
-	
-	
 	
 	const advancedForm = document.getElementById("advancedQueryForm");
 	const thresholdInput = document.getElementById("threshold");
@@ -770,6 +732,60 @@
 	    updateData();
 		setInterval(updateData, 4000);
 	});
+	
+	
+	
+	let gridView = false; // Start mit Tabellenansicht
+
+	document.getElementById("toggleCoreView").addEventListener("click", () => {
+	    gridView = !gridView;
+	    document.querySelector(".hardware-table").style.display = gridView ? "none" : "table";
+	    document.getElementById("cpuCoreGrid").style.display = gridView ? "grid" : "none";
+	    if (gridView) renderCpuGrid();
+	});
+	
+	function renderCpuGrid() {
+	    const gridContainer = document.getElementById("cpuCoreGrid");
+	    gridContainer.style.display = "grid";
+	    gridContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(60px, 1fr))";
+	    gridContainer.style.gap = "0.5rem";
+	    
+	    fetch(`/api/server/${serverName}`)
+	        .then(res => res.json())
+	        .then(server => {
+	            const cores = server.cpuCore || {};
+	            gridContainer.innerHTML = ""; // alte Quadrate löschen
+
+	            Object.entries(cores).forEach(([core, load]) => {
+	                const square = document.createElement("div");
+	                square.style.height = "60px";
+	                square.style.display = "flex";
+	                square.style.alignItems = "center";
+	                square.style.justifyContent = "center";
+	                square.style.color = "#fff";
+	                square.style.borderRadius = "6px";
+	                square.style.fontWeight = "bold";
+	                square.style.cursor = "pointer";
+	                square.style.transition = "0.3s";
+
+	                // Farbe basierend auf Load
+	                if (load < 50) square.style.backgroundColor = "#4CAF50"; // Grün
+	                else if (load < 80) square.style.backgroundColor = "#FF9800"; // Orange
+	                else square.style.backgroundColor = "#F44336"; // Rot
+
+	                square.textContent = `${load.toFixed(0)}%`;
+	                square.title = `Kern ${core} Auslastung: ${load.toFixed(2)}%`;
+
+	                // Klick öffnet das bestehende Core-Pop-up
+	                square.addEventListener("click", () => {
+	                    openCoreModal(`Kern ${core}`);
+	                });
+
+	                gridContainer.appendChild(square);
+	            });
+	        })
+	        .catch(err => console.error("Fehler beim Laden der CPU-Core-Daten für Grid:", err));
+	}
 	
 	function updateCpuCores() {
 	    fetch(`/api/server/${serverName}`)
@@ -843,6 +859,7 @@
 	        .catch(error => {
 	            console.error("Fehler beim Abrufen der CPU-Kerne:", error);
 	        });
+			if (gridView) renderCpuGrid();
 	}
 
 	// alle 5 Sekunden aktualisieren

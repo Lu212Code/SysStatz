@@ -35,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
 @RestController
 public class ApiController {
@@ -61,12 +62,6 @@ public class ApiController {
         return result;
     }
 
-
-    @PostMapping("/api/trigger/{serverName}")
-    public void setTrigger(@PathVariable String serverName, @RequestBody ThresholdConfig config) {
-        triggerService.saveTrigger(serverName, config);
-    }
-
     @GetMapping("/api/server/{name}")
     public ServerInfo getServerByName(@PathVariable String name, Model model) {
         ServerInfo server = ServerStats.getAllServers().stream()
@@ -74,9 +69,6 @@ public class ApiController {
                 .findFirst()
                 .orElse(null);
 
-        if (server != null) {
-            checkTrigger(server);
-        }
         
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -205,80 +197,6 @@ public class ApiController {
                 .findFirst()
                 .map(ServerInfo::getHistory)
                 .orElse(List.of());
-    }
-    
-    //Trigger prüfen
-    private void checkTrigger(ServerInfo server) {
-        triggerService.getTrigger(server.getName()).ifPresent(triggerList -> {
-            double cpu = server.getCpuPercent();
-            double ram = server.getRamUsed() / (double) server.getRamTotal() * 100;
-            double disk = server.getStorageUsed() / (double) server.getStorageTotal() * 100;
-
-            for (ThresholdConfig config : triggerList) {
-                if (cpu > config.cpu && canSendMail(server.getName(), "CPU")) {
-                    System.out.println("Sende Trigger Mail für CPU...");
-                    Logger.info("Sende Trigger Mail für CPU...");
-                    sendMail(config.email, server.getName(), "CPU überschritten: " + cpu + " %");
-                    try {
-						AlertUtil.addAlert("Die CPU von " + server.getName() + " hat " + cpu + " % überschritten.", Level.RED);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-                }
-
-                if (ram > config.ram && canSendMail(server.getName(), "RAM")) {
-                    System.out.println("Sende Trigger Mail für RAM...");
-                    Logger.info("Sende Trigger Mail für RAM...");
-                    sendMail(config.email, server.getName(), "RAM überschritten: " + ram + " %");
-                    try {
-						AlertUtil.addAlert("Der RAM von " + server.getName() + " hat " + ram + "% überschritten.", Level.RED);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-                }
-
-                if (disk > config.disk && canSendMail(server.getName(), "Disk")) {
-                    System.out.println("Sende Trigger Mail für Disk...");
-                    Logger.info("Sende Trigger Mail für Disk...");
-                    sendMail(config.email, server.getName(), "Speicher überschritten: " + disk + " %");
-                    try {
-						AlertUtil.addAlert("Der Speicher von " + server.getName() + " hat " + disk + "% überschritten.", Level.RED);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-                }
-            }
-        });
-    }
-
-
-    
-    //Trigger E-Mail Senden
-    private void sendMail(String to, String server, String message) {
-        try {
-            URL url = new URL("http://lukas3dprinting.czeh.de/email-warnung.php");
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("POST");
-            con.setDoOutput(true);
-            con.setRequestProperty("Content-Type", "application/json");
-
-            String json = new ObjectMapper().writeValueAsString(Map.of(
-                    "to", to,
-                    "server", server,
-                    "warnungen", message
-            ));
-
-            try (OutputStream os = con.getOutputStream()) {
-                os.write(json.getBytes(StandardCharsets.UTF_8));
-            }
-
-            if (con.getResponseCode() != 200) {
-                System.err.println("Mailversand fehlgeschlagen: " + con.getResponseCode());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Logger.error("Email konnte nicht gesendet werden.");
-        }
     }
     
     private synchronized boolean canSendMail(String server, String type) {
