@@ -17,6 +17,7 @@ import com.github.lalyos.jfiglet.FigletFont;
 import lu212.sysStats.General.AnomalyMonitor;
 import lu212.sysStats.General.Logger;
 import lu212.sysStats.General.Plugins;
+import lu212.sysStats.General.UpdateService;
 import lu212.sysStats.StatsServer.Server;
 
 @SpringBootApplication
@@ -58,6 +59,7 @@ public class SysStatsWebApplication {
 		System.out.println("Alert-Mails: " + alertMails);
 		System.out.println("Registrierte Adressen: " + mails);
 		System.out.println("----------Config----------");
+		UpdateService.init();
 		Logger.info("Starte SysStats Webserver...");
 		System.out.println("Starte SysStats Webserver...");
 		try {

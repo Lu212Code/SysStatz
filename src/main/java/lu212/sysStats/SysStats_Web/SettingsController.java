@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpSession;
 import lu212.sysStats.General.Logger;
 import lu212.sysStats.General.ServerUtil;
 import lu212.sysStats.General.ThresholdConfig;
+import lu212.sysStats.General.UpdateService;
 import lu212.sysStats.General.UserStore;
 import lu212.sysStats.StatsServer.Server;
 
@@ -34,6 +35,17 @@ public class SettingsController {
             model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
             model.addAttribute("activePage", "settings");
             model.addAttribute("servers", ServerUtil.getAllServers());
+
+            try {
+                UpdateService.checkForUpdates();
+                model.addAttribute("currentVersion", UpdateService.getCurrentVersion());
+                model.addAttribute("latestVersion", UpdateService.getLatestVersion());
+                model.addAttribute("updateAvailable", UpdateService.isUpdateAvailable());
+            } catch (Exception e) {
+                model.addAttribute("currentVersion", UpdateService.getCurrentVersion());
+                model.addAttribute("latestVersion", "Fehler beim Abrufen");
+                model.addAttribute("updateAvailable", false);
+            }
 
             String theme = SysStatsWebApplication.theme;
             model.addAttribute("theme", theme);
@@ -197,5 +209,12 @@ public class SettingsController {
         resp.put("status", "rejected");
         resp.put("ip", ip);
         return resp;
+    }
+    
+    @PostMapping("/update/start")
+    @ResponseBody
+    public String startUpdate() {
+        new Thread(UpdateService::performUpdate).start();
+        return "{\"status\":\"Update gestartet\"}";
     }
 }
