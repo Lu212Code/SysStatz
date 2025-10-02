@@ -126,6 +126,24 @@
 	input:checked + .slider:before {
 	    transform: translateX(26px);
 	}
+	
+	.update-indicator {
+	    display: inline-block;
+	    width: 10px;
+	    height: 10px;
+	    margin-left: 8px;
+	    background-color: red;
+	    border-radius: 50%;
+	    vertical-align: middle;
+	    box-shadow: 0 0 6px rgba(255, 0, 0, 0.7);
+	    animation: pulse 1.5s infinite;
+	}
+
+	@keyframes pulse {
+	    0%   { transform: scale(1); opacity: 1; }
+	    50%  { transform: scale(1.4); opacity: 0.6; }
+	    100% { transform: scale(1); opacity: 1; }
+	}
 	</style>
 	<link rel="stylesheet" th:href="@{'/css/' + ${theme} + '-sidebar.css'}">
 </head>
@@ -248,6 +266,38 @@
         </form>
     </div>
 </section>
+
+<!-- Abschnitt: SysStatz Updates -->
+<section th:if="${isAdmin}">
+    <button class="collapsible">
+        SysStatz Update
+        <span th:if="${updateAvailable}" class="update-indicator"></span>
+    </button>
+    <div class="content">
+        <p>Aktuelle SysStatz-Version: <span th:text="${currentVersion}"></span></p>
+        <p>Neueste SysStatz-Version: <span th:text="${latestVersion}"></span></p>
+
+        <div th:if="${updateAvailable}">
+            <button id="updateBtn">Update starten</button>
+        </div>
+        <div th:if="${!updateAvailable}">
+            <p>✅ SysStatz ist aktuell.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Popup -->
+<div id="updatePopup" 
+     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+            background:rgba(0,0,0,0.7); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:#2b2e3d; padding:20px; border-radius:10px; width:350px; text-align:center;">
+        <h3>Update bestätigen</h3>
+        <p>SysStatz wird kurz nicht verfügbar sein, während das Update installiert wird.</p>
+        <p>Fortsetzen?</p>
+        <button id="confirmUpdateBtn">Fortsetzen</button>
+        <button id="cancelUpdateBtn">Abbrechen</button>
+    </div>
+</div>
 
 <!-- Abschnitt: Benutzerverwaltung (Admin only) -->
 <section th:if="${isAdmin}">
@@ -426,6 +476,39 @@
 	        .then(res => res.json())
 	        .then(data => {
 	            if(data.success) e.target.closest('p').remove();
+	        });
+	    }
+	});
+	
+	document.addEventListener("DOMContentLoaded", () => {
+	    const updateBtn = document.getElementById("updateBtn");
+	    const popup = document.getElementById("updatePopup");
+	    const confirmBtn = document.getElementById("confirmUpdateBtn");
+	    const cancelBtn = document.getElementById("cancelUpdateBtn");
+
+	    if (updateBtn) {
+	        updateBtn.addEventListener("click", () => {
+	            popup.style.display = "flex";
+	        });
+	    }
+
+	    if (cancelBtn) {
+	        cancelBtn.addEventListener("click", () => {
+	            popup.style.display = "none";
+	        });
+	    }
+
+	    if (confirmBtn) {
+	        confirmBtn.addEventListener("click", async () => {
+	            confirmBtn.disabled = true;
+	            confirmBtn.innerText = "Update läuft...";
+
+	            try {
+	                await fetch("/update/start", { method: "POST" });
+	                // Server beendet sich selbst → hier kann nichts mehr zurückkommen
+	            } catch (err) {
+	                alert("❌ Fehler beim Starten des Updates: " + err);
+	            }
 	        });
 	    }
 	});
