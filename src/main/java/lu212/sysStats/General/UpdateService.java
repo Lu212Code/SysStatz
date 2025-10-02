@@ -7,7 +7,7 @@ import java.nio.file.*;
 
 public class UpdateService {
 
-    private static final String VERSION_URL = "https://example.com/sysstatz/update.json";
+    private static final String VERSION_URL = "https://sysstatz.de/update.json";
     private static final String CURRENT_VERSION = "1.0.0"; // Deine aktuelle Version
 
 	private static String latestVersion;
@@ -55,7 +55,7 @@ public class UpdateService {
                 return;
             }
 
-            // Neue Datei ins gleiche Verzeichnis laden
+            // Neue Datei ins gleiche Verzeichnis laden 
             Path currentDir = currentJar.getParentFile().toPath();
             Path newJar = currentDir.resolve("SysStatz_new.jar");
             try (InputStream in = new URL(downloadUrl).openStream()) {
