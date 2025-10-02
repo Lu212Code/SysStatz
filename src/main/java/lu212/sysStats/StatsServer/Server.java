@@ -12,6 +12,7 @@ import lu212.sysStats.General.AlertUtil.Level;
 import lu212.sysStats.General.KeystoreManager;
 import lu212.sysStats.General.Logger;
 import lu212.sysStats.General.Plugins;
+import lu212.sysStats.SysStats_Web.ProcessLoggerService;
 import lu212.sysStats.SysStats_Web.ServerStats;
 import lu212.sysStats.SysStats_Web.SysStatsWebApplication;
 
@@ -31,9 +32,9 @@ import java.security.KeyStore;
 public class Server {
 
 	private static int PORT = 12345;
-	private final static Map<String, ClientHandler> clients = new ConcurrentHashMap<>();
+	public final static Map<String, ClientHandler> clients = new ConcurrentHashMap<>();
 
-	private static final Map<String, ServerTempInfo> tempServerData = new ConcurrentHashMap<>();
+	public static final Map<String, ServerTempInfo> tempServerData = new ConcurrentHashMap<>();
 	public static final Map<String, GeoInfo> geoLocations = new ConcurrentHashMap<>();
 	
 	private static String SERVER_PASSWORD;
@@ -411,6 +412,8 @@ public class Server {
 				String formatiert = jetzt.format(formatter);
 
 				int diskPercent = (int) ((diskUsed / diskTotal) * 100);
+				
+				ProcessLoggerService.saveProcesses(Server, temp.processes);
 
 				ServerStats.update(Server, temp.cpu, ramUsed, ramTotal, diskPercent, diskUsed, diskTotal, "Online",
 						formatiert, temp.sent, temp.recv, temp.dsent, temp.drecv, temp.processes, temp.scmd, temp.temp,
@@ -429,7 +432,7 @@ public class Server {
 		}
 	}
 
-	private static class ServerTempInfo {
+	public static class ServerTempInfo {
 		Integer cpu = null;
 		String ramUsed;
 		String ramTotal;
@@ -784,5 +787,9 @@ public class Server {
     private static double parseDoubleSafe(String s) {
         if (s == null || s.isBlank()) return 0;
         return Double.parseDouble(s.replace(",", "."));
+    }
+    
+    public static Set<String> getAllClientNames() {
+        return new HashSet<>(clients.keySet());
     }
 }

@@ -1,13 +1,23 @@
 package lu212.sysStats.SysStats_Web;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Iterator;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
+import lu212.sysStats.General.LocalDateTimeAdapter;
+import lu212.sysStats.General.ProcessLogEntry;
 import lu212.sysStats.StatsServer.Server.ServerProcessInfo;
 
 public class ServerInfo {
@@ -39,6 +49,13 @@ public class ServerInfo {
     private String loadavg5;
     private String loadavg15;
     private Map<Integer, Double> cpuCoreFreqs;
+    
+    private static final Gson gson = new GsonBuilder()
+            .setPrettyPrinting()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .create();
+
+    private final List<ProcessLogEntry> processHistory = new ArrayList<>();
 
     public ServerInfo(String name, int cpuPercent, double ramUsed, double ramTotal, int diskPercent, double storageUsed, double storageTotal,
             String status, String boottime, String sent, String recv, String dsent, String drecv,
@@ -160,6 +177,7 @@ try {
 	public double getSwapUsed() { return swapUsed; }
 	public double getSwapTotal() { return swapTotal; }
 	public Map<Integer, Double> getCpuCoreFreqs() { return cpuCoreFreqs; }
+	public List<ProcessLogEntry> getProcessHistory() { return processHistory; }
 
     
     public static String berechneUptime(String boottimeStr) {
@@ -175,5 +193,53 @@ try {
         long sekunden = duration.getSeconds() % 60;
 
         return String.format("%d Tage, %02d:%02d:%02d", tage, stunden, minuten, sekunden);
+    }
+    
+    public void logTopProcesses() {
+        if (processes == null || processes.isEmpty()) return;
+
+        List<ServerProcessInfo> top3 = processes.stream()
+                .sorted((a, b) -> Double.compare(b.cpu, a.cpu))
+                .limit(3)
+                .toList();
+
+        processHistory.add(new ProcessLogEntry(LocalDateTime.now(), top3));
+
+        // Ältere als 7 Tage löschen
+        processHistory.removeIf(p -> p.getTimestamp().isBefore(LocalDateTime.now().minusDays(7)));
+
+        saveProcessHistory();
+    }
+
+    private void saveProcessHistory() {
+        try {
+            File dir = new File("data");
+            if (!dir.exists()) dir.mkdirs();
+
+            File file = new File(dir, name + "_processes.json");
+            try (FileWriter writer = new FileWriter(file)) {
+                gson.toJson(processHistory, writer);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadProcessHistory() {
+        try {
+            File file = new File("data", name + "_processes.json");
+            if (!file.exists()) return;
+
+            Type listType = new TypeToken<ArrayList<ProcessLogEntry>>() {}.getType();
+            try (FileReader reader = new FileReader(file)) {
+                List<ProcessLogEntry> loaded = gson.fromJson(reader, listType);
+                if (loaded != null) {
+                    processHistory.clear();
+                    processHistory.addAll(loaded);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

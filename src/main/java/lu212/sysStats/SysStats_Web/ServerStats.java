@@ -72,12 +72,23 @@ public class ServerStats {
         if (hw == null) return;
 
         File file = new File("hardware_" + serverName + ".txt");
+        System.out.println(file.getAbsolutePath());
         try (PrintWriter writer = new PrintWriter(file)) {
             for (Map.Entry<String, String> entry : hw.entrySet()) {
                 writer.println(entry.getKey() + ":" + entry.getValue());
             }
         } catch (IOException e) {
             Logger.warning("Fehler beim Speichern der Hardwaredaten für " + serverName);
+        }
+    }
+    
+    public static List<ServerProcessInfo> getProcessesForServer(String serverName) {
+        ServerInfo server = serverMap.get(serverName);
+        if (server != null) {
+            // Defensive Kopie zurückgeben, damit die Liste nicht extern verändert werden kann
+            return new ArrayList<>(server.getProcesses());
+        } else {
+            return new ArrayList<>(); // leere Liste falls Server nicht existiert
         }
     }
 }

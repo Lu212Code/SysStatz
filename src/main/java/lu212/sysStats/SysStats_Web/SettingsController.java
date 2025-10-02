@@ -66,7 +66,11 @@ public class SettingsController {
     public String saveSettings(@ModelAttribute Config formConfig,
                                @RequestParam(required = false) String newMailUser,
                                @RequestParam(required = false) String newMailAddress,
-                               @RequestParam(required = false) String deleteMail) {
+                               @RequestParam(required = false) String deleteMail,
+                               HttpSession session) {
+    	
+        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+        if (loggedIn != null && loggedIn) {
 
         // 1. Alte Config laden
         Config config = loadConfig();
@@ -100,6 +104,9 @@ public class SettingsController {
         saveConfig(config);
         Logger.info("Einstellungen wurden gespeichert.");
         return "redirect:/settings";
+        } else {
+            return "redirect:/login?error=sessionExpired";
+        }
     }
 
     // Hilfsmethode zum Laden der config.txt

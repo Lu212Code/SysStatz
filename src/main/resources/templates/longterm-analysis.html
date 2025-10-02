@@ -77,20 +77,26 @@
     const ramChart = makeChart('ramChart', 'RAM %', '#4a90e2');
     const diskChart = makeChart('diskChart', 'Disk %', '#27ae60');
 
-    function makeChart(id, label, color) {
-        return new Chart(document.getElementById(id), {
-            type: 'line',
-            data: { labels: [], datasets: [{ label, data: [], borderColor: color, fill: false, tension: 0.1 }] },
-            options: {
-                responsive: true,
-                scales: {
-                    x: { type: 'time', time: { unit: 'minute' }, ticks: { color: '#ccc' } },
-                    y: { ticks: { color: '#ccc' } }
-                },
-                plugins: { legend: { labels: { color: '#ccc' } } }
-            }
-        });
-    }
+	function makeChart(id, label, color) {
+	    return new Chart(document.getElementById(id), {
+	        type: 'line',
+	        data: { labels: [], datasets: [{ label, data: [], borderColor: color, fill: false, tension: 0.1 }] },
+	        options: {
+	            responsive: true,
+	            scales: {
+	                x: { type: 'time', time: { unit: 'minute' }, ticks: { color: '#ccc' } },
+	                y: { ticks: { color: '#ccc' } }
+	            },
+	            plugins: { legend: { labels: { color: '#ccc' } } },
+	            onClick: (evt, elements, chart) => {
+	                if (!elements.length) return;
+	                const index = elements[0].index;
+	                const timestamp = chart.data.labels[index];
+	                showProcessesAt(timestamp);
+	            }
+	        }
+	    });
+	}
 
     // Serverliste vom Backend holen
 	fetch('/api/servers-from-files')
@@ -109,7 +115,9 @@
 	    fetch(`/api/server/${encodeURIComponent(serverSelect.value)}/longterm`)
 	      .then(r => r.json())
 	      .then(data => {
-	        const times = data.map(d => new Date(d.timestamp * 1000));  // timestamp nicht time
+			currentProcessHistory = data;
+			
+	        const times = data.map(d => new Date(d.timestamp * 1000));
 	        const cpuVals = data.map(d => d.cpu);
 	        const ramVals = data.map(d => d.ram);
 	        const diskVals = data.map(d => d.disk);
@@ -254,6 +262,30 @@
 	        sampledValues.push(values[i]);
 	    }
 	    return [sampledTimes, sampledValues];
+	}
+	
+	let currentProcessHistory = []; // wird beim Server-Select geladen
+
+	function showProcessesAt(timestamp) {
+	    if (!currentProcessHistory.length) return;
+
+	    // timestamp in Date konvertieren
+	    const clickedTime = new Date(timestamp);
+
+	    // nächstliegenden Eintrag finden
+	    let closestEntry = currentProcessHistory.reduce((prev, curr) => {
+	        const prevDiff = Math.abs(new Date(prev.timestamp) - clickedTime);
+	        const currDiff = Math.abs(new Date(curr.timestamp) - clickedTime);
+	        return currDiff < prevDiff ? curr : prev;
+	    });
+
+	    // Prozesse anzeigen
+	    let html = `<b>Prozesse um ${new Date(closestEntry.timestamp).toLocaleString()}:</b><br><ul>`;
+	    closestEntry.topProcesses.forEach(p => {
+	        html += `<li>${p.name} - CPU: ${p.cpu}% - RAM: ${p.ram}%</li>`;
+	    });
+	    html += `</ul>`;
+	    analysisContent.innerHTML = html;
 	}
 </script>
 <script src="/js/sidebar.js"></script>

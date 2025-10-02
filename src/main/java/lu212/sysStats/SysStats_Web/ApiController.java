@@ -1,6 +1,5 @@
 package lu212.sysStats.SysStats_Web;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,41 +9,45 @@ import org.springframework.web.bind.annotation.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lu212.sysStats.General.Logger;
 import lu212.sysStats.General.PluginInfo;
 import lu212.sysStats.General.Plugins;
+import lu212.sysStats.General.ProcessLogEntry;
 import lu212.sysStats.General.SysStatzInfo;
 import lu212.sysStats.General.ThresholdConfig;
 import lu212.sysStats.StatsServer.Server;
 import lu212.sysStats.StatsServer.Server.GeoInfoDTO;
-
-import lu212.sysStats.General.AlertUtil;
-import lu212.sysStats.General.AlertUtil.Level;
+import lu212.sysStats.StatsServer.Server.ServerProcessInfo;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-import java.util.StringJoiner;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @RestController
 public class ApiController {
 
-	private final Map<String, Set<String>> sentTriggerEmails = new HashMap<>();
-	
-	
-    @Autowired
-    private TriggerService triggerService;
+	private final Path basePath = Paths.get("data");
 
     @GetMapping("/api/servers")
     public List<ServerInfo> getServers() {
@@ -176,17 +179,20 @@ public class ApiController {
         return Map.of("sysstatz version", SysStatzInfo.version);
     }
 
-    @GetMapping("/api/status")
-    public Map<String, String> getStatus() {
-        return Map.of("status", "OK", "uptime", "running");
-    }
-
     @GetMapping("/api/info")
     public Map<String, Object> getInfo() {
         return Map.of(
             "name", "SysStatz",
-            "author", "Lukas Zeh",
+            "author", "Lu212Code",
             "features", List.of("Monitoring", "API", "Live-Auslastung")
+        );
+    }
+    
+    @GetMapping("/api")
+    public Map<String, Object> getApiInfo() {
+        return Map.of(
+        		"Status", "running",
+        		"SysStatz API-Version", SysStatzInfo.version
         );
     }
     
@@ -197,16 +203,6 @@ public class ApiController {
                 .findFirst()
                 .map(ServerInfo::getHistory)
                 .orElse(List.of());
-    }
-    
-    private synchronized boolean canSendMail(String server, String type) {
-        Set<String> sentTypes = sentTriggerEmails.computeIfAbsent(server, k -> new HashSet<>());
-        if (sentTypes.contains(type)) {
-            return false; // Mail schon gesendet
-        } else {
-            sentTypes.add(type); // Status merken
-            return true;
-        }
     }
     
     @RestController
@@ -332,6 +328,178 @@ public class ApiController {
             this.spikeEndTimestamp = spikeEndTimestamp;
         }
     }
-
     
+    @GetMapping("/api/server/{name}/processes")
+    public ResponseEntity<List<ServerProcessInfo>> getServerProcesses(
+            @PathVariable String name,
+            @RequestParam(required = false) Long timestamp) {
+
+        Path txtFile = basePath.resolve(name + "_processes.txt");
+
+        try {
+            if (!Files.exists(txtFile)) {
+                return ResponseEntity.ok(Collections.emptyList());
+            }
+
+            List<String> lines = Files.readAllLines(txtFile);
+
+            // Kein Timestamp -> alle Prozesse
+            if (timestamp == null) {
+                return ResponseEntity.ok(parseProcesses(lines));
+            }
+
+            LocalDateTime requested = Instant.ofEpochMilli(timestamp)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+
+            // Alle Blöcke sammeln
+            List<List<String>> allBlocks = new ArrayList<>();
+            List<LocalDateTime> allTimes = new ArrayList<>();
+            List<String> currentBlock = null;
+            LocalDateTime currentTime = null;
+
+            for (String line : lines) {
+                if (line.startsWith("#")) {
+                    if (currentBlock != null && currentTime != null) {
+                        allBlocks.add(currentBlock);
+                        allTimes.add(currentTime);
+                    }
+                    currentTime = LocalDateTime.parse(line.substring(1).trim()); // # entfernen
+                    currentBlock = new ArrayList<>();
+                } else if (!line.isBlank() && currentBlock != null) {
+                    currentBlock.add(line);
+                }
+            }
+
+            // Letzten Block hinzufügen
+            if (currentBlock != null && currentTime != null) {
+                allBlocks.add(currentBlock);
+                allTimes.add(currentTime);
+            }
+
+            // Differenzen berechnen und die 5 nächsten Zeitpunkte auswählen
+            List<AbstractMap.SimpleEntry<Integer, Long>> distances = new ArrayList<>();
+            for (int i = 0; i < allTimes.size(); i++) {
+                long diff = Math.abs(Duration.between(allTimes.get(i), requested).toMillis());
+                distances.add(new AbstractMap.SimpleEntry<>(i, diff));
+            }
+
+            List<Integer> closestIndexes = new ArrayList<>();
+            for (int i = 0; i < allTimes.size(); i++) {
+                closestIndexes.add(i);
+            }
+            closestIndexes.sort(Comparator.comparingLong(i ->
+                Math.abs(Duration.between(allTimes.get(i), requested).toMillis())
+            ));
+            closestIndexes = closestIndexes.subList(0, Math.min(5, closestIndexes.size()));
+
+            // Alle Prozesse der 5 nächsten Zeitpunkte zusammenführen
+            List<String> resultLines = new ArrayList<>();
+            for (int idx : closestIndexes) {
+                resultLines.addAll(allBlocks.get(idx));
+            }
+
+            return ResponseEntity.ok(parseProcesses(resultLines));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+    }
+
+    private List<ServerProcessInfo> parseProcesses(List<String> lines) {
+        return lines.stream()
+                .filter(line -> !line.isBlank())
+                .map(line -> {
+                    String[] parts = line.split(";");
+                    try {
+                        int pid = Integer.parseInt(parts[0]);
+                        String procName = parts[1];
+                        double cpu = Double.parseDouble(parts[2].replace(",", "."));
+                        long ram = Long.parseLong(parts[3]);
+                        return new ServerProcessInfo(pid, procName, cpu, ram);
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+    
+    @GetMapping("/api/server/{name}/process-history/dates")
+    public ResponseEntity<?> getProcessHistoryDates(@PathVariable String name) {
+        ServerInfo server = ServerStats.getAllServers().stream()
+                .filter(s -> s.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElse(null);
+
+        if (server == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Server nicht gefunden"));
+        }
+
+        // Alle Tage extrahieren, an denen Daten gespeichert sind
+        Set<String> dates = server.getProcessHistory().stream()
+                .map(entry -> entry.getTimestamp().toLocalDate().toString())
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        return ResponseEntity.ok(dates);
+    }
+    
+    @GetMapping("/api/server/{name}/process-history/{date}/times")
+    public ResponseEntity<?> getProcessHistoryTimes(
+            @PathVariable String name,
+            @PathVariable String date) {
+
+        ServerInfo server = ServerStats.getAllServers().stream()
+                .filter(s -> s.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElse(null);
+
+        if (server == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Server nicht gefunden"));
+        }
+
+        // Uhrzeiten für den Tag sammeln
+        List<String> times = server.getProcessHistory().stream()
+                .filter(entry -> entry.getTimestamp().toLocalDate().toString().equals(date))
+                .map(entry -> entry.getTimestamp().toLocalTime().withSecond(0).withNano(0).toString())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(times);
+    }
+    
+    @GetMapping("/api/server/{name}/process-history/{date}/{time}")
+    public ResponseEntity<?> getProcessHistoryAt(
+            @PathVariable String name,
+            @PathVariable String date,
+            @PathVariable String time) {
+
+        ServerInfo server = ServerStats.getAllServers().stream()
+                .filter(s -> s.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElse(null);
+
+        if (server == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Server nicht gefunden"));
+        }
+
+        LocalDate localDate = LocalDate.parse(date);
+        LocalTime localTime = LocalTime.parse(time);
+
+        // Exaktes Match (oder nahestehendste Zeit suchen)
+        Optional<ProcessLogEntry> entry = server.getProcessHistory().stream()
+                .filter(e -> e.getTimestamp().toLocalDate().equals(localDate)
+                          && e.getTimestamp().toLocalTime().withSecond(0).withNano(0).equals(localTime))
+                .findFirst();
+
+        if (entry.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Kein Verlauf gefunden"));
+        }
+
+        return ResponseEntity.ok(entry.get().getTopProcesses());
+    }
 }
