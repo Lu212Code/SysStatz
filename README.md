@@ -11,13 +11,13 @@
 - 🌐 **Webinterface & API** – Übersichtliche Anzeige aller verbundenen Clients im Browser
 - 📈 **Echtzeit-Daten** – CPU, RAM, Festplattenauslastung, Netzwerktraffic, Bootzeit, Uptime, Swap, Auslastung pro Kern und CPU-Temperatur
 - 🖥️ **Plattformübergreifend** – Unterstützt Windows und Linux (Teilweise auch MacOS)
-- 🔔 **Benachrichtigungen** – Automatische Alerts per E-Mail und Weboberfläche bei definierter Auslastung
+- 🔔 **Benachrichtigungen** – Automatische Alerts per E-Mail und Weboberfläche
 - 💡 **Verschiedene Themes** – Mehrere wählbare Website Themes.
 - 🔐 **Client-Identifikation** – Jeder Jeder Client besitzt einen eindeutigen Namen zur Wiedererkennung.
 - ⚙️ **Einfache Konfiguration** – In wenigen Sekunden einsatzbereit
 - 👨‍💻 **Daten Analyse** - Verschiedene Analyse Möglichkeiten wie Langzeitanalyse oder AI-Analyse
 - 🪪 **User Management** - Unbegrenzt viele Benutzer möglich.
-- 🔒 **Sicherheit** - Jeder Server hat einen eigenen Keystore und die Server - Client verbindung ist verschlüsselt. Clients benötigen außerdem einen Key um sich zu verbinden.
+- 🔒 **Sicherheit** - Jeder Server hat einen eigenen Keystore und die Server - Client verbindung ist verschlüsselt. Clients benötigen außerdem einen Key um sich zu verbinden und müssen auf der IP Whitelist sein.
 
 ---
 
@@ -51,13 +51,7 @@ Auf der Weboberfläche unter Einstellung und im config.txt.
 
 ## 📧 Benachrichtigungen (Alerting)
 
-Meldungen können im Webinterface konfiguriert werden:
-
-- Typ: CPU / RAM / Disk
-- Grenzwert in %
-- Ziel-Email-Adresse
-
-Wenn der Grenzwert überschritten wird, wird eine Mail verschickt und aif der Weboberfläche eine Meldung angezeigt.
+Meldungen werden automatisch bei auffälligem Serververhalten ausgelöst.
 
 ---
 
