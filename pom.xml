@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>lu212.sysStats</groupId>
 	<artifactId>SysStatz_Web</artifactId>
-	<version>0.9.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>SysStats_Web</name>
 	<description>SysStats SpringBoot Projekt</description>
 	<url/>
