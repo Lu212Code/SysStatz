@@ -201,6 +201,14 @@
 
 <div id="servers-container">
     <!-- Server-Infos werden hier dynamisch eingefügt -->
+	<div id="loading-indicator" style="
+	    display: none;
+	    text-align: center;
+	    margin-top: 2rem;
+	">
+	    <img src="/img/loading.gif" alt="Lädt..." style="height: 50px;">
+	    <p>Lade Serverdaten...</p>
+	</div>
 </div>
 
 <script th:inline="javascript">
@@ -218,6 +226,10 @@
 	}
 	
 async function refreshData() {
+	const loadingIndicator = document.getElementById('loading-indicator');
+	const container = document.getElementById('servers-container');
+	loadingIndicator.style.display = 'block';
+	container.style.opacity = '0.5';
     try {
         const response = await fetch('/api/servers');
         if (!response.ok) {
@@ -226,8 +238,11 @@ async function refreshData() {
         }
 		
         const servers = await response.json();
-        const container = document.getElementById('servers-container');
         container.innerHTML = ''; // vorher leeren
+		
+		// Ladeanzeige ausblenden, sobald Daten da sind
+		loadingIndicator.style.display = 'none';
+		container.style.opacity = '1';
 
 		if (servers.length === 0) {
 			const messageContainer = document.createElement('div'); 
@@ -404,9 +419,11 @@ async function refreshData() {
 		}
 
 
-    } catch (error) {
-        console.error('Fehler:', error);
-    }
+	} catch (error) {
+	    console.error('Fehler:', error);
+	    loadingIndicator.style.display = 'none';
+	    container.style.opacity = '1';
+	}
 }
 
 // Daten beim Laden der Seite und alle 5 Sekunden aktualisieren

@@ -175,6 +175,10 @@
 			    </label>
 			    <span>2-Faktor-Authentifizierung erzwingen</span>
 			</div>
+			<p>
+			    <button type="button" id="restartBtn" style="background-color:#f39c12;">SysStatz Neustarten</button>
+			    <small style="color:#ddd; display:block;">Achtung: Alle Benutzer werden kurz getrennt.</small>
+			</p>
 			</section>
             <p>Website Theme:
                 <select name="theme">
@@ -508,6 +512,40 @@
 	                // Server beendet sich selbst → hier kann nichts mehr zurückkommen
 	            } catch (err) {
 	                alert("❌ Fehler beim Starten des Updates: " + err);
+	            }
+	        });
+	    }
+	});
+	
+	document.addEventListener("DOMContentLoaded", () => {
+	    const restartBtn = document.getElementById("restartBtn");
+
+	    if (restartBtn) {
+	        restartBtn.addEventListener("click", async () => {
+	            const confirmRestart = confirm("SysStatz wird jetzt neu gestartet. Alle Benutzer werden getrennt. Fortfahren?");
+	            if (!confirmRestart) return;
+
+	            restartBtn.disabled = true;
+	            restartBtn.innerText = "Neustart läuft...";
+
+	            try {
+	                const response = await fetch(`/api/server/admin/restart`, {
+	                    method: "POST"
+	                });
+
+	                if (!response.ok) {
+	                    const data = await response.json();
+	                    alert("Fehler: " + (data.error || "Unbekannt"));
+	                    restartBtn.disabled = false;
+	                    restartBtn.innerText = "SysStatz Neustarten";
+	                } else {
+	                    alert("Neustart gestartet. Die Seite wird nun getrennt.");
+	                    setTimeout(() => window.location.reload(), 2000);
+	                }
+	            } catch (err) {
+	                alert("Netzwerk-/JS-Fehler: " + err);
+	                restartBtn.disabled = false;
+	                restartBtn.innerText = "SysStatz Neustarten";
 	            }
 	        });
 	    }

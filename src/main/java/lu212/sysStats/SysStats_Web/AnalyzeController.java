@@ -22,6 +22,12 @@ public class AnalyzeController {
         model.addAttribute("servers", servers);
         model.addAttribute("activePage", "analyze");
         model.addAttribute("isAdmin", session.getAttribute("isAdmin"));
+        
+        if(SysStatsWebApplication.ollamaIP.equalsIgnoreCase("default")) {
+        	model.addAttribute("showOllamaPopup", true);
+        } else {
+        	model.addAttribute("showOllamaPopup", false);
+        }
 
         if (server != null && !server.isEmpty()) {
             List<int[]> data = readServerData(server);

@@ -229,6 +229,16 @@
 
 <body>
 	
+	<!-- Hinweis-Popup für Ollama Server -->
+	<div id="ollama-popup" th:if="${showOllamaPopup}" style="display: flex; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;">
+	    <div style="background-color: #1e1e2f; color: white; padding: 25px; border-radius: 12px; width: 400px; text-align: center; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.6);">
+	        <span id="ollama-popup-close" style="position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #ccc;">&times;</span>
+	        <h3>Hinweis</h3>
+	        <p>Es wird empfohlen, in deinen Einstellungen einen eigenen Ollama Server einzutragen, der LLaMA 3 installiert hat. Der Default-Server funktioniert nicht immer zuverlässig.</p>
+	        <button id="ollama-popup-ok" style="background-color: #4a90e2; color: white; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; margin-top: 15px;">Verstanden</button>
+	    </div>
+	</div>
+	
     <form id="serverForm" method="get" action="/analyze">
         <label for="server"> <img src="/img/server.png" alt="Server Icon" style="height: 1em; margin-right: 5px;"> Server auswählen:</label>
         <select name="server" id="server" required>
@@ -336,6 +346,17 @@
 		        });
 		    });
 		}
+		
+		document.addEventListener('DOMContentLoaded', () => {
+		    const popup = document.getElementById('ollama-popup');
+		    if (!popup) return; // Nur ausführen, wenn Popup vorhanden
+
+		    const closeBtn = document.getElementById('ollama-popup-close');
+		    const okBtn = document.getElementById('ollama-popup-ok');
+
+		    closeBtn.addEventListener('click', () => popup.style.display = 'none');
+		    okBtn.addEventListener('click', () => popup.style.display = 'none');
+		});
     </script>
 	<script src="/js/sidebar.js"></script>
 </body>

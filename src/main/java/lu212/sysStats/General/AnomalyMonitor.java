@@ -13,18 +13,35 @@ import java.util.concurrent.TimeUnit;
 
 public class AnomalyMonitor {
 
-    // Cooldown pro Server+Alert (z. B. 15 Minuten)
-    private static final Duration ALERT_COOLDOWN = Duration.ofMinutes(15);
+    // Nur ein Alert pro Tag pro Server+Typ
+    private static final Duration ALERT_COOLDOWN = Duration.ofHours(24);
+    // Alte Alerts löschen nach 2 Tagen
+    private static final Duration ALERT_EXPIRE = Duration.ofDays(2);
     private static final Map<String, LocalDateTime> lastAlerts = new HashMap<>();
+
+    // Schärfere Schwellenwerte
+    private static final int CPU_HIGH = 95;
+    private static final int CPU_WARN = 85;
+    private static final int DISK_HIGH = 95;
+    private static final int DISK_WARN = 80;
+    private static final double RAM_JUMP_FACTOR = 1.3;
+    private static final double RAM_TREND_FACTOR = 1.2;
+    private static final double SWAP_HIGH = 85;
 
     public static void start() {
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
             try {
+                purgeOldAlerts();
                 checkAllServers();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }, 0, 5, TimeUnit.MINUTES);
+    }
+
+    private static void purgeOldAlerts() {
+        LocalDateTime now = LocalDateTime.now();
+        lastAlerts.entrySet().removeIf(e -> Duration.between(e.getValue(), now).compareTo(ALERT_EXPIRE) > 0);
     }
 
     private static void checkAllServers() throws IOException {
@@ -40,30 +57,28 @@ public class AnomalyMonitor {
         ServerHistoryEntry latest = history.get(history.size() - 1);
 
         int cpu = latest.getCpuPercent();
-        double ramUsed = latest.getRamUsed();  // absolut
+        double ramUsed = latest.getRamUsed();
         int disk = latest.getDiskPercent();
         double swapPercent = latest.getSwapTotal() > 0
                 ? (latest.getSwapUsed() / latest.getSwapTotal()) * 100
                 : 0;
 
         // === CPU gesamt ===
-        if (cpu > 90) {
+        if (cpu > CPU_HIGH) {
             addAlert(name, "CPU usage very high (" + cpu + "%)", AlertUtil.Level.RED);
-        } else if (cpu > 75) {
+        } else if (cpu > CPU_WARN) {
             addAlert(name, "CPU usage elevated (" + cpu + "%)", AlertUtil.Level.YELLOW);
         }
 
-        // Trend: CPU steigt konstant (letzte 5 Werte)
-        if (history.size() >= 5) {
-            boolean increasing = true;
-            for (int i = history.size() - 5; i < history.size() - 1; i++) {
-                if (history.get(i).getCpuPercent() > history.get(i + 1).getCpuPercent()) {
-                    increasing = false;
-                    break;
-                }
-            }
-            if (increasing) {
-                addAlert(name, "CPU load rising steadily (last 5 samples)", AlertUtil.Level.YELLOW);
+        // CPU Trend (letzte 8 Werte, nur bei deutlicher Steigung)
+        int trendLength = 8;
+        if (history.size() >= trendLength) {
+            int startCpu = history.get(history.size() - trendLength).getCpuPercent();
+            int endCpu = history.get(history.size() - 1).getCpuPercent();
+            double cpuIncrease = endCpu - startCpu;
+
+            if (cpuIncrease > 30) { // nur auslösen bei starkem Anstieg
+                addAlert(name, "CPU rose by " + cpuIncrease + "% over last " + trendLength + " samples", AlertUtil.Level.YELLOW);
             }
         }
 
@@ -78,52 +93,51 @@ public class AnomalyMonitor {
             }
         }
 
-        // === RAM Trend ===
-        if (history.size() >= 5) {
-            double avgRam = history.subList(history.size() - 5, history.size())
+        // === RAM ===
+        if (history.size() >= 8) {
+            double avgRam = history.subList(history.size() - 8, history.size())
                     .stream().mapToDouble(ServerHistoryEntry::getRamUsed).average().orElse(0);
-            if (ramUsed > avgRam * 1.2) {
+            if (ramUsed > avgRam * RAM_JUMP_FACTOR) {
                 addAlert(name, "RAM usage jumped from ~" + Math.round(avgRam) + " to " + Math.round(ramUsed), AlertUtil.Level.YELLOW);
             }
 
-            // stetiges Wachstum
-            boolean ramIncreasing = true;
-            for (int i = history.size() - 5; i < history.size() - 1; i++) {
-                if (history.get(i).getRamUsed() > history.get(i + 1).getRamUsed()) {
-                    ramIncreasing = false;
-                    break;
+            if (history.size() >= trendLength) {
+                double startRam = history.get(history.size() - trendLength).getRamUsed();
+                double endRam = history.get(history.size() - 1).getRamUsed();
+                double increasePercent = (endRam - startRam) / startRam * 100;
+
+                if (increasePercent > 50) { // nur auslösen, wenn >50% Anstieg
+                    addAlert(name, "RAM increased by " + Math.round(increasePercent) + "% over last " + trendLength + " samples (possible memory leak)", AlertUtil.Level.RED);
                 }
-            }
-            if (ramIncreasing) {
-                addAlert(name, "RAM steadily increasing (possible leak)", AlertUtil.Level.YELLOW);
             }
         }
 
         // === Disk ===
-        if (disk > 90) {
+        if (disk > DISK_HIGH) {
             addAlert(name, "Disk space nearly full (" + disk + "%)", AlertUtil.Level.RED);
-        } else if (disk > 75) {
+        } else if (disk > DISK_WARN) {
             addAlert(name, "Disk usage high (" + disk + "%)", AlertUtil.Level.YELLOW);
         }
 
         if (history.size() >= 2) {
             int prev = history.get(history.size() - 2).getDiskPercent();
-            if (disk - prev > 5) {
+            if (disk - prev > 10) {
                 addAlert(name, "Disk usage jumped by " + (disk - prev) + "% in last interval", AlertUtil.Level.YELLOW);
             }
         }
 
         // === Swap ===
         if (swapPercent > 95) {
-            addAlert(name, "Swap critically full (" + swapPercent + "%)", AlertUtil.Level.RED);
-        } else if (swapPercent > 80) {
-            addAlert(name, "Swap usage high (" + swapPercent + "%)", AlertUtil.Level.YELLOW);
+            addAlert(name, "Swap critically full (" + Math.round(swapPercent) + "%)", AlertUtil.Level.RED);
+        } else if (swapPercent > SWAP_HIGH) {
+            addAlert(name, "Swap usage high (" + Math.round(swapPercent) + "%)", AlertUtil.Level.YELLOW);
         }
-        
+
+        // CPU idle & Ressourcen blockiert
         if (cpu < 2 && (disk > 80 || swapPercent > 50)) {
             addAlert(name, "CPU idle but resources blocked (possible deadlock)", AlertUtil.Level.YELLOW);
         }
-        
+
         if (cores != null && cpu < 40) {
             for (Map.Entry<Integer, Double> entry : cores.entrySet()) {
                 if (entry.getValue() > 95) {
@@ -132,30 +146,30 @@ public class AnomalyMonitor {
             }
         }
 
+        // RAM über längere Zeit
         if (history.size() >= 20) {
-            boolean alwaysIncreasing = true;
-            for (int i = history.size() - 20; i < history.size() - 1; i++) {
-                if (history.get(i).getRamUsed() > history.get(i + 1).getRamUsed()) {
-                    alwaysIncreasing = false;
-                    break;
-                }
-            }
-            if (alwaysIncreasing) {
-                addAlert(name, "RAM increasing for 20 samples (possible memory leak)", AlertUtil.Level.RED);
+            double startRam = history.get(history.size() - 20).getRamUsed();
+            double endRam = history.get(history.size() - 1).getRamUsed();
+            double increasePercent = (endRam - startRam) / startRam * 100;
+
+            if (increasePercent > 50) { // nur echte Steigerungen melden
+                addAlert(name, "RAM increased by " + Math.round(increasePercent) + "% over last 20 samples (possible memory leak)", AlertUtil.Level.RED);
             }
         }
-        
+
         if (swapPercent > 10 && ramUsed < (history.get(history.size() - 1).getRamUsed() * 0.5)) {
             addAlert(name, "Swap used despite free RAM", AlertUtil.Level.YELLOW);
         }
-        
-        if (history.size() >= 12) { // ~1h wenn alle 5min
+
+        // Diskanstieg letzte Stunde (~12 Samples)
+        if (history.size() >= 12) {
             int oldDisk = history.get(history.size() - 12).getDiskPercent();
             if (disk - oldDisk > 10) {
                 addAlert(name, "Disk usage grew " + (disk - oldDisk) + "% in the last hour", AlertUtil.Level.RED);
             }
         }
 
+        // CPU Spike
         if (history.size() >= 2) {
             int prevCpu = history.get(history.size() - 2).getCpuPercent();
             if (prevCpu < 30 && cpu > 90) {
@@ -163,50 +177,49 @@ public class AnomalyMonitor {
             }
         }
 
+        // Server idle
         if (cpu < 1 && ramUsed < 100 && disk < 1) {
             addAlert(name, "Server appears idle/unresponsive (possible crash)", AlertUtil.Level.RED);
         }
 
+        // Netzwerkspikes
         try {
-            long sent = Long.parseLong(latest.getDsent());
             long recv = Long.parseLong(latest.getDrecv());
-
-            if (history.size() >= 5) {
-                double avgRecv = history.subList(history.size() - 5, history.size())
+            if (history.size() >= 6) {
+                double avgRecv = history.subList(history.size() - 6, history.size())
                         .stream().mapToLong(h -> Long.parseLong(h.getDrecv())).average().orElse(0);
-
-                if (recv > avgRecv * 5) {
+                if (recv > avgRecv * 6) {
                     addAlert(name, "Network recv spiked from ~" + avgRecv + " to " + recv, AlertUtil.Level.RED);
                 }
             }
         } catch (NumberFormatException ignored) {}
 
+        // Datenlücke
         if (history.size() >= 2) {
             LocalDateTime prev = history.get(history.size() - 2).getTimestamp();
             LocalDateTime now = latest.getTimestamp();
-            if (Duration.between(prev, now).toMinutes() > 10) {
-                addAlert(name, "Data gap detected (>10 min between samples)", AlertUtil.Level.YELLOW);
+            if (Duration.between(prev, now).toMinutes() > 15) {
+                addAlert(name, "Data gap detected (>15 min between samples)", AlertUtil.Level.YELLOW);
             }
         }
 
+        // CPU Stabilität
         if (history.size() >= 10) {
             double avgCpu = history.subList(history.size() - 10, history.size())
                     .stream().mapToInt(ServerHistoryEntry::getCpuPercent).average().orElse(0);
             double maxCpu = history.subList(history.size() - 10, history.size())
                     .stream().mapToInt(ServerHistoryEntry::getCpuPercent).max().orElse(0);
-
             if (maxCpu - avgCpu > 50) {
                 addAlert(name, "CPU highly unstable (fluctuating >50%)", AlertUtil.Level.YELLOW);
             }
         }
-
     }
 
     private static void addAlert(String server, String text, AlertUtil.Level level) throws IOException {
-        String key = server + ":" + text; // eindeutiger Key pro Server+Meldung
+        String key = server + ":" + text;
         LocalDateTime now = LocalDateTime.now();
 
-        // Cooldown prüfen
+        // Cooldown prüfen (1x pro Tag)
         if (lastAlerts.containsKey(key)) {
             LocalDateTime last = lastAlerts.get(key);
             if (Duration.between(last, now).compareTo(ALERT_COOLDOWN) < 0) {
