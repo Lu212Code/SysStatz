@@ -14,18 +14,10 @@
 		        <img src="/img/analyse.png" alt="Analyse">
 		        <span class="link-text">KI Analyse</span>
 		    </a>
-			<a th:href="@{/longterm-analysis}" th:classappend="${activePage == 'longterm'} ? ' active' : ''" data-tooltip="Lz. Analyse">
-			    <img src="/img/lt-analys.png" alt="Lz. Analyse">
-			    <span class="link-text">Lz. Analyse</span>
+			<a th:href="@{/compare}" th:classappend="${activePage == 'compare'} ? ' active' : ''" data-tooltip="Vergleichen">
+			    <img src="/img/compare.png" alt="Vergleichen">
+			    <span class="link-text">Vergleichen</span>
 			</a>
-		    <a th:href="@{/logs}" th:classappend="${activePage == 'logs'} ? ' active' : ''" data-tooltip="Logs">
-		        <img src="/img/log.png" alt="Logs">
-		        <span class="link-text">Logs</span>
-		    </a>
-		    <a th:href="@{/compare}" th:classappend="${activePage == 'compare'} ? ' active' : ''" data-tooltip="Vergleichen">
-		        <img src="/img/compare.png" alt="Vergleichen">
-		        <span class="link-text">Vergleichen</span>
-		    </a>
 			<a th:href="@{/alerts}" th:classappend="${activePage == 'alerts'} ? ' active' : ''" data-tooltip="Meldungen">
 			    <img src="/img/alert.png" alt="Meldungen ">
 			    <span class="link-text">Meldungen</span>
@@ -37,6 +29,10 @@
 			<a th:if="${isAdmin}" th:href="@{/settings}" th:classappend="${activePage == 'settings'} ? ' active' : ''" data-tooltip="Einstellungen">
 			    <img src="/img/settings.png" alt="Einstellungen">
 			    <span class="link-text">Einstellungen</span>
+			</a>
+			<a th:href="@{/logs}" th:classappend="${activePage == 'logs'} ? ' active' : ''" data-tooltip="Logs">
+			    <img src="/img/log.png" alt="Logs">
+			    <span class="link-text">Logs</span>
 			</a>
 			<a th:if="${isAdmin}" th:href="@{/admin/manageUsers}" th:classappend="${activePage == 'manageUsers'} ? ' active' : ''" data-tooltip="Benutzer">
 			    <img src="/img/users.png" alt="Benutzer">
